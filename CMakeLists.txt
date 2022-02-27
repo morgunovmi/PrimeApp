@@ -59,6 +59,8 @@ execute_process(
 
 file(GLOB IMGUI_SOURCES ${imgui_SOURCE_DIR}/*.cpp)
 
+
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
 add_executable(${PROJECT_NAME} ${IMGUI_SOURCES} ${IMGUI_SFML_DIR}/imgui-SFML.cpp)
 
 add_subdirectory(src include)
@@ -86,3 +88,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${IMGUI_SFML_DIR}
     "C:\\Program Files\\Photometrics\\PVCamSDK\\Inc"
     ) 
+
+message("THIS IS THE BUILD TYPE E  E E E EE  EE  ")
+message(${CMAKE_BUILD_TYPE})
