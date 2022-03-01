@@ -19,14 +19,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib/${CMAKE_BUILD_TYPE})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/${CMAKE_GENERATOR_PLATFORM}/${CMAKE_BUILD_TYPE})
 
-message(${CMAKE_BUILD_TYPE})
-
 project(PrimeApp VERSION 1.0)
 
 find_package(OpenGL REQUIRED)
 
 link_directories("C:\\Program Files\\Photometrics\\PVCamSDK\\Lib\\amd64")
-find_package(pvcam)
 
 include(FetchContent)
 
