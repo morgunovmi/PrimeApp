@@ -15,7 +15,7 @@ namespace slr {
         GUI(sf::RenderWindow& window, sf::Time& dt, Backend& backend, Log& log) : mWindow(window), mDt(dt),
             mFrameTimeQueue(),
             mShowMainMenuBar(true), mShowFrameInfoOverlay(false), mShowAppLog(true),
-            mBackend(backend), mAppLog(log), mIsInit(false) {}
+            mBackend(backend), mAppLog(log), mHubballiFont(), mIsInit(false) {}
 
         bool Init();
 
@@ -41,6 +41,8 @@ namespace slr {
 
         Backend&            mBackend;
         Log&                mAppLog;
+
+        ImFont*             mHubballiFont;
 
         bool                mShowMainMenuBar;
         bool                mShowFrameInfoOverlay;

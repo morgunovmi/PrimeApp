@@ -7,7 +7,13 @@
 
 namespace slr {
     bool GUI::Init() {
-        return ImGui::SFML::Init(mWindow);
+        const auto res = ImGui::SFML::Init(mWindow);
+
+        auto& io = ImGui::GetIO();
+        mHubballiFont = io.Fonts->AddFontFromFileTTF("C:\\Code\\PrimeApp\\bin\\Debug\\Debug\\resources\\fonts\\hubballi-regular.ttf", 20);
+        ImGui::SFML::UpdateFontTexture();
+
+        return res;
     }
 
     void GUI::PollEvents() {
@@ -47,14 +53,14 @@ namespace slr {
 
     void GUI::ShowFrameInfoOverlay() {
         static int corner = 1;
-        ImGuiIO& io = ImGui::GetIO();
-        ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
+        auto& io = ImGui::GetIO();
+        auto window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
         if (corner != -1)
         {
-            const float PAD = 10.0f;
-            const ImGuiViewport* viewport = ImGui::GetMainViewport();
-            ImVec2 work_pos = viewport->WorkPos; // Use work area to avoid menu-bar/task-bar, if any!
-            ImVec2 work_size = viewport->WorkSize;
+            const auto PAD = 10.0f;
+            const auto* viewport = ImGui::GetMainViewport();
+            auto work_pos = viewport->WorkPos; // Use work area to avoid menu-bar/task-bar, if any!
+            auto work_size = viewport->WorkSize;
             ImVec2 window_pos, window_pos_pivot;
             window_pos.x = (corner & 1) ? (work_pos.x + work_size.x - PAD) : (work_pos.x + PAD);
             window_pos.y = (corner & 2) ? (work_pos.y + work_size.y - PAD) : (work_pos.y + PAD);
@@ -104,7 +110,7 @@ namespace slr {
         // We take advantage of a rarely used feature: multiple calls to Begin()/End() are appending to the _same_ window.
         // Most of the contents of the window will be added by the log.Draw() call.
 
-        const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
+        const auto* main_viewport = ImGui::GetMainViewport();
         ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkPos.x, main_viewport->WorkPos.y));
         ImGui::SetNextWindowSize(ImVec2(mWindow.getSize().x, mWindow.getSize().y / 2));
 
@@ -124,11 +130,11 @@ namespace slr {
     }
 
     void GUI::ShowActionButtons() {
-        const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
+        const auto* main_viewport = ImGui::GetMainViewport();
         ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkPos.x, main_viewport->WorkPos.y + mWindow.getSize().y / 2));
         ImGui::SetNextWindowSize(ImVec2(mWindow.getSize().x, mWindow.getSize().y / 2 - main_viewport->WorkPos.y));
 
-        ImGuiWindowFlags window_flags = 0;
+        auto window_flags = 0;
         window_flags |= ImGuiWindowFlags_NoTitleBar;
         window_flags |= ImGuiWindowFlags_NoMove;
         window_flags |= ImGuiWindowFlags_NoResize;
@@ -138,11 +144,11 @@ namespace slr {
 
         if (ImGui::Begin("Action Buttons", nullptr, window_flags)) {
             if (ImGui::Button("Init") && !mIsInit) {
-                if (std::async(&Backend::Init, &mBackend).get()) {
+                if (std::async(&Backend::InitAndOpenFirstCamera, &mBackend).get()) {
                     mAppLog.AddLog("Successful init\n");
                     mIsInit = true;
                 } else {
-                    mAppLog.AddLog("Hmm\n");
+                    mAppLog.AddLog("Failed to init\n");
                 }
             }
 
@@ -154,27 +160,28 @@ namespace slr {
                 }
             }
 
-            if (ImGui::Button("Uninit") && mIsInit) {
-                if (std::async(&Backend::Uninit, &mBackend).get()) {
-                    mIsInit = false;
-                    mAppLog.AddLog("Successful uninit\n");
-                } else {
-                    mAppLog.AddLog("Failed to uninit\n");
-                }
-            }
+            //if (ImGui::Button("Dump Params") && mIsInit) {
+            //    if (std::async(&Backend::IsParamAvailable, &mBackend).get()) {
+            //        mAppLog.AddLog("Enumeration complete\n");
+            //    } else {
+            //        mAppLog.AddLog("Failed to enumerate cameras\n");
+            //    }
+            //}
         }
 
         ImGui::End();
     }
 
     void GUI::Render() {
+        ImGui::PushFont(mHubballiFont);
         if (mShowMainMenuBar) ShowMainMenuBar();
         if (mShowFrameInfoOverlay) ShowFrameInfoOverlay();
         if (mShowAppLog) ShowAppLog();
         ShowActionButtons();
 
-        //ImGui::ShowDemoWindow();
+        ImGui::ShowDemoWindow();
 
+        ImGui::PopFont();
         ImGui::SFML::Render(mWindow);
     }
 
