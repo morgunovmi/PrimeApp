@@ -1,13 +1,13 @@
 #include "frontend/App.h"
 
-int main() {
-    const auto width = 800;
+int main(int argc, char** argv) {
+    const auto width = 1400;
     const auto height = 600;
 
     sf::ContextSettings settings{};
     settings.antialiasingLevel = 8;
 
-    slr::App system{ width, height, settings };
+    slr::App system{ argc, argv, width, height, settings };
     system.Run();
 
     return EXIT_SUCCESS;

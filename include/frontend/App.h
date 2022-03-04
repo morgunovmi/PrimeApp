@@ -11,15 +11,15 @@
 namespace slr {
     class App {
     public:
-        App(uint16_t width, uint16_t height, const sf::ContextSettings& settings) :
+        App(int argc, char** argv, uint16_t width, uint16_t height, const sf::ContextSettings& settings) :
                 mWindowWidth(width), mWindowHeight(height), mSettings(settings),
                 mWindow(sf::VideoMode{width, height},
                         "Prime App", sf::Style::Close, settings),
                 mDeltaClock(), mDt(),
                 mRenderer(mWindow, mDt, mAppLog),
-                mBackend(mWindow, mDeltaClock, mDt, mAppLog),
-                mGUI(mWindow, mDt, mBackend, mAppLog),
-                mAppLog() {}
+                mBackend(argc, argv, mWindow, mDeltaClock, mDt, mCurrentTexture, mAppLog),
+                mGUI(mWindow, mDt, mBackend, mCurrentTexture, mAppLog),
+                mCurrentTexture(), mAppLog() {}
 
         void Init();
         void Run();
@@ -36,6 +36,8 @@ namespace slr {
         Renderer                        mRenderer;
         Backend                         mBackend;
         GUI                             mGUI;
+
+        sf::Texture                     mCurrentTexture;
 
         Log                             mAppLog;
     };

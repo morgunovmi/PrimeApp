@@ -10,7 +10,7 @@ namespace slr {
         const auto res = ImGui::SFML::Init(mWindow);
 
         auto& io = ImGui::GetIO();
-        mHubballiFont = io.Fonts->AddFontFromFileTTF("C:\\Code\\PrimeApp\\bin\\Debug\\Debug\\resources\\fonts\\hubballi-regular.ttf", 20);
+        mHubballiFont = io.Fonts->AddFontFromFileTTF("./resources/fonts/hubballi-regular.ttf", 20);
         ImGui::SFML::UpdateFontTexture();
 
         return res;
@@ -105,14 +105,10 @@ namespace slr {
         }
     }
 
-    void GUI::ShowAppLog() {
-        // For the demo: add a debug button _BEFORE_ the normal log window contents
-        // We take advantage of a rarely used feature: multiple calls to Begin()/End() are appending to the _same_ window.
-        // Most of the contents of the window will be added by the log.Draw() call.
-
+    void GUI::ShowViewport() {
         const auto* main_viewport = ImGui::GetMainViewport();
         ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkPos.x, main_viewport->WorkPos.y));
-        ImGui::SetNextWindowSize(ImVec2(mWindow.getSize().x, mWindow.getSize().y / 2));
+        ImGui::SetNextWindowSize(ImVec2(mWindow.getSize().x * 0.6, mWindow.getSize().y));
 
         ImGuiWindowFlags window_flags = 0;
         window_flags |= ImGuiWindowFlags_NoTitleBar;
@@ -120,7 +116,23 @@ namespace slr {
         window_flags |= ImGuiWindowFlags_NoResize;
         window_flags |= ImGuiWindowFlags_NoCollapse;
         window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
-        window_flags |= ImGuiWindowFlags_UnsavedDocument;
+    }
+
+    void GUI::ShowAppLog() {
+        // For the demo: add a debug button _BEFORE_ the normal log window contents
+        // We take advantage of a rarely used feature: multiple calls to Begin()/End() are appending to the _same_ window.
+        // Most of the contents of the window will be added by the log.Draw() call.
+
+        const auto* main_viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkPos.x + mWindow.getSize().x * 0.6, main_viewport->WorkPos.y));
+        ImGui::SetNextWindowSize(ImVec2(mWindow.getSize().x * 0.4, mWindow.getSize().y / 2));
+
+        ImGuiWindowFlags window_flags = 0;
+        window_flags |= ImGuiWindowFlags_NoTitleBar;
+        window_flags |= ImGuiWindowFlags_NoMove;
+        window_flags |= ImGuiWindowFlags_NoResize;
+        window_flags |= ImGuiWindowFlags_NoCollapse;
+        window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
 
         ImGui::Begin("App Log", nullptr, window_flags);
         ImGui::End();
@@ -131,8 +143,8 @@ namespace slr {
 
     void GUI::ShowActionButtons() {
         const auto* main_viewport = ImGui::GetMainViewport();
-        ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkPos.x, main_viewport->WorkPos.y + mWindow.getSize().y / 2));
-        ImGui::SetNextWindowSize(ImVec2(mWindow.getSize().x, mWindow.getSize().y / 2 - main_viewport->WorkPos.y));
+        ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkPos.x + mWindow.getSize().x * 0.6, main_viewport->WorkPos.y + mWindow.getSize().y / 2));
+        ImGui::SetNextWindowSize(ImVec2(mWindow.getSize().x * 0.4, mWindow.getSize().y / 2 - main_viewport->WorkPos.y));
 
         auto window_flags = 0;
         window_flags |= ImGuiWindowFlags_NoTitleBar;
@@ -144,7 +156,7 @@ namespace slr {
 
         if (ImGui::Begin("Action Buttons", nullptr, window_flags)) {
             if (ImGui::Button("Init") && !mIsInit) {
-                if (std::async(&Backend::InitAndOpenFirstCamera, &mBackend).get()) {
+                if (std::async(&Backend::InitAndOpenOneCamera, &mBackend).get()) {
                     mAppLog.AddLog("Successful init\n");
                     mIsInit = true;
                 } else {
@@ -152,21 +164,15 @@ namespace slr {
                 }
             }
 
-            if (ImGui::Button("Enumerate Cameras") && mIsInit) {
-                if (std::async(&Backend::EnumerateCameras, &mBackend).get()) {
-                    mAppLog.AddLog("Enumeration complete\n");
-                } else {
-                    mAppLog.AddLog("Failed to enumerate cameras\n");
-                }
+            if (ImGui::Button("Live capture") && mIsInit && !mIsCapturing) {
+                mIsCapturing = true;
+                std::async(&Backend::LiveCapture, &mBackend);
             }
 
-            //if (ImGui::Button("Dump Params") && mIsInit) {
-            //    if (std::async(&Backend::IsParamAvailable, &mBackend).get()) {
-            //        mAppLog.AddLog("Enumeration complete\n");
-            //    } else {
-            //        mAppLog.AddLog("Failed to enumerate cameras\n");
-            //    }
-            //}
+            if (ImGui::Button("Terminate capture") && mIsInit) {
+                mBackend.TerminateCapture();
+                mIsCapturing = false;
+            }
         }
 
         ImGui::End();
