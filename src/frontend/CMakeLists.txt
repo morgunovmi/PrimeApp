@@ -1,4 +1,4 @@
-target_sources(${PROJECT_NAME} PRIVATE
+target_sources(${APP_NAME} PRIVATE
         App.cpp
         main.cpp
         Renderer.cpp

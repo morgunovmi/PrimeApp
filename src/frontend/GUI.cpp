@@ -7,13 +7,13 @@
 
 namespace slr {
     bool GUI::Init() {
-        const auto res = ImGui::SFML::Init(mWindow);
+        ImGui::SFML::Init(mWindow);
 
         auto& io = ImGui::GetIO();
         mHubballiFont = io.Fonts->AddFontFromFileTTF("./resources/fonts/hubballi-regular.ttf", 20);
         ImGui::SFML::UpdateFontTexture();
 
-        return res;
+        return true;
     }
 
     void GUI::PollEvents() {

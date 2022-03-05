@@ -1,0 +1,5 @@
+{
+    "name": "prime-app",
+    "version": "0.0.1",
+    "dependencies": ["sfml", "imgui", "imgui-sfml"]
+}

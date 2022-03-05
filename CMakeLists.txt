@@ -1,77 +1,49 @@
 cmake_minimum_required(VERSION 3.14)
 
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+project("Prime App" LANGUAGES CXX)
 
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Debug)
-endif()
+# default compiler options and warnings
+include(cmake/DefaultCompilerOptionsAndWarnings.cmake)
 
-if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /W4")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2")
-endif()
+# static analyzers
+include(cmake/StaticAnalyzers.cmake)
 
+# sanitizers
+include(cmake/Sanitizers.cmake)
+
+# Set project directories
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib/${CMAKE_BUILD_TYPE})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/${CMAKE_GENERATOR_PLATFORM}/${CMAKE_BUILD_TYPE})
 
-project(PrimeApp VERSION 1.0)
-
-find_package(OpenGL REQUIRED)
-
+# Hardcoded pvcam directory
 link_directories("C:\\Program Files\\Photometrics\\PVCamSDK\\Lib\\amd64")
 
-include(FetchContent)
-
-set(FETCHCONTENT_QUIET OFF)
-
-FetchContent_Declare(SFML
-    GIT_REPOSITORY "https://github.com/SFML/SFML.git"
-    GIT_TAG "2f11710abc5aa478503a7ff3f9e654bd2078ebab"
-    GIT_PROGRESS   TRUE 
-    )
-
-FetchContent_Declare(imgui
-    GIT_REPOSITORY "https://github.com/ocornut/imgui"
-    GIT_PROGRESS   TRUE 
-    )
-
-FetchContent_MakeAvailable(SFML imgui)
-
-FetchContent_GetProperties(imgui)
-
-set(IMGUI_SFML_DIR ${CMAKE_BINARY_DIR}/_deps/imgui-sfml)
-
-execute_process(
-    COMMAND git clone https://github.com/eliasdaler/imgui-sfml ${IMGUI_SFML_DIR} 
-)
-
-execute_process(
-    COMMAND cat ${IMGUI_SFML_DIR}/imgconfig-SFML.h >> ${imgui_SOURCE_DIR}/imconfig.h
-    ) 
-
-file(GLOB IMGUI_SOURCES ${imgui_SOURCE_DIR}/*.cpp)
-
-
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
-add_executable(${PROJECT_NAME} ${IMGUI_SOURCES} ${IMGUI_SFML_DIR}/imgui-SFML.cpp)
-
-add_subdirectory(src include)
+# Find necessary libs
+find_package(imgui CONFIG REQUIRED)
+find_package(SFML COMPONENTS system window graphics CONFIG REQUIRED)
+find_package(ImGui-SFML CONFIG REQUIRED)
 
 set(SFML_LIBS sfml-graphics sfml-system sfml-window)
 
-target_link_libraries(${PROJECT_NAME} 
-    PUBLIC ${SFML_LIBS}
-    PRIVATE opengl32
-    PRIVATE pvcam64
-    )
+set(APP_NAME "App")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
+add_executable(${APP_NAME} "")
 
-target_include_directories(${PROJECT_NAME} PRIVATE
+add_subdirectory(src include)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+
+set(CMAKE_CXX_EXTENSIONS OFF)
+target_compile_features(${APP_NAME} PUBLIC cxx_std_20)
+target_compile_options(${APP_NAME} PRIVATE ${SANITIZER_FLAGS} ${DEFAULT_COMPILER_OPTIONS_AND_WARNINGS})
+
+target_include_directories(${APP_NAME} PRIVATE
     "include"
-    ${imgui_SOURCE_DIR}
-    ${IMGUI_SFML_DIR}
     "C:\\Program Files\\Photometrics\\PVCamSDK\\Inc"
-    ) 
+) 
+
+target_link_libraries(${APP_NAME} PRIVATE ${SANITIZER_FLAGS} ${SFML_LIBS} ImGui-SFML::ImGui-SFML pvcam64)
 
 file(COPY ${CMAKE_SOURCE_DIR}/resources DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_BUILD_TYPE})
