@@ -1,4 +1,6 @@
 #include "frontend/App.h"
+#include "backend/PhotometricsBackend.h"
+#include "backend/OpencvBackend.h"
 
 int main(int argc, char** argv) {
     const auto width = 1400;

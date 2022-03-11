@@ -1,10 +1,13 @@
 #ifndef SOLAR_APP_H
 #define SOLAR_APP_H
 
+#include <variant>
 #include "SFML/Graphics.hpp"
 
 #include "Renderer.h"
 #include "backend/Backend.h"
+#include "backend/PhotometricsBackend.h"
+#include "backend/OpencvBackend.h"
 #include "frontend/GUI.h"
 #include "misc/Log.h"
 
@@ -16,10 +19,10 @@ namespace slr {
                 mWindow(sf::VideoMode{width, height},
                         "Prime App", sf::Style::Close, settings),
                 mDeltaClock(), mDt(),
-                mRenderer(mWindow, mDt, mAppLog),
-                mBackend(argc, argv, mWindow, mDeltaClock, mDt, mCurrentTexture, mAppLog),
+                mRenderer(mWindow, mDt, mAppLog, mCurrentTexture, mTextureMutex),
+                mBackend( argc, argv, mWindow, mDeltaClock, mDt, mCurrentTexture, mAppLog, mTextureMutex ),
                 mGUI(mWindow, mDt, mBackend, mCurrentTexture, mAppLog),
-                mCurrentTexture(), mAppLog() {}
+                mCurrentTexture(), mTextureMutex(), mAppLog() {}
 
         void Init();
         void Run();
@@ -34,10 +37,11 @@ namespace slr {
         sf::Time                        mDt;
 
         Renderer                        mRenderer;
-        Backend                         mBackend;
+        OpencvBackend                   mBackend;
         GUI                             mGUI;
 
         sf::Texture                     mCurrentTexture;
+        std::mutex                      mTextureMutex;
 
         Log                             mAppLog;
     };

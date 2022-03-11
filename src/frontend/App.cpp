@@ -1,7 +1,5 @@
 #include "frontend/App.h"
 
-#include "imgui-SFML.h"
-
 namespace slr {
     void App::Run() {
         mGUI.Init();

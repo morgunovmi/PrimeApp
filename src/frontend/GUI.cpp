@@ -156,22 +156,18 @@ namespace slr {
 
         if (ImGui::Begin("Action Buttons", nullptr, window_flags)) {
             if (ImGui::Button("Init") && !mIsInit) {
-                if (std::async(&Backend::InitAndOpenOneCamera, &mBackend).get()) {
-                    mAppLog.AddLog("Successful init\n");
-                    mIsInit = true;
-                } else {
-                    mAppLog.AddLog("Failed to init\n");
-                }
+                mBackend.Init();
+//                mIsInit = true;
             }
 
-            if (ImGui::Button("Live capture") && mIsInit && !mIsCapturing) {
-                mIsCapturing = true;
-                std::async(&Backend::LiveCapture, &mBackend);
+            if (ImGui::Button("Live capture")/* && mIsInit && !mIsCapturing*/) {
+//                mIsCapturing = true;
+                mBackend.LiveCapture();
             }
 
-            if (ImGui::Button("Terminate capture") && mIsInit) {
+            if (ImGui::Button("Terminate capture") /* && mIsInit && mIsCapturing*/) {
                 mBackend.TerminateCapture();
-                mIsCapturing = false;
+//                mIsCapturing = false;
             }
         }
 

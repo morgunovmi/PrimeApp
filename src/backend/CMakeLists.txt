@@ -1,3 +1,3 @@
 target_sources(
-        ${APP_NAME} PRIVATE Backend.cpp
+        ${APP_NAME} PRIVATE Backend.h PhotometricsBackend.cpp OpencvBackend.cpp
 )

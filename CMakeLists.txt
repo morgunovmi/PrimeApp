@@ -23,14 +23,15 @@ link_directories("C:\\Program Files\\Photometrics\\PVCamSDK\\Lib\\amd64")
 find_package(imgui CONFIG REQUIRED)
 find_package(SFML COMPONENTS system window graphics CONFIG REQUIRED)
 find_package(ImGui-SFML CONFIG REQUIRED)
+find_package(OpenCV CONFIG REQUIRED)
 
 set(SFML_LIBS sfml-graphics sfml-system sfml-window)
 
 set(APP_NAME "App")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
-add_executable(${APP_NAME} "")
+add_executable(${APP_NAME} "" src/backend/Backend.h src/backend/OpencvBackend.h src/backend/OpencvBackend.cpp)
 
-add_subdirectory(src include)
+add_subdirectory(src)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -40,10 +41,10 @@ target_compile_features(${APP_NAME} PUBLIC cxx_std_20)
 target_compile_options(${APP_NAME} PRIVATE ${SANITIZER_FLAGS} ${DEFAULT_COMPILER_OPTIONS_AND_WARNINGS})
 
 target_include_directories(${APP_NAME} PRIVATE
-    "include"
+    "src"
     "C:\\Program Files\\Photometrics\\PVCamSDK\\Inc"
 ) 
 
-target_link_libraries(${APP_NAME} PRIVATE ${SANITIZER_FLAGS} ${SFML_LIBS} ImGui-SFML::ImGui-SFML pvcam64)
+target_link_libraries(${APP_NAME} PRIVATE ${SANITIZER_FLAGS} ${SFML_LIBS} ImGui-SFML::ImGui-SFML pvcam64 ${OpenCV_LIBS})
 
 file(COPY ${CMAKE_SOURCE_DIR}/resources DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_BUILD_TYPE})

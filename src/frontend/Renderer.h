@@ -12,8 +12,8 @@ namespace slr {
     class Renderer {
     public:
         Renderer(sf::RenderWindow& window, sf::Time& dt,
-                Log& appLog) :
-                mWindow(window), mDt(dt), mAppLog(appLog) {
+                Log& appLog, sf::Texture& texture, std::mutex& mutex) :
+                mWindow(window), mDt(dt), mAppLog(appLog), mCurrentTexture(texture), mTextureMutex(mutex) {
             Init();
         }
 
@@ -26,6 +26,9 @@ namespace slr {
 
     private:
         sf::RenderWindow&           mWindow;
+
+        sf::Texture&                mCurrentTexture;
+        std::mutex&                 mTextureMutex;
 
         sf::Time&                   mDt;
 

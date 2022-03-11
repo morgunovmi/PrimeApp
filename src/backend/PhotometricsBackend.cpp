@@ -1,10 +1,10 @@
-#include "backend/Backend.h"
+#include "backend/PhotometricsBackend.h"
 
 #include "imgui-SFML.h"
 #include <iostream>
 
 namespace slr {
-    void Backend::PrintError(const char* fmt, ...) {
+    void PhotometricsBackend::PrintError(const char* fmt, ...) {
         std::scoped_lock lock(mPvcamMutex);
 
         auto code = pl_error_code();
@@ -21,7 +21,7 @@ namespace slr {
         mAppLog.AddLog("------------------------\n");
     }
 
-    bool Backend::ShowAppInfo(int argc, char* argv[]) {
+    bool PhotometricsBackend::ShowAppInfo(int argc, char* argv[]) {
         std::scoped_lock lock(mPvcamMutex);
 
         const char* appName = "<unable to get name>";
@@ -47,7 +47,7 @@ namespace slr {
         return PV_OK;
     }
 
-    bool Backend::InitPVCAM() {
+    bool PhotometricsBackend::InitPVCAM() {
         std::scoped_lock lock(mPvcamMutex);
 
         if (mIsPvcamInitialized) {
@@ -107,7 +107,7 @@ namespace slr {
         return true;
     }
 
-    void Backend::UninitPVCAM() {
+    void PhotometricsBackend::UninitPVCAM() {
         if (!mIsPvcamInitialized) {
             return;
         }
@@ -123,7 +123,7 @@ namespace slr {
         mIsPvcamInitialized = false;
     }
 
-    bool Backend::GetSpeedTable(const std::unique_ptr<CameraContext>& ctx, std::vector<SpdtabPort>& speedTable) {
+    bool PhotometricsBackend::GetSpeedTable(const std::unique_ptr<CameraContext>& ctx, std::vector<SpdtabPort>& speedTable) {
         std::vector<SpdtabPort> table;
 
         NVPC ports;
@@ -249,7 +249,7 @@ namespace slr {
         return true;
     }
 
-    bool Backend::OpenCamera(std::unique_ptr<CameraContext>& ctx) {
+    bool PhotometricsBackend::OpenCamera(std::unique_ptr<CameraContext>& ctx) {
         if (ctx->isCamOpen)
             return true;
 
@@ -459,7 +459,7 @@ namespace slr {
         return true;
     }
 
-    void Backend::CloseCamera(std::unique_ptr<CameraContext>& ctx) {
+    void PhotometricsBackend::CloseCamera(std::unique_ptr<CameraContext>& ctx) {
         if (!ctx->isCamOpen) {
             return;
         }
@@ -472,8 +472,8 @@ namespace slr {
         ctx->isCamOpen = false;
     }
 
-    void Backend::CloseAllCamerasAndUninit() {
-        mAppLog.AddLog("\n");
+    void PhotometricsBackend::CloseAllCamerasAndUninit() {
+        printf("\n");
 
         for (auto& ctx : mCameraContexts) {
             CloseCamera(ctx);
@@ -482,7 +482,12 @@ namespace slr {
         UninitPVCAM();
     }
 
-    bool Backend::InitAndOpenOneCamera() {
+    void PhotometricsBackend::Init() {
+        mAppLog.AddLog("Initing\n");
+        InitAndOpenOneCamera();
+    }
+
+    bool PhotometricsBackend::InitAndOpenOneCamera() {
         if (!ShowAppInfo(margc, margv)) {
             PrintError("Couldn't show app info\n");
             return PV_FAIL;
@@ -506,7 +511,7 @@ namespace slr {
         return true;
     }
 
-    bool Backend::ReadEnumeration(int16 hcam, NVPC* pNvpc, uns32 paramID, const char* paramName) {
+    bool PhotometricsBackend::ReadEnumeration(int16 hcam, NVPC* pNvpc, uns32 paramID, const char* paramName) {
         if (!pNvpc || !paramName) {
             return false;
         }
@@ -563,7 +568,7 @@ namespace slr {
         return !pNvpc->empty();
     }
 
-    bool Backend::IsParamAvailable(int16 hcam, uns32 paramID, const char* paramName) {
+    bool PhotometricsBackend::IsParamAvailable(int16 hcam, uns32 paramID, const char* paramName) {
 
         if (paramName == nullptr) {
             return PV_FAIL;
@@ -582,40 +587,8 @@ namespace slr {
         return PV_OK;
     }
 
-    void Backend::Update() {
-        mDt = mDeltaClock.restart();
-        PollInput();
-    }
-
-    void Backend::PollInput() {
-        sf::Event event{};
-
-        while (mWindow.pollEvent(event)) {
-            ImGui::SFML::ProcessEvent(event);
-
-            switch (event.type) {
-                case sf::Event::Closed:
-                    mWindow.close();
-                    break;
-
-                case sf::Event::KeyPressed:
-                    switch (event.key.code) {
-                        case sf::Keyboard::Escape:
-                            mWindow.close();
-                            break;
-                        default:
-                            break;
-                    }
-                    break;
-
-                default:
-                    break;
-            }
-        }
-    }
-
-    void Backend::UpdateCtxImageFormat(std::unique_ptr<CameraContext>& ctx) {
-        ctx->imageFormat = PL_IMAGE_FORMAT_MONO16;
+    void PhotometricsBackend::UpdateCtxImageFormat(std::unique_ptr<CameraContext>& ctx) {
+        ctx->imageFormat = PL_IMAGE_FORMAT_MONO8;
 
         rs_bool isAvailable;
         if (PV_OK != pl_get_param(ctx->hcam, PARAM_IMAGE_FORMAT, ATTR_AVAIL,
@@ -632,7 +605,7 @@ namespace slr {
         ctx->imageFormat = imageFormat;
     }
 
-    bool Backend::SelectCameraExpMode(const std::unique_ptr<CameraContext>& ctx, int16& expMode,
+    bool PhotometricsBackend::SelectCameraExpMode(const std::unique_ptr<CameraContext>& ctx, int16& expMode,
         int16 legacyTrigMode, int16 extendedTrigMode) {
         NVPC triggerModes;
         if (!ReadEnumeration(ctx->hcam, &triggerModes, PARAM_EXPOSURE_MODE, "PARAM_EXPOSURE_MODE")) {
@@ -677,7 +650,7 @@ namespace slr {
         return false;
     }
 
-    bool Backend::LiveCapture() {
+    void PhotometricsBackend::LiveCapture() {
         auto& ctx = mCameraContexts[0];
         uns32 exposureBytes;
         const uns32 exposureTime = 40; // milliseconds
@@ -689,7 +662,7 @@ namespace slr {
         int16 expMode;
         if (!SelectCameraExpMode(ctx, expMode, TIMED_MODE, EXT_TRIG_INTERNAL)) {
             CloseAllCamerasAndUninit();
-            return false;
+            return;
         }
         /**
         Prepare the continuous acquisition with circular buffer mode. The
@@ -700,7 +673,7 @@ namespace slr {
             exposureTime, &exposureBytes, bufferMode)) {
             PrintError("pl_exp_setup_cont() error\n");
             CloseAllCamerasAndUninit();
-            return false;
+            return;
         }
         mAppLog.AddLog("Acquisition setup successful on camera %d\n", ctx->hcam);
         UpdateCtxImageFormat(ctx);
@@ -714,7 +687,7 @@ namespace slr {
         if (!circBufferInMemory) {
             mAppLog.AddLog("Unable to allocate buffer for camera %d\n", ctx->hcam);
             CloseAllCamerasAndUninit();
-            return false;
+            return;
         }
         /**
         Start the continuous acquisition. By passing the entire size of the buffer
@@ -724,7 +697,7 @@ namespace slr {
             PrintError("pl_exp_start_cont() error\n");
             CloseAllCamerasAndUninit();
             delete[] circBufferInMemory;
-            return false;
+            return;
         }
         mAppLog.AddLog("Acquisition started on camera %d\n", ctx->hcam);
 
@@ -760,13 +733,13 @@ namespace slr {
                 // This flag is set when user presses ctrl+c. In such case, break the loop
                 // and abort the acquisition.
                 mAppLog.AddLog("Processing aborted on camera %d\n", ctx->hcam);
-                return true;
+                return;
             }
             if (status == READOUT_FAILED) {
                 mAppLog.AddLog("Frame #%u readout failed on camera %d\n",
                     framesAcquired + 1, ctx->hcam);
                 errorOccurred = true;
-                return false;
+                return;
             }
 
             /**
@@ -780,20 +753,20 @@ namespace slr {
             if (PV_OK != pl_exp_get_latest_frame_ex(ctx->hcam, &frameAddress, &info)) {
                 PrintError("pl_exp_get_latest_frame() error\n");
                 errorOccurred = true;
-                return false;
+                return;
             }
 
             mAppLog.AddLog("Frame #%u readout successfully completed on camera %d\n",
                 framesAcquired + 1, ctx->hcam);
 
-            mAppLog.AddLog("Size is %zu : %zu\n", exposureBytes, ctx->sensorResX * ctx->sensorResY);
+            mAppLog.AddLog("Size is %u : %d\n", exposureBytes, ctx->sensorResX * ctx->sensorResY);
             //ShowImage(ctx, frameAddress, exposureBytes);
 
             framesAcquired++;
         }
     }
 
-    void Backend::TerminateCapture() {
+    void PhotometricsBackend::TerminateCapture() {
         mAppLog.AddLog("\n>>>\n");
         mAppLog.AddLog(">>> CLI TERMINATION HANDLER\n");
         for (auto& ctx : mCameraContexts) {

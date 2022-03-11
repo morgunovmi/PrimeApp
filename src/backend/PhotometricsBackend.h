@@ -7,6 +7,8 @@
 #include <vector>
 #include <string>
 
+
+#include "Backend.h"
 #include "master.h"
 #include "pvcam.h"
 #include "misc/Log.h"
@@ -123,23 +125,21 @@ namespace slr {
         bool threadAbortFlag{ false };
     };
 
-    class Backend {
+    class PhotometricsBackend : public Backend {
     public:
-        Backend(int argc, char **argv, sf::RenderWindow& window, sf::Clock& deltaClock, sf::Time& dt, sf::Texture& currentTexture, Log& appLog) :
-            margc(argc), margv(argv), mWindow(window), mDeltaClock(deltaClock), mDt(dt), mAppLog(appLog), mPvcamMutex(), mCurrentTexture(currentTexture) {}
+        PhotometricsBackend(int argc, char **argv, sf::RenderWindow& window, sf::Clock& deltaClock, sf::Time& dt, sf::Texture& currentTexture, Log& appLog, std::mutex& mutex) :
+            Backend(argc, argv, window, currentTexture, deltaClock, dt, appLog, mutex), mPvcamMutex() {}
 
-        bool InitAndOpenOneCamera();
+        void Init() override;
 
-        void Update();
+        void LiveCapture() override;
 
-        bool LiveCapture();
+        void TerminateCapture() override;
 
-        void TerminateCapture();
-
-        ~Backend() { CloseAllCamerasAndUninit();  }
+        ~PhotometricsBackend() override { CloseAllCamerasAndUninit();  }
 
     private:
-        void PollInput();
+        bool InitAndOpenOneCamera();
 
         void PrintError(const char* fmt, ...);
 
@@ -166,21 +166,8 @@ namespace slr {
         bool SelectCameraExpMode(const std::unique_ptr<CameraContext>& ctx, int16& expMode,
             int16 legacyTrigMode, int16 extendedTrigMode);
 
-
-
     private:
-        int margc;
-        char** margv;
-        sf::RenderWindow&                       mWindow;
-
-        sf::Clock&                              mDeltaClock;
-        sf::Time&                               mDt;
-
-        Log&                                    mAppLog;
-
         std::mutex                              mPvcamMutex;
-
-        sf::Texture&                            mCurrentTexture;
 
         const uns16                             mCameraIndex = 0;
         std::vector<std::unique_ptr<CameraContext>> mCameraContexts;

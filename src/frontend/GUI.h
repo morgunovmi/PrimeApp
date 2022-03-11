@@ -5,7 +5,7 @@
 
 #include <SFML/Graphics.hpp>
 #include "misc/Log.h"
-#include "backend/Backend.h"
+#include "backend/PhotometricsBackend.h"
 
 namespace slr {
     const uint16_t FRAME_QUEUE_SIZE = 60;
