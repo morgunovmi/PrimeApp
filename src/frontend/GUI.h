@@ -4,6 +4,7 @@
 #include <queue>
 
 #include <SFML/Graphics.hpp>
+
 #include "misc/Log.h"
 #include "backend/PhotometricsBackend.h"
 
@@ -12,10 +13,10 @@ namespace slr {
 
     class GUI {
     public:
-        GUI(sf::RenderWindow& window, sf::Time& dt, Backend& backend, sf::Texture& currentTexture, Log& log) : mWindow(window), mDt(dt),
+        GUI(sf::RenderWindow& window, sf::Time& dt, Backend& backend, Log& log) : mWindow(window), mDt(dt),
             mFrameTimeQueue(),
             mShowMainMenuBar(true), mShowFrameInfoOverlay(false), mShowAppLog(true),
-            mBackend(backend), mAppLog(log), mHubballiFont(), mCurrentTexture(currentTexture), mIsInit(false), mIsCapturing(false) {}
+            mBackend(backend), mAppLog(log), mHubballiFont(), mIsInit(false), mIsCapturing(false) {}
 
         bool Init();
 
@@ -34,8 +35,6 @@ namespace slr {
         void ShowAppLog();
         void ShowActionButtons();
 
-        void launch();
-
     private:
         sf::RenderWindow&   mWindow;
         sf::Time&           mDt;
@@ -50,8 +49,6 @@ namespace slr {
         bool                mShowMainMenuBar;
         bool                mShowFrameInfoOverlay;
         bool                mShowAppLog;
-
-        sf::Texture&        mCurrentTexture;
 
         bool                mIsInit;
         bool                mIsCapturing;

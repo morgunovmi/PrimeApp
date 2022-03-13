@@ -2,6 +2,7 @@
 #define PRIME_APP_BACKEND_H
 
 #include "imgui-SFML.h"
+#include "spdlog/spdlog.h"
 #include <SFML/Graphics.hpp>
 #include <misc/Log.h>
 
@@ -37,6 +38,11 @@ namespace slr {
 
         sf::Clock& mDeltaClock;
         sf::Time& mDt;
+
+        template <typename... Args>
+        void PrintError(fmt::format_string<Args...> fmt, Args &&...args) {
+            spdlog::error(fmt, args...);
+        }
 
     private:
         void PollInput() {

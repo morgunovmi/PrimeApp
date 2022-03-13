@@ -2,7 +2,8 @@
 #define SOLAR_APP_H
 
 #include <variant>
-#include "SFML/Graphics.hpp"
+
+#include <SFML/Graphics.hpp>
 
 #include "Renderer.h"
 #include "backend/Backend.h"
@@ -21,7 +22,7 @@ namespace slr {
                 mDeltaClock(), mDt(), mCurrentTexture(), mTextureMutex(),
                 mRenderer(mWindow, mDt,  mCurrentTexture, mTextureMutex),
                 mBackend( argc, argv, mWindow, mCurrentTexture, mDeltaClock, mDt, mTextureMutex ),
-                mGUI(mWindow, mDt, mBackend, mCurrentTexture, log) {}
+                mGUI(mWindow, mDt, mBackend, log) {}
 
         void Init();
         void Run();

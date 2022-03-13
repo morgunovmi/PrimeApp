@@ -45,7 +45,7 @@ namespace slr {
         PollEvents();
         ImGui::SFML::Update(mWindow, mDt);
 
-        mFrameTimeQueue.push(mDt.asMicroseconds());
+        mFrameTimeQueue.push(static_cast<float>(mDt.asMicroseconds()));
         if (mFrameTimeQueue.size() > FRAME_QUEUE_SIZE) {
             mFrameTimeQueue.pop();
         }
@@ -53,7 +53,6 @@ namespace slr {
 
     void GUI::ShowFrameInfoOverlay() {
         static int corner = 1;
-        auto& io = ImGui::GetIO();
         auto window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
         if (corner != -1)
         {
@@ -108,7 +107,8 @@ namespace slr {
     void GUI::ShowViewport() {
         const auto* main_viewport = ImGui::GetMainViewport();
         ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkPos.x, main_viewport->WorkPos.y));
-        ImGui::SetNextWindowSize(ImVec2(mWindow.getSize().x * 0.6, mWindow.getSize().y));
+        ImGui::SetNextWindowSize(ImVec2(static_cast<float>(mWindow.getSize().x) * 0.6f,
+            static_cast<float>(mWindow.getSize().y)));
 
         ImGuiWindowFlags window_flags = 0;
         window_flags |= ImGuiWindowFlags_NoTitleBar;
@@ -124,8 +124,8 @@ namespace slr {
         // Most of the contents of the window will be added by the log.Draw() call.
 
         const auto* main_viewport = ImGui::GetMainViewport();
-        ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkPos.x + mWindow.getSize().x * 0.6, main_viewport->WorkPos.y));
-        ImGui::SetNextWindowSize(ImVec2(mWindow.getSize().x * 0.4, mWindow.getSize().y / 2));
+        ImGui::SetNextWindowPos(ImVec2(static_cast<float>(main_viewport->WorkPos.x) + static_cast<float>(mWindow.getSize().x) * 0.6f, main_viewport->WorkPos.y));
+        ImGui::SetNextWindowSize(ImVec2(static_cast<float>(mWindow.getSize().x) * 0.4f, static_cast<float>(mWindow.getSize().y) / 2.f));
 
         ImGuiWindowFlags window_flags = 0;
         window_flags |= ImGuiWindowFlags_NoTitleBar;
@@ -143,8 +143,8 @@ namespace slr {
 
     void GUI::ShowActionButtons() {
         const auto* main_viewport = ImGui::GetMainViewport();
-        ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkPos.x + mWindow.getSize().x * 0.6, main_viewport->WorkPos.y + mWindow.getSize().y / 2));
-        ImGui::SetNextWindowSize(ImVec2(mWindow.getSize().x * 0.4, mWindow.getSize().y / 2 - main_viewport->WorkPos.y));
+        ImGui::SetNextWindowPos(ImVec2(static_cast<float>(main_viewport->WorkPos.x) + static_cast<float>(mWindow.getSize().x) * 0.6f, main_viewport->WorkPos.y + static_cast<float>(mWindow.getSize().y) / 2.f));
+        ImGui::SetNextWindowSize(ImVec2(static_cast<float>(mWindow.getSize().x) * 0.4f, static_cast<float>(mWindow.getSize().y) / 2.f - main_viewport->WorkPos.y));
 
         auto window_flags = 0;
         window_flags |= ImGuiWindowFlags_NoTitleBar;

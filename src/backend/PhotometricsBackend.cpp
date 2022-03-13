@@ -1,12 +1,12 @@
-#include "backend/PhotometricsBackend.h"
-#include "fmt/format.h"
-#include "spdlog/spdlog.h"
+#include <fmt/format.h>
+#include <spdlog/spdlog.h>
 
-#include <iostream>
+#include "backend/PhotometricsBackend.h"
+
 
 namespace slr {
     template<typename... Args>
-    constexpr void PhotometricsBackend::PrintError(fmt::format_string<Args...> fmt, Args &&...args) {
+    void PhotometricsBackend::PrintError(fmt::format_string<Args...> fmt, Args &&...args) {
         auto code = pl_error_code();
         char pvcamErrMsg[ERROR_MSG_LEN];
         pl_error_message(code, pvcamErrMsg);
@@ -37,7 +37,7 @@ namespace slr {
 
         spdlog::info("\n************************************************************\n"
                      "Application  : {}\n"
-                     "PVCAM version: %d.%d.%d\n"
+                     "PVCAM version: {}.{}.{}\n"
                      "************************************************************\n",
                     appName, (pvcamVersion >> 8) & 0xFF,
                     (pvcamVersion >> 4) & 0x0F,
@@ -627,7 +627,7 @@ namespace slr {
                     return false;
                 }
                 // Select the first one
-                const int16 expOutMode = static_cast<int16>(expOutModes[0].value);
+                const auto expOutMode = static_cast<int16>(expOutModes[0].value);
                 // And return our final 'exp' mode that can be used in pl_exp_setup functions.
                 // The final mode is an 'or-ed' value of exposure (trigger) mode and expose-out mode.
                 expMode = extendedTrigMode | expOutMode;

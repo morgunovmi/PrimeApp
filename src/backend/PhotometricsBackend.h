@@ -142,7 +142,7 @@ namespace slr {
         bool InitAndOpenOneCamera();
 
         template<typename... Args>
-        constexpr void PrintError(fmt::format_string<Args...> fmt, Args &&...args);
+        void PrintError(fmt::format_string<Args...> fmt, Args &&...args);
 
         bool ShowAppInfo(int argc, char* argv[]);
 

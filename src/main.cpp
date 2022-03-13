@@ -1,8 +1,8 @@
-#include "misc/Log.h"
-#include "misc/LogSink.h"
 #include <spdlog/logger.h>
 #include <spdlog/spdlog.h>
 
+#include "misc/Log.h"
+#include "misc/LogSink.h"
 #include "frontend/App.h"
 
 int main(int argc, char** argv) {
