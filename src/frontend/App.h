@@ -6,23 +6,22 @@
 
 #include "Renderer.h"
 #include "backend/Backend.h"
-#include "backend/PhotometricsBackend.h"
 #include "backend/OpencvBackend.h"
+#include "backend/PhotometricsBackend.h"
 #include "frontend/GUI.h"
 #include "misc/Log.h"
 
 namespace slr {
     class App {
     public:
-        App(int argc, char** argv, uint16_t width, uint16_t height, const sf::ContextSettings& settings) :
+        App(int argc, char** argv, uint16_t width, uint16_t height, const sf::ContextSettings& settings, Log& log) :
                 mWindowWidth(width), mWindowHeight(height), mSettings(settings),
                 mWindow(sf::VideoMode{width, height},
                         "Prime App", sf::Style::Close, settings),
-                mDeltaClock(), mDt(),
-                mRenderer(mWindow, mDt, mAppLog, mCurrentTexture, mTextureMutex),
-                mBackend( argc, argv, mWindow, mDeltaClock, mDt, mCurrentTexture, mAppLog, mTextureMutex ),
-                mGUI(mWindow, mDt, mBackend, mCurrentTexture, mAppLog),
-                mCurrentTexture(), mTextureMutex(), mAppLog() {}
+                mDeltaClock(), mDt(), mCurrentTexture(), mTextureMutex(),
+                mRenderer(mWindow, mDt,  mCurrentTexture, mTextureMutex),
+                mBackend( argc, argv, mWindow, mCurrentTexture, mDeltaClock, mDt, mTextureMutex ),
+                mGUI(mWindow, mDt, mBackend, mCurrentTexture, log) {}
 
         void Init();
         void Run();
@@ -42,8 +41,6 @@ namespace slr {
 
         sf::Texture                     mCurrentTexture;
         std::mutex                      mTextureMutex;
-
-        Log                             mAppLog;
     };
 }
 

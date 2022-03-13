@@ -4,6 +4,7 @@
 #include "imgui.h"
 
 #include <mutex>
+#include <fmt/format.h>
 
 namespace slr {
     // Taken straight from imgui_demo.cpp
@@ -28,8 +29,6 @@ namespace slr {
         }
 
         void AddLog(const char *fmt, ...) IM_FMTARGS(2) {
-            std::scoped_lock lock(logMutex);
-
             int old_size = Buf.size();
             va_list args;
             va_start(args, fmt);

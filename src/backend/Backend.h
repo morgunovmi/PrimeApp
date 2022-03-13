@@ -9,7 +9,7 @@ namespace slr {
     class Backend {
     public:
         Backend(int argc, char** argv, sf::RenderWindow& window, sf::Texture& texture,
-            sf::Clock& clock, sf::Time& dt, Log& log, std::mutex& mutex) : margc(argc), margv(argv), mWindow(window), mCurrentTexture(texture), mDeltaClock(clock), mDt(dt), mAppLog(log), mTextureMutex(mutex), mIsCapturing() { }
+            sf::Clock& clock, sf::Time& dt, std::mutex& mutex) : margc(argc), margv(argv), mWindow(window), mCurrentTexture(texture), mDeltaClock(clock), mDt(dt), mTextureMutex(mutex), mIsCapturing() { }
 
         void Update() {
             mDt = mDeltaClock.restart();
@@ -37,8 +37,6 @@ namespace slr {
 
         sf::Clock& mDeltaClock;
         sf::Time& mDt;
-
-        Log& mAppLog;
 
     private:
         void PollInput() {

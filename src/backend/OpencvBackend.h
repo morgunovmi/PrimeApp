@@ -7,8 +7,8 @@
 namespace slr {
 class OpencvBackend : public Backend {
 public:
-    OpencvBackend(int argc, char **argv, sf::RenderWindow& window, sf::Clock& deltaClock, sf::Time& dt, sf::Texture& currentTexture, Log& appLog, std::mutex& mutex) :
-        Backend(argc, argv, window, currentTexture, deltaClock, dt, appLog, mutex), mIsOpened(false) {}
+    OpencvBackend(int argc, char **argv, sf::RenderWindow& window, sf::Texture& currentTexture, sf::Clock& deltaClock, sf::Time& dt,  std::mutex& mutex) :
+        Backend(argc, argv, window, currentTexture, deltaClock, dt, mutex), mIsOpened(false) {}
 
     void Init() override;
 

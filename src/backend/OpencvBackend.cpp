@@ -1,14 +1,17 @@
 #include "OpencvBackend.h"
+#include "spdlog/spdlog.h"
+
 
 void slr::OpencvBackend::Init() {
     mWorkerThread = std::jthread([&] {
+        spdlog::info("Opening camera");
         mCamera = cv::VideoCapture{0};
         if (!mCamera.isOpened()) {
             std::cerr << "ERROR: Could not open camera" << std::endl;
             return;
         }
         mIsOpened.store(true);
-        mAppLog.AddLog("Successfult camera init\n");
+        spdlog::info("Successful camera init");
     });
 }
 
@@ -20,11 +23,14 @@ void slr::OpencvBackend::LiveCapture() {
     if (mIsOpened.load()) {
         mIsCapturing.store(true);
         mWorkerThread = std::jthread([&]() {
+            auto counter = 0;
             while (mIsCapturing.load()) {
+                ++counter;
                 cv::Mat frame;
 
                 mCamera >> frame;
-                mAppLog.AddLog("Meme\n");
+                spdlog::info("Frame no {}", counter);
+
                 cv::cvtColor(frame, frame, cv::COLOR_BGR2RGB);
 
                 sf::Image image;
@@ -37,6 +43,7 @@ void slr::OpencvBackend::LiveCapture() {
 
                 std::scoped_lock lock(mTextureMutex);
                 mCurrentTexture.loadFromImage(image);
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
             }
             mCamera.release();
         });

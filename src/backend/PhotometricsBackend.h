@@ -127,8 +127,8 @@ namespace slr {
 
     class PhotometricsBackend : public Backend {
     public:
-        PhotometricsBackend(int argc, char **argv, sf::RenderWindow& window, sf::Clock& deltaClock, sf::Time& dt, sf::Texture& currentTexture, Log& appLog, std::mutex& mutex) :
-            Backend(argc, argv, window, currentTexture, deltaClock, dt, appLog, mutex), mPvcamMutex() {}
+        PhotometricsBackend(int argc, char **argv, sf::RenderWindow& window, sf::Texture& currentTexture, sf::Clock& deltaClock, sf::Time& dt, std::mutex& mutex) :
+            Backend(argc, argv, window, currentTexture, deltaClock, dt, mutex), mPvcamMutex() {}
 
         void Init() override;
 
@@ -141,7 +141,8 @@ namespace slr {
     private:
         bool InitAndOpenOneCamera();
 
-        void PrintError(const char* fmt, ...);
+        template<typename... Args>
+        constexpr void PrintError(fmt::format_string<Args...> fmt, Args &&...args);
 
         bool ShowAppInfo(int argc, char* argv[]);
 
