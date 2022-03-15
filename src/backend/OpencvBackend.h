@@ -13,12 +13,14 @@ constexpr std::string_view SEQ_CAPTURE_PREFIX{"SequenceCapture_"};
 
 class OpencvBackend : public Backend {
 public:
-    OpencvBackend(int argc, char **argv, sf::RenderWindow& window, sf::Texture& currentTexture, sf::Clock& deltaClock, sf::Time& dt,  std::mutex& mutex) :
-        Backend(argc, argv, window, currentTexture, deltaClock, dt, mutex), mIsOpened(false), mFramerate(30) {}
+    OpencvBackend(int argc, char **argv, sf::RenderWindow& window, sf::Texture& currentTexture, sf::Time& dt,  std::mutex& mutex) :
+        Backend(argc, argv, window, currentTexture, dt, mutex), mIsOpened(false), mFramerate(30) {}
 
     void Init() override;
 
     void LiveCapture() override;
+
+    void SequenceCapture(uint32_t nFrames) override;
 
     void TerminateCapture() override;
 

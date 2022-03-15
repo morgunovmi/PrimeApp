@@ -23,20 +23,26 @@ namespace slr {
             ImGui::SFML::ProcessEvent(event);
 
             switch (event.type) {
-                case sf::Event::KeyPressed:
-                    switch (event.key.code) {
-                        case sf::Keyboard::LAlt:
-                            mShowMainMenuBar = !mShowMainMenuBar;
-                            break;
-                        case sf::Keyboard::F1:
-                            mShowFrameInfoOverlay = !mShowFrameInfoOverlay;
-                            break;
-                        default:
-                            break;
-                    }
+            case sf::Event::Closed:
+                mWindow.close();
+                break;
+            case sf::Event::KeyPressed:
+                switch (event.key.code) {
+                case sf::Keyboard::Escape:
+                    mWindow.close();
+                    break;
+                case sf::Keyboard::LAlt:
+                    mShowMainMenuBar = !mShowMainMenuBar;
+                    break;
+                case sf::Keyboard::F1:
+                    mShowFrameInfoOverlay = !mShowFrameInfoOverlay;
                     break;
                 default:
                     break;
+                }
+                break;
+            default:
+                break;
             }
         }
     }
@@ -164,6 +170,14 @@ namespace slr {
 //                mIsCapturing = true;
                 mBackend.LiveCapture();
             }
+
+            static int nFrames = 100;
+            if (ImGui::Button("Sequence capture")/* && mIsInit && !mIsCapturing*/) {
+                //                mIsCapturing = true;
+                mBackend.SequenceCapture(nFrames);
+            }
+            ImGui::SameLine();
+            if (ImGui::SliderInt("Number of frames", &nFrames, 0, 1000)) {}
 
             if (ImGui::Button("Terminate capture") /* && mIsInit && mIsCapturing*/) {
                 mBackend.TerminateCapture();

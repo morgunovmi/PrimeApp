@@ -4,7 +4,8 @@ namespace slr {
     void App::Run() {
         mGUI.Init();
         while (mWindow.isOpen()) {
-            mBackend.Update();
+            mDt = mDeltaClock.restart();
+
             mGUI.Update();
             mRenderer.Render();
             mGUI.Render();

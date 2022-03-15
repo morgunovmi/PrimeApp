@@ -10,18 +10,15 @@ namespace slr {
     class Backend {
     public:
         Backend(int argc, char** argv, sf::RenderWindow& window, sf::Texture& texture,
-            sf::Clock& clock, sf::Time& dt, std::mutex& mutex) : margc(argc), margv(argv), mWindow(window), mCurrentTexture(texture), mDeltaClock(clock), mDt(dt), mTextureMutex(mutex), mIsCapturing() { }
-
-        void Update() {
-            mDt = mDeltaClock.restart();
-            PollInput();
-        }
+            sf::Time& dt, std::mutex& mutex) : margc(argc), margv(argv), mWindow(window), mCurrentTexture(texture), mDt(dt), mTextureMutex(mutex), mIsCapturing() { }
 
         virtual void Init() { }
 
         virtual void LiveCapture() { }
 
-        virtual void TerminateCapture() {}
+        virtual void SequenceCapture(uint32_t nFrames) { }
+
+        virtual void TerminateCapture() { }
 
         virtual ~Backend() = default;
 
@@ -36,40 +33,11 @@ namespace slr {
         std::jthread mWorkerThread;
         std::atomic<bool> mIsCapturing;
 
-        sf::Clock& mDeltaClock;
         sf::Time& mDt;
 
         template <typename... Args>
-        void PrintError(fmt::format_string<Args...> fmt, Args &&...args) {
+        static void PrintError(fmt::format_string<Args...> fmt, Args &&...args) {
             spdlog::error(fmt, args...);
-        }
-
-    private:
-        void PollInput() {
-            sf::Event event{};
-
-            while (mWindow.pollEvent(event)) {
-                ImGui::SFML::ProcessEvent(event);
-
-                switch (event.type) {
-                case sf::Event::Closed:
-                    mWindow.close();
-                    break;
-
-                case sf::Event::KeyPressed:
-                    switch (event.key.code) {
-                    case sf::Keyboard::Escape:
-                        mWindow.close();
-                        break;
-                    default:
-                        break;
-                    }
-                    break;
-
-                default:
-                    break;
-                }
-            }
         }
     };
     }

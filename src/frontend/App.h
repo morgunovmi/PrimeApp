@@ -21,7 +21,7 @@ namespace slr {
                         "Prime App", sf::Style::Close, settings),
                 mDeltaClock(), mDt(), mCurrentTexture(), mTextureMutex(),
                 mRenderer(mWindow, mDt,  mCurrentTexture, mTextureMutex),
-                mBackend( argc, argv, mWindow, mCurrentTexture, mDeltaClock, mDt, mTextureMutex ),
+                mBackend( argc, argv, mWindow, mCurrentTexture, mDt, mTextureMutex ),
                 mGUI(mWindow, mDt, mBackend, log) {}
 
         void Init();

@@ -67,7 +67,7 @@ void slr::OpencvBackend::LiveCapture() {
                     break;
                 }
 
-                spdlog::info("Frame no {}", counter);
+                spdlog::debug("Frame no {}", counter);
 
                 writer.write(frame);
 
@@ -76,7 +76,60 @@ void slr::OpencvBackend::LiveCapture() {
 
                 std::scoped_lock lock(mTextureMutex);
                 mCurrentTexture.loadFromImage(image);
-                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<uint64_t>(1.f / static_cast<float>(mFramerate)) * 1000));
+            }
+            mCamera.release();
+            writer.release();
+        });
+    }
+}
+
+void slr::OpencvBackend::SequenceCapture(uint32_t nFrames) {
+    if (!mIsOpened.load()) {
+        Init();
+        return;
+    }
+
+    if (mIsOpened.load()) {
+        mIsCapturing.store(true);
+        mWorkerThread = std::jthread([&, nFrames]() {
+            const auto t = std::time(nullptr);
+            const auto tm = *std::localtime(&t);
+
+            std::ostringstream oss;
+            oss << std::put_time(&tm, "%H-%M-%S");
+            const auto curTime = oss.str();
+
+            const auto videoPath = fmt::format("{}{}.mp4", SEQ_CAPTURE_PREFIX, curTime);
+
+            cv::VideoWriter writer{videoPath, cv::VideoWriter::fourcc('X', '2', '6', '4'), static_cast<double>(mFramerate),
+                                   cv::Size{static_cast<int>(mCamera.get(cv::CAP_PROP_FRAME_WIDTH)),
+                                            static_cast<int>(mCamera.get(cv::CAP_PROP_FRAME_HEIGHT))}};
+
+            for (uint32_t counter = 0; counter < nFrames && mIsCapturing.load(); ++counter) {
+                spdlog::debug("Counter: {}", counter);
+                cv::Mat frame;
+
+                mCamera >> frame;
+                if (frame.empty()) {
+                    spdlog::info("Got empty frame. Stopping capture...");
+                    mIsCapturing.store(false);
+                    mCamera.release();
+                    writer.release();
+                    mIsOpened.store(false);
+                    break;
+                }
+
+                spdlog::debug("Frame no {}", counter);
+
+                writer.write(frame);
+
+                cv::cvtColor(frame, frame, cv::COLOR_BGR2RGB);
+                const auto image = MatToImage(frame);
+
+                std::scoped_lock lock(mTextureMutex);
+                mCurrentTexture.loadFromImage(image);
+                std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<uint64_t>(1.f / static_cast<float>(mFramerate)) * 1000));
             }
             mCamera.release();
             writer.release();

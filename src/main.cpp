@@ -10,6 +10,13 @@ int main(int argc, char** argv) {
 
     auto sink = std::make_shared<LogSinkMt>(log);
     auto MyLogger = std::make_shared<spdlog::logger>("MyLogger", sink);
+
+#ifndef NDEBUG
+    MyLogger->set_level(spdlog::level::trace);
+#else
+    MyLogger->set_level(spdlog::level::off);
+#endif
+
     spdlog::set_default_logger(MyLogger);
 
     const auto width = 1400;
