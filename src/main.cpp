@@ -1,9 +1,13 @@
 #include <spdlog/logger.h>
 #include <spdlog/spdlog.h>
+#include <pybind11/embed.h>
 
 #include "misc/Log.h"
+#include <fmt/format.h>
 #include "misc/LogSink.h"
 #include "frontend/App.h"
+
+namespace py = pybind11;
 
 int main(int argc, char** argv) {
     slr::Log log;
@@ -18,6 +22,15 @@ int main(int argc, char** argv) {
 #endif
 
     spdlog::set_default_logger(MyLogger);
+
+    {
+        py::scoped_interpreter guard{};  // start the interpreter and keep it alive
+
+        spdlog::info("Hello, World! (From Python)");
+
+        spdlog::info("Resutlt from python : {}",
+                   py::module::import("math").attr("sqrt")(2).cast<double>());
+    }
 
     const auto width = 1400;
     const auto height = 600;

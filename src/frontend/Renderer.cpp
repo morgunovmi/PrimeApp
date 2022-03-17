@@ -6,9 +6,9 @@ namespace slr {
     }
 
     void Renderer::Render() {
-        std::scoped_lock lock(mTextureMutex);
-
         mWindow.clear(sf::Color::Black);
+
+        std::scoped_lock lock(mTextureMutex);
         mWindow.draw(sf::Sprite(mCurrentTexture));
     }
 

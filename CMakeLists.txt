@@ -26,6 +26,7 @@ find_package(ImGui-SFML CONFIG REQUIRED)
 find_package(OpenCV CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
+find_package(pybind11 CONFIG REQUIRED)
 
 set(SFML_LIBS sfml-graphics sfml-system sfml-window)
 
@@ -45,8 +46,17 @@ target_compile_options(${APP_NAME} PRIVATE ${SANITIZER_FLAGS} ${DEFAULT_COMPILER
 target_include_directories(${APP_NAME} PRIVATE
     "src"
     "C:\\Program Files\\Photometrics\\PVCamSDK\\Inc"
-) 
+)
 
-target_link_libraries(${APP_NAME} PRIVATE ${SANITIZER_FLAGS} ${SFML_LIBS} ImGui-SFML::ImGui-SFML pvcam64 ${OpenCV_LIBS} fmt::fmt spdlog::spdlog spdlog::spdlog_header_only)
+target_link_libraries(${APP_NAME} PRIVATE ${SANITIZER_FLAGS} ${SFML_LIBS} ImGui-SFML::ImGui-SFML pvcam64 ${OpenCV_LIBS} fmt::fmt spdlog::spdlog spdlog::spdlog_header_only pybind11::embed)
 
-file(COPY ${CMAKE_SOURCE_DIR}/resources DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_BUILD_TYPE})
+add_custom_command(TARGET ${APP_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E
+        copy_if_different ${CMAKE_SOURCE_DIR}/resources $<TARGET_FILE_DIR:${APP_NAME}>)
+
+file(GLOB PythonLibs ${CMAKE_SOURCE_DIR}/python)
+foreach(PythonLib ${PythonLibs})
+    add_custom_command(TARGET ${APP_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E
+            copy_if_different ${PythonLib} $<TARGET_FILE_DIR:${APP_NAME}>)
+endforeach()
