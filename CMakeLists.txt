@@ -13,8 +13,6 @@ include(cmake/Sanitizers.cmake)
 
 # Set project directories
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE})
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib/${CMAKE_BUILD_TYPE})
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/${CMAKE_GENERATOR_PLATFORM}/${CMAKE_BUILD_TYPE})
 
 # Hardcoded pvcam directory
 link_directories("C:\\Program Files\\Photometrics\\PVCamSDK\\Lib\\amd64")
@@ -32,7 +30,7 @@ set(SFML_LIBS sfml-graphics sfml-system sfml-window)
 
 set(APP_NAME "App")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
-add_executable(${APP_NAME} "" src/backend/Backend.h src/backend/OpencvBackend.h src/backend/OpencvBackend.cpp src/misc/LogSink.h)
+add_executable(${APP_NAME} "" src/backend/Backend.h src/backend/OpencvBackend.h src/backend/OpencvBackend.cpp src/misc/LogSink.h src/videoproc/VideoProcessor.h src/videoproc/VideoProcessor.cpp)
 
 add_subdirectory(src)
 
@@ -53,10 +51,3 @@ target_link_libraries(${APP_NAME} PRIVATE ${SANITIZER_FLAGS} ${SFML_LIBS} ImGui-
 add_custom_command(TARGET ${APP_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E
         copy_if_different ${CMAKE_SOURCE_DIR}/resources $<TARGET_FILE_DIR:${APP_NAME}>)
-
-file(GLOB PythonLibs ${CMAKE_SOURCE_DIR}/python)
-foreach(PythonLib ${PythonLibs})
-    add_custom_command(TARGET ${APP_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E
-            copy_if_different ${PythonLib} $<TARGET_FILE_DIR:${APP_NAME}>)
-endforeach()
