@@ -1,3 +1,6 @@
+#ifndef MESSAGES_H
+#define MESSAGES_H
+
 #include <SFML/Graphics.hpp>
 
 #include <vector>
@@ -21,19 +24,24 @@ struct WorkerLiveCapture {
     sf::Vector2u imageSize;
 };
 
-struct WorkerQuit{};
+struct WorkerQuit {
+};
 
 using WorkerMessage = std::variant<WorkerLiveCapture, WorkerQuit>;
 
 // PythonWorker
 
-struct PythonWorkerEnvInit {};
+struct PythonWorkerEnvInit {
+};
 
 struct PythonWorkerVideoInit {
     std::string path;
     std::string file;
 };
 
-struct PythonWorkerQuit {};
+struct PythonWorkerQuit {
+};
 
 using PythonWorkerMessage = std::variant<PythonWorkerEnvInit, PythonWorkerVideoInit, PythonWorkerQuit>;
+
+#endif

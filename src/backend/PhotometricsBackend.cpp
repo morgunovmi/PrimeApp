@@ -12,7 +12,7 @@ namespace slr {
         pl_error_message(code, pvcamErrMsg);
 
         auto str = fmt::format("\n-----Error code {}-----\n"
-                                     "{}\n", code, pvcamErrMsg);
+                               "{}\n", code, pvcamErrMsg);
 
         auto str1 = fmt::vformat(fmt, fmt::make_format_args(args...));
 
@@ -20,7 +20,7 @@ namespace slr {
         spdlog::error("{}{}{}", str, str1, str2);
     }
 
-    bool PhotometricsBackend::ShowAppInfo(int argc, char* argv[]) {
+    bool PhotometricsBackend::ShowAppInfo(int argc, char *argv[]) {
         std::scoped_lock lock(mPvcamMutex);
 
         auto appName = "<unable to get name>";
@@ -39,9 +39,9 @@ namespace slr {
                      "Application  : {}\n"
                      "PVCAM version: {}.{}.{}\n"
                      "************************************************************\n",
-                    appName, (pvcamVersion >> 8) & 0xFF,
-                    (pvcamVersion >> 4) & 0x0F,
-                    (pvcamVersion >> 0) & 0x0F);
+                     appName, (pvcamVersion >> 8) & 0xFF,
+                     (pvcamVersion >> 4) & 0x0F,
+                     (pvcamVersion >> 0) & 0x0F);
 
         return PV_OK;
     }
@@ -121,7 +121,8 @@ namespace slr {
         mIsPvcamInitialized = false;
     }
 
-    bool PhotometricsBackend::GetSpeedTable(const std::unique_ptr<CameraContext>& ctx, std::vector<SpdtabPort>& speedTable) {
+    bool
+    PhotometricsBackend::GetSpeedTable(const std::unique_ptr<CameraContext> &ctx, std::vector<SpdtabPort> &speedTable) {
         std::vector<SpdtabPort> table;
 
         NVPC ports;
@@ -139,7 +140,7 @@ namespace slr {
 
         rs_bool isGainNameAvailable;
         if (PV_OK != pl_get_param(ctx->hcam, PARAM_GAIN_NAME, ATTR_AVAIL,
-            (void*)&isGainNameAvailable)) {
+                                  (void *) &isGainNameAvailable)) {
             PrintError("Error reading ATTR_AVAIL of PARAM_GAIN_NAME");
             return false;
         }
@@ -149,18 +150,18 @@ namespace slr {
         for (size_t pi = 0; pi < ports.size(); pi++) {
             // Set readout port
             if (PV_OK != pl_set_param(ctx->hcam, PARAM_READOUT_PORT,
-                (void*)&ports[pi].value)) {
+                                      (void *) &ports[pi].value)) {
                 PrintError(
-                    "pl_set_param(PARAM_READOUT_PORT) error");
+                        "pl_set_param(PARAM_READOUT_PORT) error");
                 return false;
             }
 
             // Get number of available speeds for this port
             uns32 speedCount;
             if (PV_OK != pl_get_param(ctx->hcam, PARAM_SPDTAB_INDEX, ATTR_COUNT,
-                (void*)&speedCount)) {
+                                      (void *) &speedCount)) {
                 PrintError(
-                    "pl_get_param(PARAM_SPDTAB_INDEX) error");
+                        "pl_get_param(PARAM_SPDTAB_INDEX) error");
                 return false;
             }
 
@@ -169,11 +170,11 @@ namespace slr {
             port.name = ports[pi].name;
 
             // Iterate through all the speeds
-            for (int16 si = 0; si < (int16)speedCount; si++) {
+            for (int16 si = 0; si < (int16) speedCount; si++) {
                 // Set camera to new speed index
-                if (PV_OK != pl_set_param(ctx->hcam, PARAM_SPDTAB_INDEX, (void*)&si)) {
+                if (PV_OK != pl_set_param(ctx->hcam, PARAM_SPDTAB_INDEX, (void *) &si)) {
                     PrintError(
-                        "pl_set_param(PARAM_SPDTAB_INDEX) error");
+                            "pl_set_param(PARAM_SPDTAB_INDEX) error");
                     return false;
                 }
 
@@ -182,17 +183,17 @@ namespace slr {
                 // frequency of the port/speed pair.
                 uns16 pixTime;
                 if (PV_OK != pl_get_param(ctx->hcam, PARAM_PIX_TIME, ATTR_CURRENT,
-                    (void*)&pixTime)) {
+                                          (void *) &pixTime)) {
                     PrintError(
-                        "pl_get_param(PARAM_PIX_TIME) error");
+                            "pl_get_param(PARAM_PIX_TIME) error");
                     return false;
                 }
 
                 uns32 gainCount;
                 if (PV_OK != pl_get_param(ctx->hcam, PARAM_GAIN_INDEX, ATTR_COUNT,
-                    (void*)&gainCount)) {
+                                          (void *) &gainCount)) {
                     PrintError(
-                        "pl_get_param(PARAM_GAIN_INDEX) error");
+                            "pl_get_param(PARAM_GAIN_INDEX) error");
                     return false;
                 }
 
@@ -201,20 +202,20 @@ namespace slr {
                 speed.pixTimeNs = pixTime;
 
                 // Iterate through all the gains, notice it starts at value 1!
-                for (int16 gi = 1; gi <= (int16)gainCount; gi++) {
+                for (int16 gi = 1; gi <= (int16) gainCount; gi++) {
                     // Set camera to new gain index
-                    if (PV_OK != pl_set_param(ctx->hcam, PARAM_GAIN_INDEX, (void*)&gi)) {
+                    if (PV_OK != pl_set_param(ctx->hcam, PARAM_GAIN_INDEX, (void *) &gi)) {
                         PrintError(
-                            "pl_set_param(PARAM_GAIN_INDEX) error");
+                                "pl_set_param(PARAM_GAIN_INDEX) error");
                         return false;
                     }
 
                     // Get bit depth for the current gain
                     int16 bitDepth;
                     if (PV_OK != pl_get_param(ctx->hcam, PARAM_BIT_DEPTH, ATTR_CURRENT,
-                        (void*)&bitDepth)) {
+                                              (void *) &bitDepth)) {
                         PrintError(
-                            "pl_get_param(PARAM_BIT_DEPTH) error");
+                                "pl_get_param(PARAM_BIT_DEPTH) error");
                         return false;
                     }
 
@@ -225,9 +226,9 @@ namespace slr {
                     if (isGainNameSupported) {
                         char gainName[MAX_GAIN_NAME_LEN];
                         if (PV_OK != pl_get_param(ctx->hcam, PARAM_GAIN_NAME,
-                            ATTR_CURRENT, (void*)gainName)) {
+                                                  ATTR_CURRENT, (void *) gainName)) {
                             PrintError(
-                                "pl_get_param(PARAM_GAIN_NAME) error");
+                                    "pl_get_param(PARAM_GAIN_NAME) error");
                             return false;
                         }
 
@@ -247,7 +248,7 @@ namespace slr {
         return true;
     }
 
-    bool PhotometricsBackend::OpenCamera(std::unique_ptr<CameraContext>& ctx) {
+    bool PhotometricsBackend::OpenCamera(std::unique_ptr<CameraContext> &ctx) {
         if (ctx->isCamOpen)
             return true;
 
@@ -256,7 +257,7 @@ namespace slr {
         // The name is obtained in InitPVCAM() function when listing all cameras
         // in the system.
         if (PV_OK != pl_cam_open(ctx->camName, &ctx->hcam, OPEN_EXCLUSIVE)) {
-            PrintError( "pl_cam_open() error");
+            PrintError("pl_cam_open() error");
             return false;
         }
         ctx->isCamOpen = true;
@@ -266,14 +267,14 @@ namespace slr {
         if (!IsParamAvailable(ctx->hcam, PARAM_DD_VERSION, "PARAM_DD_VERSION"))
             return false;
         uns16 ddVersion;
-        if (PV_OK != pl_get_param(ctx->hcam, PARAM_DD_VERSION, ATTR_CURRENT, (void*)&ddVersion)) {
-            PrintError( "pl_get_param(PARAM_DD_VERSION) error");
+        if (PV_OK != pl_get_param(ctx->hcam, PARAM_DD_VERSION, ATTR_CURRENT, (void *) &ddVersion)) {
+            PrintError("pl_get_param(PARAM_DD_VERSION) error");
             return false;
         }
         spdlog::info("  Device driver version: {}.{}.{}",
-            (ddVersion >> 8) & 0xFF,
-            (ddVersion >> 4) & 0x0F,
-            (ddVersion >> 0) & 0x0F);
+                     (ddVersion >> 8) & 0xFF,
+                     (ddVersion >> 4) & 0x0F,
+                     (ddVersion >> 0) & 0x0F);
 
         // Historically, the chip name also included camera model name and it was commonly used 
         // as camera identifier. On recent cameras, the camera model name should be read from 
@@ -281,8 +282,8 @@ namespace slr {
         if (!IsParamAvailable(ctx->hcam, PARAM_CHIP_NAME, "PARAM_CHIP_NAME"))
             return false;
         char chipName[CCD_NAME_LEN];
-        if (PV_OK != pl_get_param(ctx->hcam, PARAM_CHIP_NAME, ATTR_CURRENT, (void*)chipName)) {
-            PrintError( "pl_get_param(PARAM_CHIP_NAME) error");
+        if (PV_OK != pl_get_param(ctx->hcam, PARAM_CHIP_NAME, ATTR_CURRENT, (void *) chipName)) {
+            PrintError("pl_get_param(PARAM_CHIP_NAME) error");
             return false;
         }
         spdlog::info("  Sensor chip name: {}", chipName);
@@ -292,30 +293,30 @@ namespace slr {
             return false;
         uns16 fwVersion;
         if (PV_OK != pl_get_param(ctx->hcam, PARAM_CAM_FW_VERSION, ATTR_CURRENT,
-            (void*)&fwVersion)) {
+                                  (void *) &fwVersion)) {
             PrintError(
-                "pl_get_param(PARAM_CAM_FW_VERSION) error");
+                    "pl_get_param(PARAM_CAM_FW_VERSION) error");
             return false;
         }
         // The camera major and minor firmware version is encoded in a 2-byte number.
         spdlog::info("  Camera firmware version: {}.{}",
-            (fwVersion >> 8) & 0xFF,
-            (fwVersion >> 0) & 0xFF);
+                     (fwVersion >> 8) & 0xFF,
+                     (fwVersion >> 0) & 0xFF);
 
         // Read the camera sensor serial size (sensor width/number of columns)
         if (!IsParamAvailable(ctx->hcam, PARAM_SER_SIZE, "PARAM_SER_SIZE"))
             return false;
         if (PV_OK != pl_get_param(ctx->hcam, PARAM_SER_SIZE, ATTR_CURRENT,
-            (void*)&ctx->sensorResX)) {
-            PrintError( "Couldn't read CCD X-resolution");
+                                  (void *) &ctx->sensorResX)) {
+            PrintError("Couldn't read CCD X-resolution");
             return false;
         }
         // Read the camera sensor parallel size (sensor height/number of rows)
         if (!IsParamAvailable(ctx->hcam, PARAM_PAR_SIZE, "PARAM_PAR_SIZE"))
             return false;
         if (PV_OK != pl_get_param(ctx->hcam, PARAM_PAR_SIZE, ATTR_CURRENT,
-            (void*)&ctx->sensorResY)) {
-            PrintError( "Couldn't read CCD Y-resolution");
+                                  (void *) &ctx->sensorResY)) {
+            PrintError("Couldn't read CCD Y-resolution");
             return false;
         }
         spdlog::info("  Sensor size: {}x{} px", ctx->sensorResX, ctx->sensorResY);
@@ -341,16 +342,16 @@ namespace slr {
 
         // Speed table has been created, print it out
         std::string table{"  Speed table:\n"};
-        for (const auto& port : ctx->speedTable) {
+        for (const auto &port: ctx->speedTable) {
             table.append(fmt::format("  - port '{}', value {}\n", port.name, port.value));
-            for (const auto& speed : port.speeds) {
+            for (const auto &speed: port.speeds) {
                 table.append(fmt::format("    - speed index {}, running at {} MHz\n",
-                    speed.index, 1000 / (float)speed.pixTimeNs));
-                for (const auto& gain : speed.gains) {
+                                         speed.index, 1000 / (float) speed.pixTimeNs));
+                for (const auto &gain: speed.gains) {
                     table.append(fmt::format("      - gain index {}, {}bit-depth {} bpp\n",
-                        gain.index,
-                        (gain.name.empty()) ? "" : "'" + gain.name + "', ",
-                        gain.bitDepth));
+                                             gain.index,
+                                             (gain.name.empty()) ? "" : "'" + gain.name + "', ",
+                                             gain.bitDepth));
 
                 }
             }
@@ -360,22 +361,22 @@ namespace slr {
         // Initialize the camera to the first port, first speed and first gain
 
         if (PV_OK != pl_set_param(ctx->hcam, PARAM_READOUT_PORT,
-            (void*)&ctx->speedTable[0].value)) {
-            PrintError( "Readout port could not be set");
+                                  (void *) &ctx->speedTable[0].value)) {
+            PrintError("Readout port could not be set");
             return false;
         }
         spdlog::info("  Setting readout port to '{}'", ctx->speedTable[0].name);
 
         if (PV_OK != pl_set_param(ctx->hcam, PARAM_SPDTAB_INDEX,
-            (void*)&ctx->speedTable[0].speeds[0].index)) {
-            PrintError( "Readout port could not be set");
+                                  (void *) &ctx->speedTable[0].speeds[0].index)) {
+            PrintError("Readout port could not be set");
             return false;
         }
         spdlog::info("Setting readout speed index to {}", ctx->speedTable[0].speeds[0].index);
 
         if (PV_OK != pl_set_param(ctx->hcam, PARAM_GAIN_INDEX,
-            (void*)&ctx->speedTable[0].speeds[0].gains[0].index)) {
-            PrintError( "Gain index could not be set");
+                                  (void *) &ctx->speedTable[0].speeds[0].gains[0].index)) {
+            PrintError("Gain index could not be set");
             return false;
         }
         spdlog::info("  Setting gain index to {}", ctx->speedTable[0].speeds[0].gains[0].index);
@@ -389,9 +390,9 @@ namespace slr {
         if (!IsParamAvailable(ctx->hcam, PARAM_CLEAR_CYCLES, "PARAM_CLEAR_CYCLES"))
             return false;
         uns16 clearCycles = 2;
-        if (PV_OK != pl_set_param(ctx->hcam, PARAM_CLEAR_CYCLES, (void*)&clearCycles)) {
+        if (PV_OK != pl_set_param(ctx->hcam, PARAM_CLEAR_CYCLES, (void *) &clearCycles)) {
             PrintError(
-                "pl_set_param(PARAM_CLEAR_CYCLES) error");
+                    "pl_set_param(PARAM_CLEAR_CYCLES) error");
             return false;
         }
 
@@ -400,18 +401,18 @@ namespace slr {
         ctx->isFrameTransfer = false;
         rs_bool isFrameTransfer;
         if (PV_OK != pl_get_param(ctx->hcam, PARAM_FRAME_CAPABLE, ATTR_AVAIL,
-            (void*)&isFrameTransfer)) {
+                                  (void *) &isFrameTransfer)) {
             isFrameTransfer = FALSE;
             PrintError(
-                "pl_get_param(PARAM_FRAME_CAPABLE) error");
+                    "pl_get_param(PARAM_FRAME_CAPABLE) error");
             return false;
         }
         if (isFrameTransfer) {
             if (PV_OK != pl_get_param(ctx->hcam, PARAM_FRAME_CAPABLE, ATTR_CURRENT,
-                (void*)&isFrameTransfer)) {
+                                      (void *) &isFrameTransfer)) {
                 isFrameTransfer = FALSE;
                 PrintError(
-                    "pl_get_param(PARAM_FRAME_CAPABLE) error");
+                        "pl_get_param(PARAM_FRAME_CAPABLE) error");
                 return false;
             }
             ctx->isFrameTransfer = isFrameTransfer == TRUE;
@@ -428,17 +429,17 @@ namespace slr {
             return false;
         if (ctx->isFrameTransfer) {
             int32 PMode = PMODE_FT;
-            if (PV_OK != pl_set_param(ctx->hcam, PARAM_PMODE, (void*)&PMode)) {
-                PrintError( "pl_set_param(PARAM_PMODE) error");
+            if (PV_OK != pl_set_param(ctx->hcam, PARAM_PMODE, (void *) &PMode)) {
+                PrintError("pl_set_param(PARAM_PMODE) error");
                 return false;
             }
         }
-        // If not a Frame Transfer sensor (i.e. Interline), set PARAM_PMODE to
-        // PMODE_NORMAL, or PMODE_ALT_NORMAL.
+            // If not a Frame Transfer sensor (i.e. Interline), set PARAM_PMODE to
+            // PMODE_NORMAL, or PMODE_ALT_NORMAL.
         else {
             int32 PMode = PMODE_NORMAL;
-            if (PV_OK != pl_set_param(ctx->hcam, PARAM_PMODE, (void*)&PMode)) {
-                PrintError( "pl_set_param(PARAM_PMODE) error");
+            if (PV_OK != pl_set_param(ctx->hcam, PARAM_PMODE, (void *) &PMode)) {
+                PrintError("pl_set_param(PARAM_PMODE) error");
                 return false;
             }
         }
@@ -457,7 +458,7 @@ namespace slr {
         return true;
     }
 
-    void PhotometricsBackend::CloseCamera(std::unique_ptr<CameraContext>& ctx) {
+    void PhotometricsBackend::CloseCamera(std::unique_ptr<CameraContext> &ctx) {
         if (!ctx->isCamOpen) {
             return;
         }
@@ -473,7 +474,7 @@ namespace slr {
     void PhotometricsBackend::CloseAllCamerasAndUninit() {
         printf("\n");
 
-        for (auto& ctx : mCameraContexts) {
+        for (auto &ctx: mCameraContexts) {
             CloseCamera(ctx);
         }
 
@@ -509,7 +510,7 @@ namespace slr {
         return true;
     }
 
-    bool PhotometricsBackend::ReadEnumeration(int16 hcam, NVPC* pNvpc, uns32 paramID, const char* paramName) {
+    bool PhotometricsBackend::ReadEnumeration(int16 hcam, NVPC *pNvpc, uns32 paramID, const char *paramName) {
         if (!pNvpc || !paramName) {
             return false;
         }
@@ -519,7 +520,7 @@ namespace slr {
         }
 
         uns32 count;
-        if (PV_OK != pl_get_param(hcam, paramID, ATTR_COUNT, (void*)&count)) {
+        if (PV_OK != pl_get_param(hcam, paramID, ATTR_COUNT, (void *) &count)) {
             PrintError("pl_get_param({}) error", paramName);
             return false;
         }
@@ -529,12 +530,12 @@ namespace slr {
             // Retrieve the enum string length
             uns32 strLength;
             if (PV_OK != pl_enum_str_length(hcam, paramID, i, &strLength)) {
-                PrintError( "pl_enum_str_length({}) error", paramName);
+                PrintError("pl_enum_str_length({}) error", paramName);
                 return false;
             }
 
             // Allocate the destination string
-            char* name = new (std::nothrow) char[strLength];
+            char *name = new(std::nothrow) char[strLength];
             if (!name) {
                 PrintError("Unable to allocate memory for {} enum item name", paramName);
                 return false;
@@ -560,14 +561,14 @@ namespace slr {
         return !pNvpc->empty();
     }
 
-    bool PhotometricsBackend::IsParamAvailable(int16 hcam, uns32 paramID, const char* paramName) {
+    bool PhotometricsBackend::IsParamAvailable(int16 hcam, uns32 paramID, const char *paramName) {
 
         if (paramName == nullptr) {
             return PV_FAIL;
         }
 
         rs_bool isAvailable;
-        if (PV_OK != pl_get_param(hcam, paramID, ATTR_AVAIL, (void*)&isAvailable)) {
+        if (PV_OK != pl_get_param(hcam, paramID, ATTR_AVAIL, (void *) &isAvailable)) {
             PrintError("Error reading ATTR_AVAIL of {}", paramName);
             return PV_FAIL;
         }
@@ -579,32 +580,32 @@ namespace slr {
         return PV_OK;
     }
 
-    void PhotometricsBackend::UpdateCtxImageFormat(std::unique_ptr<CameraContext>& ctx) {
+    void PhotometricsBackend::UpdateCtxImageFormat(std::unique_ptr<CameraContext> &ctx) {
         ctx->imageFormat = PL_IMAGE_FORMAT_MONO8;
 
         rs_bool isAvailable;
         if (PV_OK != pl_get_param(ctx->hcam, PARAM_IMAGE_FORMAT, ATTR_AVAIL,
-            (void*)&isAvailable))
+                                  (void *) &isAvailable))
             return;
         if (isAvailable == FALSE)
             return;
 
         int32 imageFormat;
         if (PV_OK != pl_get_param(ctx->hcam, PARAM_IMAGE_FORMAT, ATTR_CURRENT,
-            (void*)&imageFormat))
+                                  (void *) &imageFormat))
             return;
 
         ctx->imageFormat = imageFormat;
     }
 
-    bool PhotometricsBackend::SelectCameraExpMode(const std::unique_ptr<CameraContext>& ctx, int16& expMode,
-        int16 legacyTrigMode, int16 extendedTrigMode) {
+    bool PhotometricsBackend::SelectCameraExpMode(const std::unique_ptr<CameraContext> &ctx, int16 &expMode,
+                                                  int16 legacyTrigMode, int16 extendedTrigMode) {
         NVPC triggerModes;
         if (!ReadEnumeration(ctx->hcam, &triggerModes, PARAM_EXPOSURE_MODE, "PARAM_EXPOSURE_MODE")) {
             return false;
         }
         // Try to find the legacy mode first
-        for (const NVP& nvp : triggerModes) {
+        for (const NVP &nvp: triggerModes) {
             if (nvp.value == legacyTrigMode) {
                 // If this is a legacy (mostly CCD) camera, return the legacy mode
                 expMode = legacyTrigMode;
@@ -613,7 +614,7 @@ namespace slr {
         }
 
         // If not, select the extended mode and choose the first expose-out mode.
-        for (const NVP& nvp : triggerModes) {
+        for (const NVP &nvp: triggerModes) {
             if (nvp.value == extendedTrigMode) {
                 // Modern cameras should all support the expose-out mode, but let's make sure.
                 if (!IsParamAvailable(ctx->hcam, PARAM_EXPOSE_OUT_MODE, "PARAM_EXPOSE_OUT_MODE")) {
@@ -643,7 +644,7 @@ namespace slr {
     }
 
     void PhotometricsBackend::LiveCapture() {
-        auto& ctx = mCameraContexts[0];
+        auto &ctx = mCameraContexts[0];
         uns32 exposureBytes;
         const uns32 exposureTime = 40; // milliseconds
 
@@ -662,7 +663,7 @@ namespace slr {
         the pl_exp_setup_seq() that returns a buffer size for the entire sequence).
         */
         if (PV_OK != pl_exp_setup_cont(ctx->hcam, 1, &ctx->region, expMode,
-            exposureTime, &exposureBytes, bufferMode)) {
+                                       exposureTime, &exposureBytes, bufferMode)) {
             PrintError("pl_exp_setup_cont() error\n");
             CloseAllCamerasAndUninit();
             return;
@@ -675,7 +676,7 @@ namespace slr {
         Now allocate the buffer memory. The application is in control of the
         circular buffer and should allocate memory of appropriate size.
         */
-        uns8* circBufferInMemory = new (std::nothrow) uns8[circBufferBytes];
+        uns8 *circBufferInMemory = new(std::nothrow) uns8[circBufferBytes];
         if (!circBufferInMemory) {
             PrintError("Unable to allocate buffer for camera {}\n", ctx->hcam);
             CloseAllCamerasAndUninit();
@@ -712,8 +713,8 @@ namespace slr {
             may be lost unnoticed.
             */
             while (PV_OK == pl_exp_check_cont_status(ctx->hcam, &status, &byte_cnt, &buffer_cnt)
-                && status != FRAME_AVAILABLE && status != READOUT_NOT_ACTIVE
-                && !ctx->threadAbortFlag) {
+                   && status != FRAME_AVAILABLE && status != READOUT_NOT_ACTIVE
+                   && !ctx->threadAbortFlag) {
                 /**
                 WARNING: Removing the sleep or setting it to a value too low may significantly increase
                 the CPU load. Shorter sleeps do not guarantee the code does not miss a frame 'notification'
@@ -729,7 +730,7 @@ namespace slr {
             }
             if (status == READOUT_FAILED) {
                 PrintError("Frame #{} readout failed on camera {}\n",
-                    framesAcquired + 1, ctx->hcam);
+                           framesAcquired + 1, ctx->hcam);
                 errorOccurred = true;
                 return;
             }
@@ -739,7 +740,7 @@ namespace slr {
             function. Optionally, the pl_exp_get_latest_frame_ex() can be used to receive the address
             together with a #FRAME_INFO structure. This structure contains frame number and timestamps.
             */
-            void* frameAddress;
+            void *frameAddress;
 
             FRAME_INFO info{};
             if (PV_OK != pl_exp_get_latest_frame_ex(ctx->hcam, &frameAddress, &info)) {
@@ -749,7 +750,7 @@ namespace slr {
             }
 
             spdlog::info("Frame #{} readout successfully completed on camera {}",
-                framesAcquired + 1, ctx->hcam);
+                         framesAcquired + 1, ctx->hcam);
 
             spdlog::info("Size is {} : {}", exposureBytes, ctx->sensorResX * ctx->sensorResY);
             //ShowImage(ctx, frameAddress, exposureBytes);
@@ -762,7 +763,7 @@ namespace slr {
         spdlog::info("\n>>>\n"
                      ">>> CLI TERMINATION HANDLER");
 
-        for (auto& ctx : mCameraContexts) {
+        for (auto &ctx: mCameraContexts) {
             if (!ctx || !ctx->isCamOpen) {
                 continue;
             }

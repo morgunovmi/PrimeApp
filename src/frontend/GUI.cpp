@@ -9,7 +9,7 @@ namespace slr {
     bool GUI::Init() {
         ImGui::SFML::Init(mWindow);
 
-        auto& io = ImGui::GetIO();
+        auto &io = ImGui::GetIO();
         mHubballiFont = io.Fonts->AddFontFromFileTTF("./resources/fonts/hubballi-regular.ttf", 20);
         ImGui::SFML::UpdateFontTexture();
 
@@ -23,26 +23,26 @@ namespace slr {
             ImGui::SFML::ProcessEvent(event);
 
             switch (event.type) {
-            case sf::Event::Closed:
-                mWindow.close();
-                break;
-            case sf::Event::KeyPressed:
-                switch (event.key.code) {
-                case sf::Keyboard::Escape:
+                case sf::Event::Closed:
                     mWindow.close();
                     break;
-                case sf::Keyboard::LAlt:
-                    mShowMainMenuBar = !mShowMainMenuBar;
-                    break;
-                case sf::Keyboard::F1:
-                    mShowFrameInfoOverlay = !mShowFrameInfoOverlay;
+                case sf::Event::KeyPressed:
+                    switch (event.key.code) {
+                        case sf::Keyboard::Escape:
+                            mWindow.close();
+                            break;
+                        case sf::Keyboard::LAlt:
+                            mShowMainMenuBar = !mShowMainMenuBar;
+                            break;
+                        case sf::Keyboard::F1:
+                            mShowFrameInfoOverlay = !mShowFrameInfoOverlay;
+                            break;
+                        default:
+                            break;
+                    }
                     break;
                 default:
                     break;
-                }
-                break;
-            default:
-                break;
             }
         }
     }
@@ -59,11 +59,12 @@ namespace slr {
 
     void GUI::ShowFrameInfoOverlay() {
         static int corner = 1;
-        auto window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
-        if (corner != -1)
-        {
+        auto window_flags =
+                ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings |
+                ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
+        if (corner != -1) {
             const auto PAD = 10.0f;
-            const auto* viewport = ImGui::GetMainViewport();
+            const auto *viewport = ImGui::GetMainViewport();
             auto work_pos = viewport->WorkPos; // Use work area to avoid menu-bar/task-bar, if any!
             auto work_size = viewport->WorkSize;
             ImVec2 window_pos, window_pos_pivot;
@@ -75,20 +76,18 @@ namespace slr {
             window_flags |= ImGuiWindowFlags_NoMove;
         }
         ImGui::SetNextWindowBgAlpha(0.35f); // Transparent background
-        if (ImGui::Begin("FrameInfoOverlay", &mShowFrameInfoOverlay, window_flags))
-        {
+        if (ImGui::Begin("FrameInfoOverlay", &mShowFrameInfoOverlay, window_flags)) {
             ImGui::Text("Frame info");
             ImGui::Separator();
             ImGui::Text("Frametime: %d ms\nFPS: %.3f", mDt.asMilliseconds(), 1.f / mDt.asSeconds());
             ImGui::PlotLines("Frame Times", &mFrameTimeQueue.front(), static_cast<int>(mFrameTimeQueue.size()),
                              0, nullptr, FLT_MAX, FLT_MAX, ImVec2{100, 40});
 
-            if (ImGui::BeginPopupContextWindow())
-            {
-                if (ImGui::MenuItem("Custom",       nullptr, corner == -1)) corner = -1;
-                if (ImGui::MenuItem("Top-left",     nullptr, corner == 0)) corner = 0;
-                if (ImGui::MenuItem("Top-right",    nullptr, corner == 1)) corner = 1;
-                if (ImGui::MenuItem("Bottom-left",  nullptr, corner == 2)) corner = 2;
+            if (ImGui::BeginPopupContextWindow()) {
+                if (ImGui::MenuItem("Custom", nullptr, corner == -1)) corner = -1;
+                if (ImGui::MenuItem("Top-left", nullptr, corner == 0)) corner = 0;
+                if (ImGui::MenuItem("Top-right", nullptr, corner == 1)) corner = 1;
+                if (ImGui::MenuItem("Bottom-left", nullptr, corner == 2)) corner = 2;
                 if (ImGui::MenuItem("Bottom-right", nullptr, corner == 3)) corner = 3;
                 if (ImGui::MenuItem("Close")) mShowFrameInfoOverlay = false;
                 ImGui::EndPopup();
@@ -98,10 +97,8 @@ namespace slr {
     }
 
     void GUI::ShowMainMenuBar() {
-        if (ImGui::BeginMainMenuBar())
-        {
-            if (ImGui::BeginMenu("Windows"))
-            {
+        if (ImGui::BeginMainMenuBar()) {
+            if (ImGui::BeginMenu("Windows")) {
                 if (ImGui::MenuItem("Frame Info", "F1", &mShowFrameInfoOverlay)) {}
                 if (ImGui::MenuItem("App Log", "F2", &mShowAppLog)) {}
                 ImGui::EndMenu();
@@ -111,10 +108,10 @@ namespace slr {
     }
 
     void GUI::ShowViewport() {
-        const auto* main_viewport = ImGui::GetMainViewport();
+        const auto *main_viewport = ImGui::GetMainViewport();
         ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkPos.x, main_viewport->WorkPos.y));
         ImGui::SetNextWindowSize(ImVec2(static_cast<float>(mWindow.getSize().x) * 0.6f,
-            static_cast<float>(mWindow.getSize().y)));
+                                        static_cast<float>(mWindow.getSize().y)));
 
         ImGuiWindowFlags window_flags = 0;
         window_flags |= ImGuiWindowFlags_NoTitleBar;
@@ -129,9 +126,12 @@ namespace slr {
         // We take advantage of a rarely used feature: multiple calls to Begin()/End() are appending to the _same_ window.
         // Most of the contents of the window will be added by the log.Draw() call.
 
-        const auto* main_viewport = ImGui::GetMainViewport();
-        ImGui::SetNextWindowPos(ImVec2(static_cast<float>(main_viewport->WorkPos.x) + static_cast<float>(mWindow.getSize().x) * 0.6f, main_viewport->WorkPos.y));
-        ImGui::SetNextWindowSize(ImVec2(static_cast<float>(mWindow.getSize().x) * 0.4f, static_cast<float>(mWindow.getSize().y) / 2.f));
+        const auto *main_viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(
+                ImVec2(static_cast<float>(main_viewport->WorkPos.x) + static_cast<float>(mWindow.getSize().x) * 0.6f,
+                       main_viewport->WorkPos.y));
+        ImGui::SetNextWindowSize(
+                ImVec2(static_cast<float>(mWindow.getSize().x) * 0.4f, static_cast<float>(mWindow.getSize().y) / 2.f));
 
         ImGuiWindowFlags window_flags = 0;
         window_flags |= ImGuiWindowFlags_NoTitleBar;
@@ -148,9 +148,12 @@ namespace slr {
     }
 
     void GUI::ShowActionButtons() {
-        const auto* main_viewport = ImGui::GetMainViewport();
-        ImGui::SetNextWindowPos(ImVec2(static_cast<float>(main_viewport->WorkPos.x) + static_cast<float>(mWindow.getSize().x) * 0.6f, main_viewport->WorkPos.y + static_cast<float>(mWindow.getSize().y) / 2.f));
-        ImGui::SetNextWindowSize(ImVec2(static_cast<float>(mWindow.getSize().x) * 0.4f, static_cast<float>(mWindow.getSize().y) / 2.f - main_viewport->WorkPos.y));
+        const auto *main_viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(
+                ImVec2(static_cast<float>(main_viewport->WorkPos.x) + static_cast<float>(mWindow.getSize().x) * 0.6f,
+                       main_viewport->WorkPos.y + static_cast<float>(mWindow.getSize().y) / 2.f));
+        ImGui::SetNextWindowSize(ImVec2(static_cast<float>(mWindow.getSize().x) * 0.4f,
+                                        static_cast<float>(mWindow.getSize().y) / 2.f - main_viewport->WorkPos.y));
 
         auto window_flags = 0;
         window_flags |= ImGuiWindowFlags_NoTitleBar;

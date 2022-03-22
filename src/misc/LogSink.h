@@ -6,16 +6,16 @@
 
 #include <mutex>
 
-template <typename Mutex>
+template<typename Mutex>
 class LogSink : public spdlog::sinks::base_sink<Mutex> {
 public:
-    explicit LogSink(slr::Log& log) : spdlog::sinks::base_sink<Mutex>(), mLog(log) {}
+    explicit LogSink(slr::Log &log) : spdlog::sinks::base_sink<Mutex>(), mLog(log) {}
 
 private:
-    slr::Log& mLog;
+    slr::Log &mLog;
 
 protected:
-    void sink_it_(const spdlog::details::log_msg& msg) override {
+    void sink_it_(const spdlog::details::log_msg &msg) override {
         // log_msg is a struct containing the log entry info like level, timestamp, thread id etc.
         // msg.raw contains pre formatted log
 

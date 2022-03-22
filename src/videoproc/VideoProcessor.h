@@ -3,7 +3,7 @@
 
 #include <pybind11/embed.h>
 
-#include "PythonWorker.h"
+#include "workers/PythonWorker.h"
 #include "spdlog/spdlog.h"
 
 namespace py = pybind11;
@@ -11,9 +11,14 @@ using namespace py::literals;
 
 class VideoProcessor {
 public:
-    VideoProcessor() : mMessageQueue(), mPythonWorker(1, mMessageQueue) { mPythonWorker.Run(); Init(); }
+    VideoProcessor() : mMessageQueue(), mPythonWorker(1, mMessageQueue) {
+        mPythonWorker.Run();
+        Init();
+    }
 
-    void Test() { mMessageQueue.Send(PythonWorkerVideoInit{.path = R"(C:\Users\Max\Desktop\Samples\)", .file = R"(a1.tif)"}); }
+    void Test() {
+        mMessageQueue.Send(PythonWorkerVideoInit{.path = R"(C:\Users\Max\Desktop\Samples\)", .file = R"(a1.tif)"});
+    }
 
     ~VideoProcessor() { mMessageQueue.Send(PythonWorkerQuit{}); }
 

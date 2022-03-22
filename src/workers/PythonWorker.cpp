@@ -1,9 +1,9 @@
-#include <spdlog/spdlog.h>
+#include "spdlog/spdlog.h"
 
 #include "PythonWorker.h"
 
 void PythonWorker::Run() {
-    mWorkerThread = std::jthread(&PythonWorker::Main, this);
+    mThread = std::jthread(&PythonWorker::Main, this);
 }
 
 [[noreturn]] void PythonWorker::Main() {
@@ -14,7 +14,7 @@ void PythonWorker::Run() {
     mRunning = true;
 
     while (mRunning) {
-        std::visit(visitor, mQueue.WaitForMessage());
+        std::visit(visitor, mWorkerMessageQueue.WaitForMessage());
     }
 }
 

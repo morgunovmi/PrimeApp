@@ -13,10 +13,14 @@ namespace slr {
 
     class GUI {
     public:
-        GUI(sf::RenderWindow& window, sf::Time& dt, Backend& backend, Log& log) : mWindow(window), mDt(dt),
-            mFrameTimeQueue(),
-            mShowMainMenuBar(true), mShowFrameInfoOverlay(false), mShowAppLog(true),
-            mBackend(backend), mAppLog(log), mHubballiFont(), mIsInit(false), mIsCapturing(false) {}
+        GUI(sf::RenderWindow &window, sf::Time &dt, Backend &backend, Log &log) : mWindow(window), mDt(dt),
+                                                                                  mFrameTimeQueue(),
+                                                                                  mShowMainMenuBar(true),
+                                                                                  mShowFrameInfoOverlay(false),
+                                                                                  mShowAppLog(true),
+                                                                                  mBackend(backend), mAppLog(log),
+                                                                                  mHubballiFont(), mIsInit(false),
+                                                                                  mIsCapturing(false) {}
 
         bool Init();
 
@@ -30,28 +34,32 @@ namespace slr {
         void PollEvents();
 
         void ShowMainMenuBar();
+
         void ShowFrameInfoOverlay();
+
         void ShowViewport();
+
         void ShowAppLog();
+
         void ShowActionButtons();
 
     private:
-        sf::RenderWindow&   mWindow;
-        sf::Time&           mDt;
+        sf::RenderWindow &mWindow;
+        sf::Time &mDt;
 
-        std::queue<float>   mFrameTimeQueue;
+        std::queue<float> mFrameTimeQueue;
 
-        Backend&            mBackend;
-        Log&                mAppLog;
+        Backend &mBackend;
+        Log &mAppLog;
 
-        ImFont*             mHubballiFont;
+        ImFont *mHubballiFont;
 
-        bool                mShowMainMenuBar;
-        bool                mShowFrameInfoOverlay;
-        bool                mShowAppLog;
+        bool mShowMainMenuBar;
+        bool mShowFrameInfoOverlay;
+        bool mShowAppLog;
 
-        bool                mIsInit;
-        bool                mIsCapturing;
+        bool mIsInit;
+        bool mIsCapturing;
     };
 }
 
