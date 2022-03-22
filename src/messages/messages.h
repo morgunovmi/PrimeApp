@@ -24,3 +24,16 @@ struct WorkerLiveCapture {
 struct WorkerQuit{};
 
 using WorkerMessage = std::variant<WorkerLiveCapture, WorkerQuit>;
+
+// PythonWorker
+
+struct PythonWorkerEnvInit {};
+
+struct PythonWorkerVideoInit {
+    std::string path;
+    std::string file;
+};
+
+struct PythonWorkerQuit {};
+
+using PythonWorkerMessage = std::variant<PythonWorkerEnvInit, PythonWorkerVideoInit, PythonWorkerQuit>;

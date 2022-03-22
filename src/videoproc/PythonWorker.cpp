@@ -1,8 +1,38 @@
-#include "VideoProcessor.h"
-#include "spdlog/spdlog.h"
+#include <spdlog/spdlog.h>
 
-void VideoProcessor::Init() {
+#include "PythonWorker.h"
+
+void PythonWorker::Run() {
+    mWorkerThread = std::jthread(&PythonWorker::Main, this);
+}
+
+[[noreturn]] void PythonWorker::Main() {
+    py::scoped_interpreter mGuard;
+    spdlog::debug("Started python worker main func");
+
+    auto visitor = [&](auto &&msg) { HandleMessage(std::forward<decltype(msg)>(msg)); };
+    mRunning = true;
+
+    while (mRunning) {
+        std::visit(visitor, mQueue.WaitForMessage());
+    }
+}
+
+void PythonWorker::HandleMessage(PythonWorkerEnvInit &&envInit) {
+    spdlog::debug("Env func");
     py::exec(R"(
+import pims
+import numpy as np
+import trackpy as tp
+import pandas as pd
+import matplotlib.pyplot as plt
+from skimage import data, img_as_float
+from skimage import exposure
+from PIL import Image
+
+from tifffile import imsave
+import os
+
 class Test:
     def __init__(self, name):
         self.name = name
@@ -95,13 +125,21 @@ class Video:
     spdlog::debug("videoproc init successful");
 }
 
-void VideoProcessor::Test() {
-    auto locals = py::dict("name"_a="Jeff");
+void PythonWorker::HandleMessage(PythonWorkerVideoInit &&videoInit) {
+    spdlog::debug("Video init func");
+    auto locals = py::dict("name"_a = "Jeff", "path"_a = videoInit.path, "file"_a = videoInit.file);
     py::exec(R"(
         test = Test(name)
         new_name = test.get_name()
+
+        vid = Video(path, file)
     )", py::globals(), locals);
 
     auto message = locals["new_name"].cast<std::string>();
     spdlog::info(message);
+}
+
+void PythonWorker::HandleMessage(PythonWorkerQuit &&videoInit) {
+    spdlog::debug("Quit");
+    mRunning = false;
 }

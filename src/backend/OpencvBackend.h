@@ -29,7 +29,6 @@ public:
 private:
     static sf::Image MatToImage(const cv::Mat& mat);
 
-private:
     cv::VideoCapture mCamera;
     uint16_t         mFramerate;
 

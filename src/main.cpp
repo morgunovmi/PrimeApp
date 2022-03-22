@@ -1,18 +1,24 @@
+#include <vector>
 #include <spdlog/logger.h>
 #include <spdlog/spdlog.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
 
 #include "misc/Log.h"
 #include <fmt/format.h>
 #include "misc/LogSink.h"
 #include "frontend/App.h"
 
-
 int main(int argc, char **argv) {
     try {
         slr::Log log;
 
         auto sink = std::make_shared<LogSinkMt>(log);
-        auto MyLogger = std::make_shared<spdlog::logger>("MyLogger", sink);
+
+        auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+        console_sink->set_pattern("[Console sink] [%^%l%$] %v");
+
+        std::vector<spdlog::sink_ptr> sinks { sink, console_sink };
+        auto MyLogger = std::make_shared<spdlog::logger>("MyLogger", sinks.begin(), sinks.end());
 
 #ifndef NDEBUG
         MyLogger->set_level(spdlog::level::trace);

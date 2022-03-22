@@ -10,7 +10,7 @@ void Worker::Main() {
 }
 
 void Worker::HandleMessage(WorkerLiveCapture&& liveCapture) {
-    auto result = mBackend.LiveCapture();
+    mBackend.LiveCapture();
 }
 
 void Worker::HandleMessage(WorkerQuit&& quit) {

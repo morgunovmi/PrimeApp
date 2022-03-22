@@ -5,6 +5,8 @@
 #include <mutex>
 #include <queue>
 
+#include <spdlog/spdlog.h>
+
 template <typename T>
 class MessageQueue {
 public:
@@ -25,18 +27,20 @@ private:
 template <typename T>
 void MessageQueue<T>::Send(T&& msg) {
 	{
+        spdlog::debug("Sending message");
 		std::scoped_lock lock(mMutex);
 		mQueue.emplace(std::move(msg));
 	}
 
-	mCondVar.notify_one();
+	mCondVar.notify_all();
 }
 
 template <typename T>
 [[nodiscard]] T MessageQueue<T>::WaitForMessage() {
-	std::scoped_lock lock(mMutex);
+	std::unique_lock lock(mMutex);
 	mCondVar.wait(lock, [&] { return !mQueue.empty(); });
 
+    spdlog::debug("received message!");
 	auto msg = mQueue.front();
 	mQueue.pop();
 

@@ -3,6 +3,7 @@
 namespace slr {
     void App::Run() {
         mGUI.Init();
+        mVideoProc.Test();
         while (mWindow.isOpen()) {
             mDt = mDeltaClock.restart();
 

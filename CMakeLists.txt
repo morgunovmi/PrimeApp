@@ -30,7 +30,7 @@ set(SFML_LIBS sfml-graphics sfml-system sfml-window)
 
 set(APP_NAME "App")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
-add_executable(${APP_NAME} "" src/backend/Backend.h src/backend/OpencvBackend.h src/backend/OpencvBackend.cpp src/misc/LogSink.h src/videoproc/VideoProcessor.h src/videoproc/VideoProcessor.cpp)
+add_executable(${APP_NAME} "" src/backend/Backend.h src/backend/OpencvBackend.h src/backend/OpencvBackend.cpp src/misc/LogSink.h src/videoproc/VideoProcessor.h src/videoproc/PythonWorker.h src/videoproc/PythonWorker.cpp)
 
 add_subdirectory(src)
 

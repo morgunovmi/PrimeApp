@@ -1,1 +1,1 @@
-target_sources(${APP_NAME} PRIVATE VideoProcessor.cpp)
+target_sources(${APP_NAME} PRIVATE PythonWorker.cpp)
