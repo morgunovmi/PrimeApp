@@ -5,43 +5,33 @@
 
 #include <vector>
 #include <variant>
+#include <string>
 
 #include "imgui.h"
 
-// Supervisor
-struct OneImageResult {
-    sf::Image image;
-};
-
-struct ImageVectorResult {
-    std::vector<sf::Image> resultFrames;
-};
-
-using SupervisorMessage = std::variant<OneImageResult, ImageVectorResult>;
-
-// Worker
-struct WorkerLiveCapture {
-    sf::Vector2u imageSize;
-};
-
-struct WorkerQuit {
-};
-
-using WorkerMessage = std::variant<WorkerLiveCapture, WorkerQuit>;
-
 // PythonWorker
 
-struct PythonWorkerEnvInit {
-};
+const uint16_t MAX_DEBUG_STR_LEN = 256;
 
-struct PythonWorkerVideoInit {
-    std::string path;
-    std::string file;
+struct PythonWorkerRunString {
+#ifndef NDEBUG
+    const char debugString[MAX_DEBUG_STR_LEN] = "Run pythong string message";
+#endif
+
+    std::string string{};
+    std::vector<std::pair<std::string, std::string>> strVariables{};
+    std::vector<std::pair<std::string, int>> numVariables{};
 };
 
 struct PythonWorkerQuit {
+#ifndef NDEBUG
+    const char debugString[MAX_DEBUG_STR_LEN] = "Python worker quit message";
+#endif
 };
 
-using PythonWorkerMessage = std::variant<PythonWorkerEnvInit, PythonWorkerVideoInit, PythonWorkerQuit>;
+using PythonWorkerMessage = std::variant<
+        PythonWorkerRunString,
+        PythonWorkerQuit
+        >;
 
 #endif

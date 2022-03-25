@@ -20,9 +20,7 @@ public:
 private:
     [[noreturn]] void Main() override;
 
-    void HandleMessage(PythonWorkerEnvInit &&envInit);
-
-    void HandleMessage(PythonWorkerVideoInit &&videoInit);
+    void HandleMessage(PythonWorkerRunString&& runString);
 
     void HandleMessage(PythonWorkerQuit &&quit);
 };

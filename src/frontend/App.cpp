@@ -3,7 +3,7 @@
 namespace slr {
     void App::Run() {
         mGUI.Init();
-        mVideoProc.Test();
+        mVideoProc.Test(R"(C:\Users\Max\Desktop\Samples\)", R"(a1.tif)");
         while (mWindow.isOpen()) {
             mDt = mDeltaClock.restart();
 

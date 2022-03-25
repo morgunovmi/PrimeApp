@@ -16,14 +16,12 @@ public:
         Init();
     }
 
-    void Test() {
-        mMessageQueue.Send(PythonWorkerVideoInit{.path = R"(C:\Users\Max\Desktop\Samples\)", .file = R"(a1.tif)"});
-    }
+    void Test(const std::string& path, const std::string& file);
 
     ~VideoProcessor() { mMessageQueue.Send(PythonWorkerQuit{}); }
 
 private:
-    void Init() { mMessageQueue.Send(PythonWorkerEnvInit{}); }
+    void Init();
 
     MessageQueue<PythonWorkerMessage> mMessageQueue;
 
