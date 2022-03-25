@@ -18,40 +18,6 @@ void PythonWorker::Run() {
     }
 }
 
-/*
-void PythonWorker::HandleMessage(PythonWorkerVideoInit &&videoInit) {
-    spdlog::debug("Video init func");
-
-    py::globals()["name"] = "Jeff";
-    py::globals()["path"] = videoInit.path;
-    py::globals()["file"] = videoInit.file;
-    py::exec(R"(
-
-)");
-}
-
-void PythonWorker::HandleMessage(PythonWorkerLocateOne &&locateOne) {
-    spdlog::debug("Locating one");
-
-    try {
-        py::exec(R"(
-minm = 1e3 #1e2 = 100
-ecc = 0.5
-vid.minmass = minm
-mass = minm
-size = 5
-diametr = 19
-
-#Эта функция для подбора параметров на одном кадре. Изменяем параметры (в основном, mass),
-#пока картинка не станет хорошей, и только тогда запускаем locate_all
-vid.locate_1_frame(10, ecc, mass, size, diametr)
-)");
-    } catch (py::error_already_set &e) {
-        spdlog::error("Error {}", e.what());
-    }
-}
- */
-
 void PythonWorker::HandleMessage(PythonWorkerRunString&& runString) {
     spdlog::debug(runString.debugString);
 
