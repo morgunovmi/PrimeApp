@@ -18,7 +18,7 @@ public:
 
     void Test(const std::string& path, const std::string& file);
 
-    ~VideoProcessor() { mMessageQueue.Send(PythonWorkerQuit{}); }
+    ~VideoProcessor() { spdlog::info("Killing video processor"); mMessageQueue.Send(PythonWorkerQuit{}); }
 
 private:
     void Init();

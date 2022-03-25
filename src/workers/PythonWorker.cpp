@@ -16,27 +16,40 @@ void PythonWorker::Run() {
     while (mRunning) {
         std::visit(visitor, mWorkerMessageQueue.WaitForMessage());
     }
+    spdlog::debug("Python worker main func end");
 }
 
-void PythonWorker::HandleMessage(PythonWorkerRunString&& runString) {
+void PythonWorker::HandleMessage(PythonWorkerRunString &&runString) {
+    const uint16_t stringPeekLen = 20;
+
+#ifndef NDEBUG
     spdlog::debug(runString.debugString);
+#endif
 
-    for (const auto & val : runString.strVariables) {
-        py::globals()[val.first.c_str()] = val.second;
-    }
-
-    for (const auto & val : runString.numVariables) {
-        py::globals()[val.first.c_str()] = val.second;
-    }
+    spdlog::debug("Attempting to run python string {}...", runString.string.substr(0, stringPeekLen));
 
     try {
+        for (const auto &val: runString.strVariables) {
+            spdlog::debug("{}: {}", val.first, val.second);
+            py::globals()[val.first.c_str()] = val.second;
+        }
+
+        for (const auto &val: runString.numVariables) {
+            spdlog::debug("{}: {}", val.first, val.second);
+            py::globals()[val.first.c_str()] = val.second;
+        }
+
         py::exec(runString.string);
-    } catch (const py::error_already_set& e) {
+        spdlog::debug("String {}... ran successfully!", runString.string.substr(0, stringPeekLen));
+    } catch (const py::error_already_set &e) {
         spdlog::error("Error running python string {}\n\nError: {}", runString.string, e.what());
     }
 }
 
 void PythonWorker::HandleMessage(PythonWorkerQuit &&quit) {
-    spdlog::debug(quit.debugString);
+#ifndef NDEBUG
+    spdlog::debug(runString.debugString);
+#endif
+
     mRunning = false;
 }

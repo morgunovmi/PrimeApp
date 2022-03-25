@@ -15,7 +15,7 @@ const uint16_t MAX_DEBUG_STR_LEN = 256;
 
 struct PythonWorkerRunString {
 #ifndef NDEBUG
-    const char debugString[MAX_DEBUG_STR_LEN] = "Run pythong string message";
+    const char debugString[MAX_DEBUG_STR_LEN] = "Run python string message";
 #endif
 
     std::string string{};

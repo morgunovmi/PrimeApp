@@ -2,6 +2,7 @@
 #include "messages/messages.h"
 
 void VideoProcessor::Init() {
+    spdlog::info("Initializing video processor module");
     mMessageQueue.Send(PythonWorkerRunString{
             .string = R"(
 import pims
@@ -15,16 +16,6 @@ from PIL import Image
 
 from tifffile import imsave
 import os
-
-class Test:
-    def __init__(self, name):
-        self.name = name
-
-    def get_name(self):
-        return self.name
-
-    def __str__(self):
-        return "Test"
 
 class Video:
     def __init__(self, path, file):
@@ -46,10 +37,12 @@ class Video:
     def locate_1_frame(self, num, ecc, mass,size, diam = 15):
         f = tp.locate(self.frames_rescale[num], diam, minmass = self.minmass)
         self.f = f[(f['ecc'] < ecc)&(f['mass'] > mass)&(f['size'] < size)]
-        fig = plt.figure(figsize=(15,10))
-        ax = plt.axes([0, 0, 4, 4])
-        tp.annotate(self.f, self.frames_rescale[num],ax = ax, imshow_style={'cmap':'viridis'})
+
+        fig, ax = plt.subplots()
+        tp.annotate(self.f, self.frames_rescale[num], ax = ax, imshow_style = {'cmap':'viridis'})
+        plt.show()
         plt.savefig('figure.png')
+
     def locate_all(self, ecc, mass, size, diam = 15):
         f = tp.batch(self.frames_rescale, diam, minmass=self.minmass)
         self.f = f[(f['ecc'] < ecc)&(f['mass'] > mass)&(f['size'] < size)]
@@ -114,16 +107,12 @@ class Video:
 }
 
 void VideoProcessor::Test(const std::string &path, const std::string &file) {
+    spdlog::info("Instantiating Video and testing one frame");
     mMessageQueue.Send(PythonWorkerRunString{
             .string = R"(
-test = Test(name)
-new_name = test.get_name()
-
 vid = Video(path, file)
-string = vid.path
 )",
             .strVariables{
-                    {"name", "Jeff"},
                     {"path", path},
                     {"file", file}
             }
@@ -140,7 +129,7 @@ diametr = 19
 
 #Эта функция для подбора параметров на одном кадре. Изменяем параметры (в основном, mass),
 #пока картинка не станет хорошей, и только тогда запускаем locate_all
-vid.locate_1_frame(10, ecc, mass, size, diametr)
+vid.locate_1_frame(0, ecc, mass, size, diametr)
 )"
     });
 }

@@ -9,56 +9,38 @@
 #include "frontend/App.h"
 
 int main(int argc, char **argv) {
-try {
-    slr::Log log;
+    try {
+        slr::Log log;
 
-    auto sink = std::make_shared<LogSinkMt>(log);
+        auto sink = std::make_shared<LogSinkMt>(log);
 
-    auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-    console_sink->set_pattern("[Console sink] [%^%l%$] %v");
+        auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
 
-    std::vector<spdlog::sink_ptr> sinks{sink, console_sink};
-    auto MyLogger = std::make_shared<spdlog::logger>("MyLogger", sinks.begin(), sinks.end());
+        std::vector<spdlog::sink_ptr> sinks{sink, console_sink};
+        auto MyLogger = std::make_shared<spdlog::logger>("MyLogger", sinks.begin(), sinks.end());
+        MyLogger->set_pattern(">> [%T] (%^%l%$) %v <<");
 
 #ifndef NDEBUG
-    MyLogger->set_level(spdlog::level::trace);
+        MyLogger->set_level(spdlog::level::trace);
 #else
-    MyLogger->set_level(spdlog::level::info);
+        MyLogger->set_level(spdlog::level::info);
 #endif
-    spdlog::set_default_logger(MyLogger);
+        spdlog::set_default_logger(MyLogger);
 
-    const auto width = 1400;
-    const auto height = 600;
-    const auto antialiasingLevel = 8;
+        const auto width = 1400;
+        const auto height = 600;
+        const auto antialiasingLevel = 8;
 
-    sf::ContextSettings settings{};
-    settings.antialiasingLevel = antialiasingLevel;
+        sf::ContextSettings settings{};
+        settings.antialiasingLevel = antialiasingLevel;
 
-    slr::App system{argc, argv, width, height, settings, log};
-    system.Run();
-
+        slr::App system{argc, argv, width, height, settings, log};
+        system.Run();
 
 
     } catch (std::exception &e) {
         fmt::print("Error {}", e.what());
     }
-    /*
-    py::scoped_interpreter guard{};
-
-    std::vector<std::pair<std::string, std::string>> args{{"name", "jeff"}};
-
-    try {
-        for (const auto &val: args) {
-            py::globals()[val.first.c_str()] = val.second;
-        }
-
-        py::exec(R"(
-print(name)
-)");
-    } catch (py::error_already_set& e) {
-        fmt::print("Error: {}", e.what());
-    }
-     */
 
     return EXIT_SUCCESS;
 }
