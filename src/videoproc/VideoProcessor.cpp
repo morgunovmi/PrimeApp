@@ -40,11 +40,11 @@ class Video:
 
         fig, ax = plt.subplots()
         tp.annotate(self.f, self.frames_rescale[num], ax = ax, imshow_style = {'cmap':'viridis'})
+        plt.savefig('1_frame_res.png')
         plt.show()
-        plt.savefig('figure.png')
 
     def locate_all(self, ecc, mass, size, diam = 15):
-        f = tp.batch(self.frames_rescale, diam, minmass=self.minmass)
+        f = tp.batch(self.frames_rescale, diam, processes=1, minmass=self.minmass)
         self.f = f[(f['ecc'] < ecc)&(f['mass'] > mass)&(f['size'] < size)]
     def link(self,  ecc, mass, size,search_range = 10, memory = 3):
         self.raw_t = tp.link(self.f, search_range, memory=memory)
@@ -106,7 +106,7 @@ class Video:
 )"});
 }
 
-void VideoProcessor::Test(const std::string &path, const std::string &file) {
+void VideoProcessor::LoadVideo(const std::string &path, const std::string &file) {
     spdlog::info("Instantiating Video and testing one frame");
     mMessageQueue.Send(PythonWorkerRunString{
             .string = R"(
@@ -117,19 +117,73 @@ vid = Video(path, file)
                     {"file", file}
             }
     });
+}
 
+void VideoProcessor::LocateOneFrame(int frameNum, int minm, double ecc, int size, int diameter) {
+    spdlog::info("Locating features on one frame");
     mMessageQueue.Send(PythonWorkerRunString{
             .string = R"(
-minm = 1e3 #1e2 = 100
-ecc = 0.5
 vid.minmass = minm
 mass = minm
-size = 5
-diametr = 19
-
 #Эта функция для подбора параметров на одном кадре. Изменяем параметры (в основном, mass),
 #пока картинка не станет хорошей, и только тогда запускаем locate_all
-vid.locate_1_frame(0, ecc, mass, size, diametr)
+vid.locate_1_frame(10, ecc, mass, size, diam=diameter)
+)",
+            .intVariables {
+                    {"frameNum", frameNum},
+                    {"minm",     minm},
+                    {"size",     size},
+                    {"diameter", diameter}
+            },
+            .floatVariables {
+                    {"ecc", ecc}
+            }
+    });
+}
+
+void VideoProcessor::LocateAllFrames() {
+    spdlog::info("Locating features for all frames");
+    mMessageQueue.Send(PythonWorkerRunString{
+            .string = R"(
+vid.locate_all(ecc, mass, size, diam=diameter)
 )"
+    });
+}
+
+void VideoProcessor::LinkAndFilter(int searchRange, int memory, int minTrajectoryLen, int driftSmoothing) {
+    spdlog::info("Linking features, filtering trajectory and subtracting drift");
+    mMessageQueue.Send(PythonWorkerRunString{
+            .string = R"(
+vid.raw_t = tp.link_df(vid.f, search_range, memory = mem)
+
+vid.filter_traj(min_len = min_traj_len)
+
+d = tp.compute_drift(vid.t, smoothing = drift_smoothing)
+vid.t = tp.subtract_drift(vid.t, d)
+)",
+            .intVariables {
+                    {"search_range",    searchRange},
+                    {"mem",             memory},
+                    {"min_traj_len",    minTrajectoryLen},
+                    {"drift_smoothing", driftSmoothing}
+            }
+    });
+}
+
+void VideoProcessor::GroupAndPlotTrajectory(int minDiagSize, int maxDiagSize) {
+    spdlog::info("Grouping by particle, filtering by diagonal \ntrajectory size, plotting trajectory");
+    mMessageQueue.Send(PythonWorkerRunString{
+            .string{R"(
+vid.t = vid.t.groupby('particle').filter(lambda x: tp.diagonal_size(x) > min_diag_size and tp.diagonal_size(x) < max_diag_size)
+
+fig, ax = plt.subplots()
+tp.plot_traj(vid.t, ax=ax)
+plt.savefig('trajectory.png')
+plt.show()
+)"},
+            .intVariables {
+                    {"min_diag_size", minDiagSize},
+                    {"max_diag_size", maxDiagSize}
+            }
     });
 }

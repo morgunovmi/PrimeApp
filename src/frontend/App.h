@@ -23,7 +23,7 @@ namespace slr {
                 mDeltaClock(), mDt(), mCurrentTexture(), mTextureMutex(),
                 mRenderer(mWindow, mDt, mCurrentTexture, mTextureMutex),
                 mBackend(argc, argv, mWindow, mCurrentTexture, mDt, mTextureMutex),
-                mGUI(mWindow, mDt, mBackend, log), mVideoProc() {}
+                mGUI(mWindow, mDt, mBackend, log), mVideoProc(mCurrentTexture, mTextureMutex) {}
 
         void Init();
 

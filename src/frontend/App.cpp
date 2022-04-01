@@ -3,7 +3,13 @@
 namespace slr {
     void App::Run() {
         mGUI.Init();
-        mVideoProc.Test(R"(C:\Users\Max\Desktop\Samples\)", R"(a1.tif)");
+
+        mVideoProc.LoadVideo(R"(C:\Users\Max\Desktop\Samples\)", R"(a1.tif)");
+        mVideoProc.LocateOneFrame(10, 1000, 0.5, 5, 19);
+        mVideoProc.LocateAllFrames();
+        mVideoProc.LinkAndFilter(7, 10, 5, 10);
+        mVideoProc.GroupAndPlotTrajectory(5, 30);
+
         while (mWindow.isOpen()) {
             mDt = mDeltaClock.restart();
 

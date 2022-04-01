@@ -20,7 +20,8 @@ struct PythonWorkerRunString {
 
     std::string string{};
     std::vector<std::pair<std::string, std::string>> strVariables{};
-    std::vector<std::pair<std::string, int>> numVariables{};
+    std::vector<std::pair<std::string, int>> intVariables{};
+    std::vector<std::pair<std::string, double>> floatVariables{};
 };
 
 struct PythonWorkerQuit {

@@ -34,7 +34,12 @@ void PythonWorker::HandleMessage(PythonWorkerRunString &&runString) {
             py::globals()[val.first.c_str()] = val.second;
         }
 
-        for (const auto &val: runString.numVariables) {
+        for (const auto &val: runString.intVariables) {
+            spdlog::debug("{}: {}", val.first, val.second);
+            py::globals()[val.first.c_str()] = val.second;
+        }
+
+        for (const auto &val: runString.floatVariables) {
             spdlog::debug("{}: {}", val.first, val.second);
             py::globals()[val.first.c_str()] = val.second;
         }
@@ -48,7 +53,7 @@ void PythonWorker::HandleMessage(PythonWorkerRunString &&runString) {
 
 void PythonWorker::HandleMessage(PythonWorkerQuit &&quit) {
 #ifndef NDEBUG
-    spdlog::debug(runString.debugString);
+    spdlog::debug(quit.debugString);
 #endif
 
     mRunning = false;
