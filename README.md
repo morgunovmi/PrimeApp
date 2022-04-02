@@ -13,6 +13,10 @@ the Releases page. To run it you'll need Visual C++ Redistributable installed on
 Additionally, you need to have
 Python 3 installed, along with some requirements listed int requirements.txt
 
+```
+pip install -r requirements.txt
+```
+
 ## Build
 ### Prerequisites
 
@@ -28,7 +32,7 @@ git clone https://github.com/morgunovmi/PrimeApp.git
 cd PrimeApp
 mkdir build
 cd build
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=path-to-vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows ..
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=path-to-vcpkg\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows ..
 cmake --build . --config=Release
-../bin/Release/App.exe
+..\bin\Release\App.exe
 ```
