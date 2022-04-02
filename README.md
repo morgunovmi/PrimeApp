@@ -32,7 +32,7 @@ git clone https://github.com/morgunovmi/PrimeApp.git
 cd PrimeApp
 mkdir build
 cd build
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=path-to-vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows ..
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=path-to-vcpkg\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows ..
 cmake --build . --config=Release
-../bin/Release/App.exe
+..\bin\Release\App.exe
 ```
