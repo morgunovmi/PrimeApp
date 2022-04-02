@@ -1,0 +1,8 @@
+pims
+numpy
+trackpy
+pandas
+matplotlib
+scikit-image
+pillow
+tifffile
