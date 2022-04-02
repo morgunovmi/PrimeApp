@@ -13,6 +13,10 @@ the Releases page. To run it you'll need Visual C++ Redistributable installed on
 Additionally, you need to have
 Python 3 installed, along with some requirements listed int requirements.txt
 
+```
+pip install -r requirements.txt
+```
+
 ## Build
 ### Prerequisites
 
