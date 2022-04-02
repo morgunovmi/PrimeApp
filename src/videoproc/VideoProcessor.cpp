@@ -8,11 +8,15 @@ void VideoProcessor::Init() {
 import pims
 import numpy as np
 import trackpy as tp
+
 import pandas as pd
 import matplotlib.pyplot as plt
 from skimage import data, img_as_float
 from skimage import exposure
 from PIL import Image
+
+import multiprocessing
+multiprocessing.set_executable('C:/code/vcpkg/installed/x64-windows/tools/python3/pythonw.exe')
 
 from tifffile import imsave
 import os
@@ -44,7 +48,7 @@ class Video:
         plt.show()
 
     def locate_all(self, ecc, mass, size, diam = 15):
-        f = tp.batch(self.frames_rescale, diam, processes=1, minmass=self.minmass)
+        f = tp.batch(self.frames_rescale, diam, processes="auto", minmass=self.minmass)
         self.f = f[(f['ecc'] < ecc)&(f['mass'] > mass)&(f['size'] < size)]
     def link(self,  ecc, mass, size,search_range = 10, memory = 3):
         self.raw_t = tp.link(self.f, search_range, memory=memory)
@@ -103,6 +107,7 @@ class Video:
         R = k*T/(6*np.pi*D*eta)
         diam = 2*R*1e9
         print('diameter = ', diam, ' nm')
+
 )"});
 }
 
@@ -145,7 +150,11 @@ void VideoProcessor::LocateAllFrames() {
     spdlog::info("Locating features for all frames");
     mMessageQueue.Send(PythonWorkerRunString{
             .string = R"(
+import time
+starttime = time.time()
 vid.locate_all(ecc, mass, size, diam=diameter)
+print(time.time() - starttime)
+
 )"
     });
 }
@@ -154,12 +163,12 @@ void VideoProcessor::LinkAndFilter(int searchRange, int memory, int minTrajector
     spdlog::info("Linking features, filtering trajectory and subtracting drift");
     mMessageQueue.Send(PythonWorkerRunString{
             .string = R"(
-vid.raw_t = tp.link_df(vid.f, search_range, memory = mem)
+#vid.raw_t = tp.link_df(vid.f, search_range, memory = mem)
 
-vid.filter_traj(min_len = min_traj_len)
+#vid.filter_traj(min_len = min_traj_len)
 
-d = tp.compute_drift(vid.t, smoothing = drift_smoothing)
-vid.t = tp.subtract_drift(vid.t, d)
+#d = tp.compute_drift(vid.t, smoothing = drift_smoothing)
+#vid.t = tp.subtract_drift(vid.t, d)
 )",
             .intVariables {
                     {"search_range",    searchRange},
