@@ -58,6 +58,4 @@ target_link_libraries(
         pybind11::embed
 )
 
-add_custom_command(TARGET ${APP_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E
-        copy_if_different ${CMAKE_SOURCE_DIR}/resources $<TARGET_FILE_DIR:${APP_NAME}>)
+file(COPY ${CMAKE_SOURCE_DIR}/resources DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})

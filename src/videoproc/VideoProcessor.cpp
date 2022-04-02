@@ -16,7 +16,7 @@ from skimage import exposure
 from PIL import Image
 
 import multiprocessing
-multiprocessing.set_executable('C:/code/vcpkg/installed/x64-windows/tools/python3/pythonw.exe')
+multiprocessing.set_executable('./python/python.exe')
 
 from tifffile import imsave
 import os
@@ -163,12 +163,12 @@ void VideoProcessor::LinkAndFilter(int searchRange, int memory, int minTrajector
     spdlog::info("Linking features, filtering trajectory and subtracting drift");
     mMessageQueue.Send(PythonWorkerRunString{
             .string = R"(
-#vid.raw_t = tp.link_df(vid.f, search_range, memory = mem)
+vid.raw_t = tp.link_df(vid.f, search_range, memory = mem)
 
-#vid.filter_traj(min_len = min_traj_len)
+vid.filter_traj(min_len = min_traj_len)
 
-#d = tp.compute_drift(vid.t, smoothing = drift_smoothing)
-#vid.t = tp.subtract_drift(vid.t, d)
+d = tp.compute_drift(vid.t, smoothing = drift_smoothing)
+vid.t = tp.subtract_drift(vid.t, d)
 )",
             .intVariables {
                     {"search_range",    searchRange},
