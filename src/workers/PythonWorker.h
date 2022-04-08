@@ -15,8 +15,6 @@ class PythonWorker : public Worker<PythonWorkerMessage> {
 public:
     PythonWorker(int id, MessageQueue<PythonWorkerMessage> &queue) : Worker(id, queue) {}
 
-    void Run() override;
-
 private:
     [[noreturn]] void Main() override;
 

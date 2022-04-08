@@ -145,3 +145,19 @@ void slr::OpencvBackend::TerminateCapture() {
     mIsOpened.store(false);
     mIsCapturing.store(false);
 }
+
+void slr::OpencvBackend::Init_() {
+    Backend::Init_();
+}
+
+void slr::OpencvBackend::LiveCapture_() {
+    Backend::LiveCapture_();
+}
+
+void slr::OpencvBackend::SequenceCapture_(uint32_t nFrames) {
+    Backend::SequenceCapture_(nFrames);
+}
+
+void slr::OpencvBackend::TerminateCapture_() {
+    Backend::TerminateCapture_();
+}

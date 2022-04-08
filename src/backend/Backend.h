@@ -6,11 +6,16 @@
 #include <SFML/Graphics.hpp>
 #include <misc/Log.h>
 
+#include "messages/MessageQueue.h"
+#include "messages/messages.h"
+#include "workers/CameraWorker.h"
+
 namespace slr {
     class Backend {
     public:
         Backend(int argc, char **argv, sf::RenderWindow &window, sf::Texture &texture,
                 sf::Time &dt, std::mutex &mutex) : margc(argc), margv(argv), mWindow(window), mCurrentTexture(texture),
+                                                   mCameraWorker(0, mMessageQueue, mIsCapturing), mMessageQueue(),
                                                    mDt(dt), mTextureMutex(mutex), mIsCapturing() {}
 
         virtual void Init() {}
@@ -24,12 +29,23 @@ namespace slr {
         virtual ~Backend() = default;
 
     protected:
+        virtual void Init_() {}
+
+        virtual void LiveCapture_() {}
+
+        virtual void SequenceCapture_(uint32_t nFrames) {}
+
+        virtual void TerminateCapture_() {}
+
         int margc;
         char **margv;
         sf::RenderWindow &mWindow;
 
         sf::Texture &mCurrentTexture;
         std::mutex &mTextureMutex;
+
+        CameraWorker mCameraWorker;
+        MessageQueue<CameraWorkerMessage> mMessageQueue;
 
         std::jthread mWorkerThread;
         std::atomic<bool> mIsCapturing;

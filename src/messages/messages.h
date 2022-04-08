@@ -35,4 +35,24 @@ using PythonWorkerMessage = std::variant<
         PythonWorkerQuit
         >;
 
+// Camera worker
+
+struct CameraWorkerInit {
+
+};
+
+struct CameraWorkerLiveCapture {
+
+};
+
+struct CameraWorkerSequenceCapture {
+    uint32_t numFrames;
+};
+
+using CameraWorkerMessage = std::variant<
+        CameraWorkerInit,
+        CameraWorkerLiveCapture,
+        CameraWorkerSequenceCapture
+        >;
+
 #endif

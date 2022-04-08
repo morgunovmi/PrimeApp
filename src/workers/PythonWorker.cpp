@@ -2,13 +2,9 @@
 
 #include "PythonWorker.h"
 
-void PythonWorker::Run() {
-    mThread = std::jthread(&PythonWorker::Main, this);
-}
-
 [[noreturn]] void PythonWorker::Main() {
-    py::scoped_interpreter mGuard{};
     spdlog::debug("Started python worker main func");
+    py::scoped_interpreter mGuard{};
 
     auto visitor = [&](auto &&msg) { HandleMessage(std::forward<decltype(msg)>(msg)); };
     mRunning = true;
@@ -16,6 +12,7 @@ void PythonWorker::Run() {
     while (mRunning) {
         std::visit(visitor, mWorkerMessageQueue.WaitForMessage());
     }
+
     spdlog::debug("Python worker main func end");
 }
 
