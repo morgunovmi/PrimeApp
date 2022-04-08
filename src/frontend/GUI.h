@@ -7,20 +7,31 @@
 
 #include "misc/Log.h"
 #include "backend/PhotometricsBackend.h"
+#include "videoproc/VideoProcessor.h"
 
 namespace slr {
     const uint16_t FRAME_QUEUE_SIZE = 60;
 
     class GUI {
     public:
-        GUI(sf::RenderWindow &window, sf::Time &dt, Backend &backend, Log &log) : mWindow(window), mDt(dt),
-                                                                                  mFrameTimeQueue(),
-                                                                                  mShowMainMenuBar(true),
-                                                                                  mShowFrameInfoOverlay(false),
-                                                                                  mShowAppLog(true),
-                                                                                  mBackend(backend), mAppLog(log),
-                                                                                  mHubballiFont(), mIsInit(false),
-                                                                                  mIsCapturing(false) {}
+        GUI(sf::RenderWindow &window, sf::Time &dt, Backend &backend,
+            VideoProcessor &videoproc, Log &log) : mWindow(window), mDt(dt),
+                                                   mFrameTimeQueue(),
+                                                   mShowMainMenuBar(
+                                                           true),
+                                                   mShowFrameInfoOverlay(
+                                                           false),
+                                                   mShowAppLog(
+                                                           true),
+                                                   mShowVideoProcessor(false),
+                                                   mBackend(
+                                                           backend),
+                                                   mVideoProcessor(videoproc),
+                                                   mAppLog(log),
+                                                   mHubballiFont(),
+                                                   mIsInit(false),
+                                                   mIsCapturing(
+                                                           false) {}
 
         bool Init();
 
@@ -37,11 +48,13 @@ namespace slr {
 
         void ShowFrameInfoOverlay();
 
+        void ShowVideoProcessor();
+
         void ShowViewport();
 
         void ShowAppLog();
 
-        void ShowActionButtons();
+        void ShowCameraButtons();
 
     private:
         sf::RenderWindow &mWindow;
@@ -50,6 +63,7 @@ namespace slr {
         std::queue<float> mFrameTimeQueue;
 
         Backend &mBackend;
+        VideoProcessor &mVideoProcessor;
         Log &mAppLog;
 
         ImFont *mHubballiFont;
@@ -57,9 +71,12 @@ namespace slr {
         bool mShowMainMenuBar;
         bool mShowFrameInfoOverlay;
         bool mShowAppLog;
+        bool mShowVideoProcessor;
 
         bool mIsInit;
         bool mIsCapturing;
+
+        const uint16_t mInputFieldWidth = 150;
     };
 }
 

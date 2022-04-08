@@ -2,8 +2,7 @@
 
 #include "imgui-SFML.h"
 #include "imgui.h"
-
-#include <future>
+#include "imgui_stdlib.h"
 
 namespace slr {
     bool GUI::Init() {
@@ -35,6 +34,9 @@ namespace slr {
                             mShowMainMenuBar = !mShowMainMenuBar;
                             break;
                         case sf::Keyboard::F1:
+                            mShowVideoProcessor = !mShowVideoProcessor;
+                            break;
+                        case sf::Keyboard::F2:
                             mShowFrameInfoOverlay = !mShowFrameInfoOverlay;
                             break;
                         default:
@@ -99,8 +101,9 @@ namespace slr {
     void GUI::ShowMainMenuBar() {
         if (ImGui::BeginMainMenuBar()) {
             if (ImGui::BeginMenu("Windows")) {
-                if (ImGui::MenuItem("Frame Info", "F1", &mShowFrameInfoOverlay)) {}
-                if (ImGui::MenuItem("App Log", "F2", &mShowAppLog)) {}
+                if (ImGui::MenuItem("Video Processor", "F1", &mShowVideoProcessor)) {}
+                if (ImGui::MenuItem("Frame Info", "F2", &mShowFrameInfoOverlay)) {}
+                if (ImGui::MenuItem("App Log", nullptr, &mShowAppLog)) {}
                 ImGui::EndMenu();
             }
             ImGui::EndMainMenuBar();
@@ -147,7 +150,7 @@ namespace slr {
         mAppLog.Draw("App Log", &mShowAppLog);
     }
 
-    void GUI::ShowActionButtons() {
+    void GUI::ShowCameraButtons() {
         const auto *main_viewport = ImGui::GetMainViewport();
         ImGui::SetNextWindowPos(
                 ImVec2(static_cast<float>(main_viewport->WorkPos.x) + static_cast<float>(mWindow.getSize().x) * 0.6f,
@@ -156,14 +159,12 @@ namespace slr {
                                         static_cast<float>(mWindow.getSize().y) / 2.f - main_viewport->WorkPos.y));
 
         auto window_flags = 0;
-        window_flags |= ImGuiWindowFlags_NoTitleBar;
         window_flags |= ImGuiWindowFlags_NoMove;
         window_flags |= ImGuiWindowFlags_NoResize;
         window_flags |= ImGuiWindowFlags_NoCollapse;
         window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
-        window_flags |= ImGuiWindowFlags_UnsavedDocument;
 
-        if (ImGui::Begin("Action Buttons", nullptr, window_flags)) {
+        if (ImGui::Begin("Camera Buttons", nullptr, window_flags)) {
             if (ImGui::Button("Init") && !mIsInit) {
                 mBackend.Init();
 //                mIsInit = true;
@@ -180,7 +181,9 @@ namespace slr {
                 mBackend.SequenceCapture(nFrames);
             }
             ImGui::SameLine();
+            ImGui::PushItemWidth(mInputFieldWidth);
             if (ImGui::SliderInt("Number of frames", &nFrames, 0, 1000)) {}
+            ImGui::PopItemWidth();
 
             if (ImGui::Button("Terminate capture") /* && mIsInit && mIsCapturing*/) {
                 mBackend.TerminateCapture();
@@ -193,10 +196,11 @@ namespace slr {
 
     void GUI::Render() {
         ImGui::PushFont(mHubballiFont);
+        ShowCameraButtons();
         if (mShowMainMenuBar) ShowMainMenuBar();
         if (mShowFrameInfoOverlay) ShowFrameInfoOverlay();
+        if (mShowVideoProcessor) ShowVideoProcessor();
         if (mShowAppLog) ShowAppLog();
-        ShowActionButtons();
 
         ImGui::ShowDemoWindow();
 
@@ -206,5 +210,66 @@ namespace slr {
 
     void GUI::Shutdown() {
         ImGui::SFML::Shutdown();
+    }
+
+    void GUI::ShowVideoProcessor() {
+        auto window_flags = 0;
+        window_flags |= ImGuiWindowFlags_NoCollapse;
+        window_flags |= ImGuiWindowFlags_NoResize;
+        window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
+
+        if (ImGui::Begin("Video Processor", nullptr, window_flags)) {
+            static std::string videoPath{};
+            ImGui::InputTextWithHint("Video path", ".tif file path", &videoPath);
+
+            if (ImGui::Button("Load Video")) {
+                mVideoProcessor.LoadVideo(videoPath);
+            }
+
+            static int frameNum = 0;
+            static int minMass = 1000;
+            static double ecc = 0.5;
+            static int size = 5;
+            static int diameter = 19;
+
+            ImGui::PushItemWidth(mInputFieldWidth);
+            ImGui::InputInt("frame num", &frameNum);
+            ImGui::InputInt("min mass", &minMass);
+            ImGui::InputInt("size", &size);
+            ImGui::InputInt("diameter", &diameter);
+            ImGui::InputDouble("eccentricity", &ecc, 0.0, 0.0, "%.2f");
+            ImGui::PopItemWidth();
+
+            if (ImGui::Button("Locate on one frame")) {
+                mVideoProcessor.LocateOneFrame(frameNum, minMass, ecc, size, diameter);
+            }
+
+            static int searchRange = 7;
+            static int memory = 10;
+            static int minTrajLen = 5;
+            static int driftSmoothing = 10;
+
+            static int minDiagSize = 5;
+            static int maxDiagSize = 30;
+            ImGui::PushItemWidth(mInputFieldWidth);
+            ImGui::InputInt("search range", &searchRange);
+            ImGui::SameLine();
+            ImGui::InputInt("memory", &memory);
+            ImGui::InputInt("min traj. len", &minTrajLen);
+            ImGui::SameLine();
+            ImGui::InputInt("drift smooth.", &driftSmoothing);
+            ImGui::InputInt("min diag. size", &minDiagSize);
+            ImGui::SameLine();
+            ImGui::InputInt("max diag. size", &maxDiagSize);
+            ImGui::PopItemWidth();
+
+            if (ImGui::Button("Find trajectories")) {
+                mVideoProcessor.LocateAllFrames();
+                mVideoProcessor.LinkAndFilter(7, 10, 5, 10);
+                mVideoProcessor.GroupAndPlotTrajectory(5, 30);
+            }
+        }
+
+        ImGui::End();
     }
 }

@@ -12,12 +12,13 @@ using namespace py::literals;
 
 class VideoProcessor {
 public:
-    VideoProcessor(sf::Texture &texture, std::mutex& mutex) : mCurrentTexture(texture), mTextureMutex(mutex), mMessageQueue(), mPythonWorker(1, mMessageQueue) {
+    VideoProcessor(sf::Texture &texture, std::mutex &mutex) : mCurrentTexture(texture), mTextureMutex(mutex),
+                                                              mMessageQueue(), mPythonWorker(1, mMessageQueue) {
         mPythonWorker.Run();
         Init();
     }
 
-    void LoadVideo(const std::string& path, const std::string& file);
+    void LoadVideo(const std::string &path);
 
     void LocateOneFrame(int frameNum, int minm, double ecc, int size, int diameter);
 
@@ -27,13 +28,16 @@ public:
 
     void GroupAndPlotTrajectory(int minDiagSize, int maxDiagSize);
 
-    ~VideoProcessor() { spdlog::info("Killing video processor"); mMessageQueue.Send(PythonWorkerQuit{}); }
+    ~VideoProcessor() {
+        spdlog::info("Killing video processor");
+        mMessageQueue.Send(PythonWorkerQuit{});
+    }
 
 private:
     void Init();
 
-    sf::Texture& mCurrentTexture;
-    std::mutex& mTextureMutex;
+    sf::Texture &mCurrentTexture;
+    std::mutex &mTextureMutex;
 
     MessageQueue<PythonWorkerMessage> mMessageQueue;
 

@@ -22,10 +22,9 @@ from tifffile import imsave
 import os
 
 class Video:
-    def __init__(self, path, file):
-        self.file = file
+    def __init__(self, path):
         self.path = path
-        self.frames = np.array(pims.as_grey(pims.TiffStack(self.path + self.file)))
+        self.frames = np.array(pims.as_grey(pims.TiffStack(self.path)))
 
         self.frames_rescale = self.frames
         self.minmass = 1e5
@@ -111,15 +110,14 @@ class Video:
 )"});
 }
 
-void VideoProcessor::LoadVideo(const std::string &path, const std::string &file) {
+void VideoProcessor::LoadVideo(const std::string &path) {
     spdlog::info("Instantiating Video and testing one frame");
     mMessageQueue.Send(PythonWorkerRunString{
             .string = R"(
-vid = Video(path, file)
+vid = Video(path)
 )",
             .strVariables{
-                    {"path", path},
-                    {"file", file}
+                    {"path", path}
             }
     });
 }
