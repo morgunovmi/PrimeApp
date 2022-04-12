@@ -28,14 +28,6 @@ namespace slr {
         ~OpencvBackend() override { OpencvBackend::TerminateCapture(); };
 
     private:
-        void Init_() override;
-
-        void LiveCapture_() override;
-
-        void SequenceCapture_(uint32_t nFrames) override;
-
-        void TerminateCapture_() override;
-
         static sf::Image MatToImage(const cv::Mat &mat);
 
         cv::VideoCapture mCamera;

@@ -166,19 +166,19 @@ namespace slr {
 
         if (ImGui::Begin("Camera Buttons", nullptr, window_flags)) {
             if (ImGui::Button("Init") && !mIsInit) {
-                mBackend.Init();
+                mBackend->Init();
 //                mIsInit = true;
             }
 
             if (ImGui::Button("Live capture")/* && mIsInit && !mIsCapturing*/) {
 //                mIsCapturing = true;
-                mBackend.LiveCapture();
+                mBackend->LiveCapture();
             }
 
             static int nFrames = 100;
             if (ImGui::Button("Sequence capture")/* && mIsInit && !mIsCapturing*/) {
                 //                mIsCapturing = true;
-                mBackend.SequenceCapture(nFrames);
+                mBackend->SequenceCapture(nFrames);
             }
             ImGui::SameLine();
             ImGui::PushItemWidth(mInputFieldWidth);
@@ -186,7 +186,7 @@ namespace slr {
             ImGui::PopItemWidth();
 
             if (ImGui::Button("Terminate capture") /* && mIsInit && mIsCapturing*/) {
-                mBackend.TerminateCapture();
+                mBackend->TerminateCapture();
 //                mIsCapturing = false;
             }
         }
@@ -216,7 +216,6 @@ namespace slr {
         auto window_flags = 0;
         window_flags |= ImGuiWindowFlags_NoCollapse;
         window_flags |= ImGuiWindowFlags_NoResize;
-        window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
 
         if (ImGui::Begin("Video Processor", nullptr, window_flags)) {
             static std::string videoPath{};

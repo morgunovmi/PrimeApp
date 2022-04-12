@@ -14,6 +14,11 @@
 #include "misc/Log.h"
 
 namespace slr {
+    enum BackendOption {
+        OPENCV = 0,
+        PVCAM = 1,
+    };
+
     class App {
     public:
         App(int argc, char **argv, uint16_t width, uint16_t height, const sf::ContextSettings &settings, Log &log) :
@@ -22,8 +27,10 @@ namespace slr {
                         "Prime App", sf::Style::Close, settings),
                 mDeltaClock(), mDt(), mCurrentTexture(), mTextureMutex(),
                 mRenderer(mWindow, mDt, mCurrentTexture, mTextureMutex),
-                mBackend(argc, argv, mWindow, mCurrentTexture, mDt, mTextureMutex),
-                mGUI(mWindow, mDt, mBackend, mVideoProc, log), mVideoProc(mCurrentTexture, mTextureMutex) {}
+                mBackend(std::make_unique<OpencvBackend>(argc, argv, mWindow, mCurrentTexture, mDt, mTextureMutex)),
+                mCurrentBackend(OPENCV),
+                mGUI(mWindow, mDt, mBackend, mVideoProc, log),
+                mVideoProc(mCurrentTexture, mTextureMutex) {}
 
         void Init();
 
@@ -38,8 +45,10 @@ namespace slr {
         sf::Clock mDeltaClock;
         sf::Time mDt;
 
+        std::unique_ptr<Backend> mBackend;
+        BackendOption mCurrentBackend;
+
         Renderer mRenderer;
-        OpencvBackend mBackend;
         GUI mGUI;
         VideoProcessor mVideoProc;
 

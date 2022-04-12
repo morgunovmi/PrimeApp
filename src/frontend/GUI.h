@@ -14,7 +14,7 @@ namespace slr {
 
     class GUI {
     public:
-        GUI(sf::RenderWindow &window, sf::Time &dt, Backend &backend,
+        GUI(sf::RenderWindow &window, sf::Time &dt, std::unique_ptr<Backend> &backend,
             VideoProcessor &videoproc, Log &log) : mWindow(window), mDt(dt),
                                                    mFrameTimeQueue(),
                                                    mShowMainMenuBar(
@@ -62,7 +62,7 @@ namespace slr {
 
         std::queue<float> mFrameTimeQueue;
 
-        Backend &mBackend;
+        std::unique_ptr<Backend> &mBackend;
         VideoProcessor &mVideoProcessor;
         Log &mAppLog;
 
