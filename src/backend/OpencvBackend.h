@@ -17,6 +17,9 @@ namespace slr {
                       std::mutex &mutex) :
                 Backend(argc, argv, window, currentTexture, dt, mutex), mIsOpened(false), mFramerate(30) {}
 
+        explicit OpencvBackend(const std::unique_ptr<Backend> &other) : Backend(other), mIsOpened(false),
+                                                                        mFramerate(30) {}
+
         void Init() override;
 
         void LiveCapture() override;

@@ -12,13 +12,9 @@
 #include "frontend/GUI.h"
 #include "videoproc/VideoProcessor.h"
 #include "misc/Log.h"
+#include "backend/BackendOption.h"
 
 namespace slr {
-    enum BackendOption {
-        OPENCV = 0,
-        PVCAM = 1,
-    };
-
     class App {
     public:
         App(int argc, char **argv, uint16_t width, uint16_t height, const sf::ContextSettings &settings, Log &log) :
@@ -29,7 +25,7 @@ namespace slr {
                 mRenderer(mWindow, mDt, mCurrentTexture, mTextureMutex),
                 mBackend(std::make_unique<OpencvBackend>(argc, argv, mWindow, mCurrentTexture, mDt, mTextureMutex)),
                 mCurrentBackend(OPENCV),
-                mGUI(mWindow, mDt, mBackend, mVideoProc, log),
+                mGUI(mWindow, mDt, mBackend, mCurrentBackend, mVideoProc, log),
                 mVideoProc(mCurrentTexture, mTextureMutex) {}
 
         void Init();

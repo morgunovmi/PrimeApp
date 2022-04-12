@@ -17,6 +17,12 @@ namespace slr {
                 sf::Time &dt, std::mutex &mutex) : margc(argc), margv(argv), mWindow(window), mCurrentTexture(texture),
                                                    mDt(dt), mTextureMutex(mutex), mIsCapturing() {}
 
+        explicit Backend(const std::unique_ptr<Backend> &other) : margc(other->margc), margv(other->margv),
+                                                                  mWindow(other->mWindow),
+                                                                  mCurrentTexture(other->mCurrentTexture),
+                                                                  mDt(other->mDt), mTextureMutex(other->mTextureMutex),
+                                                                  mIsCapturing(other->mIsCapturing.load()) {}
+
         virtual void Init() {}
 
         virtual void LiveCapture() {}

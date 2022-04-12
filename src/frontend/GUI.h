@@ -8,30 +8,26 @@
 #include "misc/Log.h"
 #include "backend/PhotometricsBackend.h"
 #include "videoproc/VideoProcessor.h"
+#include "backend/BackendOption.h"
 
 namespace slr {
     const uint16_t FRAME_QUEUE_SIZE = 60;
 
     class GUI {
     public:
-        GUI(sf::RenderWindow &window, sf::Time &dt, std::unique_ptr<Backend> &backend,
-            VideoProcessor &videoproc, Log &log) : mWindow(window), mDt(dt),
-                                                   mFrameTimeQueue(),
-                                                   mShowMainMenuBar(
-                                                           true),
-                                                   mShowFrameInfoOverlay(
-                                                           false),
-                                                   mShowAppLog(
-                                                           true),
+        GUI(sf::RenderWindow &window, sf::Time &dt, std::unique_ptr<Backend> &backend, BackendOption &curr,
+            VideoProcessor &videoproc, Log &log) : mWindow(window), mDt(dt), mFrameTimeQueue(),
+                                                   mShowMainMenuBar(true),
+                                                   mShowFrameInfoOverlay(false),
+                                                   mShowAppLog(true),
                                                    mShowVideoProcessor(false),
-                                                   mBackend(
-                                                           backend),
+                                                   mBackend(backend),
+                                                   mCurrBackend(curr),
                                                    mVideoProcessor(videoproc),
                                                    mAppLog(log),
                                                    mHubballiFont(),
                                                    mIsInit(false),
-                                                   mIsCapturing(
-                                                           false) {}
+                                                   mIsCapturing(false) {}
 
         bool Init();
 
@@ -63,6 +59,8 @@ namespace slr {
         std::queue<float> mFrameTimeQueue;
 
         std::unique_ptr<Backend> &mBackend;
+        BackendOption &mCurrBackend;
+
         VideoProcessor &mVideoProcessor;
         Log &mAppLog;
 

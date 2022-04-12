@@ -131,6 +131,9 @@ namespace slr {
                             std::mutex &mutex) :
                 Backend(argc, argv, window, currentTexture, dt, mutex), mPvcamMutex() {}
 
+
+        explicit PhotometricsBackend(const std::unique_ptr<Backend> &other) : Backend(other), mPvcamMutex() {}
+
         void Init() override;
 
         void LiveCapture() override;

@@ -4,6 +4,7 @@
 #include "imgui.h"
 #include "imgui_stdlib.h"
 
+//TODO Disabled blocks
 namespace slr {
     bool GUI::Init() {
         ImGui::SFML::Init(mWindow);
@@ -105,6 +106,24 @@ namespace slr {
                 if (ImGui::MenuItem("Frame Info", "F2", &mShowFrameInfoOverlay)) {}
                 if (ImGui::MenuItem("App Log", nullptr, &mShowAppLog)) {}
                 ImGui::EndMenu();
+            }
+
+            auto oldOpt = mCurrBackend;
+            if (ImGui::BeginMenu("Backend")) {
+                ImGui::RadioButton("OpenCV", (int *) &mCurrBackend, 0);
+                ImGui::RadioButton("PVCam", (int *) &mCurrBackend, 1);
+                ImGui::EndMenu();
+            }
+
+            if (oldOpt != mCurrBackend) {
+                switch (mCurrBackend) {
+                    case OPENCV:
+                        mBackend = std::make_unique<OpencvBackend>(mBackend);
+                        break;
+                    case PVCAM:
+                        mBackend = std::make_unique<PhotometricsBackend>(mBackend);
+                        break;
+                }
             }
             ImGui::EndMainMenuBar();
         }
