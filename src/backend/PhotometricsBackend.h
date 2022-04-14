@@ -76,7 +76,6 @@ namespace slr {
         bool flag{false};
     };
 
-
     struct CameraContext {
         // Camera name, the only member valid before opening camera
         char camName[CAM_NAME_LEN]{'\0'};
@@ -177,7 +176,7 @@ namespace slr {
         const uns16 mCameraIndex = 0;
         std::vector<std::unique_ptr<CameraContext>> mCameraContexts;
 
-        rs_bool mIsPvcamInitialized = FALSE;
+        bool mIsPvcamInitialized = FALSE;
     };
 }
 

@@ -17,10 +17,11 @@ public:
 
     virtual ~Worker() = default;
 
+    const int mId;
+
 protected:
     virtual void Main() {}
 
-    const int mId;
     bool mRunning;
 
     std::jthread mThread;

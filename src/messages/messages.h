@@ -33,26 +33,6 @@ struct PythonWorkerQuit {
 using PythonWorkerMessage = std::variant<
         PythonWorkerRunString,
         PythonWorkerQuit
-        >;
-
-// Camera worker
-
-struct CameraWorkerInit {
-
-};
-
-struct CameraWorkerLiveCapture {
-
-};
-
-struct CameraWorkerSequenceCapture {
-    uint32_t numFrames;
-};
-
-using CameraWorkerMessage = std::variant<
-        CameraWorkerInit,
-        CameraWorkerLiveCapture,
-        CameraWorkerSequenceCapture
-        >;
+>;
 
 #endif

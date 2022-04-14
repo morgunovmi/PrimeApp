@@ -8,20 +8,20 @@
 
 #include "messages/MessageQueue.h"
 #include "messages/messages.h"
-#include "workers/CameraWorker.h"
 
 namespace slr {
     class Backend {
     public:
         Backend(int argc, char **argv, sf::RenderWindow &window, sf::Texture &texture,
-                sf::Time &dt, std::mutex &mutex) : margc(argc), margv(argv), mWindow(window), mCurrentTexture(texture),
-                                                   mDt(dt), mTextureMutex(mutex), mIsCapturing() {}
+                sf::Time &dt, std::mutex &mutex) : margc(argc), margv(argv), mWindow(window),
+                                                   mCurrentTexture(texture),
+                                                   mDt(dt), mTextureMutex(mutex) {}
 
         explicit Backend(const std::unique_ptr<Backend> &other) : margc(other->margc), margv(other->margv),
                                                                   mWindow(other->mWindow),
                                                                   mCurrentTexture(other->mCurrentTexture),
-                                                                  mDt(other->mDt), mTextureMutex(other->mTextureMutex),
-                                                                  mIsCapturing(other->mIsCapturing.load()) {}
+                                                                  mDt(other->mDt),
+                                                                  mTextureMutex(other->mTextureMutex) {}
 
         virtual void Init() {}
 
@@ -40,9 +40,6 @@ namespace slr {
 
         sf::Texture &mCurrentTexture;
         std::mutex &mTextureMutex;
-
-        std::jthread mWorkerThread;
-        std::atomic<bool> mIsCapturing;
 
         sf::Time &mDt;
 
