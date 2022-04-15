@@ -52,7 +52,8 @@ void slr::OpencvBackend::SequenceCapture(uint32_t nFrames) {
     }
 
     mContext.isCapturing = true;
-    mContext.thread = std::make_unique<std::jthread>(&OpencvBackend::SequenceCapture_, this, std::ref(mContext), nFrames);
+    mContext.thread = std::make_unique<std::jthread>(&OpencvBackend::SequenceCapture_, this, std::ref(mContext),
+                                                     nFrames);
 }
 
 void slr::OpencvBackend::TerminateCapture() {

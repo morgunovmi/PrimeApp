@@ -18,7 +18,7 @@ public:
         Init();
     }
 
-    void LoadVideo(const std::string &path);
+    void LoadVideo(std::string_view path);
 
     void LocateOneFrame(int frameNum, int minm, double ecc, int size, int diameter);
 

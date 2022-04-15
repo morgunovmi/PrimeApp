@@ -25,6 +25,7 @@ find_package(OpenCV CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 find_package(pybind11 CONFIG REQUIRED)
+find_package(OpenImageIO CONFIG REQUIRED)
 
 set(SFML_LIBS sfml-graphics sfml-system sfml-window)
 
@@ -56,6 +57,7 @@ target_link_libraries(
         fmt::fmt
         spdlog::spdlog spdlog::spdlog_header_only
         pybind11::embed
+        OpenImageIO::OpenImageIO
 )
 
 file(COPY ${CMAKE_SOURCE_DIR}/resources DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})

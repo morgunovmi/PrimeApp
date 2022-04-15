@@ -1,5 +1,5 @@
 {
     "name": "prime-app",
     "version": "0.0.1",
-    "dependencies": ["sfml", "imgui", "imgui-sfml", "opencv", "fmt", "spdlog", "python3", "pybind11"]
+    "dependencies": ["sfml", "imgui", "imgui-sfml", "opencv", "fmt", "spdlog", "pybind11", "openimageio"]
 }

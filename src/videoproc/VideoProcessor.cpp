@@ -1,3 +1,5 @@
+#include <filesystem>
+
 #include "VideoProcessor.h"
 #include "messages/messages.h"
 
@@ -110,14 +112,19 @@ class Video:
 )"});
 }
 
-void VideoProcessor::LoadVideo(const std::string &path) {
+void VideoProcessor::LoadVideo(std::string_view path) {
+    if (!std::filesystem::exists(std::filesystem::path{path})) {
+        spdlog::error("No such file, please check the path");
+        return;
+    }
+
     spdlog::info("Instantiating Video and testing one frame");
     mMessageQueue.Send(PythonWorkerRunString{
             .string = R"(
 vid = Video(path)
 )",
             .strVariables{
-                    {"path", path}
+                    {"path", std::string{path}}
             }
     });
 }
