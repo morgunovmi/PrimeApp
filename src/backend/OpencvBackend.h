@@ -52,9 +52,9 @@ namespace slr {
 
         void Init() override;
 
-        void LiveCapture() override;
+        void LiveCapture(CAP_FORMAT format) override;
 
-        void SequenceCapture(uint32_t nFrames) override;
+        void SequenceCapture(uint32_t nFrames, CAP_FORMAT format) override;
 
         void TerminateCapture() override;
 
@@ -65,9 +65,11 @@ namespace slr {
     private:
         void Init_(OpencvCameraCtx &ctx);
 
-        void LiveCapture_(OpencvCameraCtx &ctx);
+        void LiveCapture_(OpencvCameraCtx &ctx, CAP_FORMAT format);
 
-        void SequenceCapture_(OpencvCameraCtx &ctx, uint16_t nFrames);
+        void SequenceCapture_(OpencvCameraCtx &ctx, uint16_t nFrames, CAP_FORMAT format);
+
+        void Capture_(OpencvCameraCtx &ctx, CAP_FORMAT format, int16_t nFrames);
 
         static sf::Image MatToImage(const cv::Mat &mat);
 

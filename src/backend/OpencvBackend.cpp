@@ -1,5 +1,6 @@
 #include "OpencvBackend.h"
 #include "spdlog/spdlog.h"
+#include <OpenImageIO/imageio.h>
 
 sf::Image slr::OpencvBackend::MatToImage(const cv::Mat &mat) {
     sf::Image image;
@@ -25,7 +26,7 @@ void slr::OpencvBackend::Init() {
     mContext.thread = std::make_unique<std::jthread>(&OpencvBackend::Init_, this, std::ref(mContext));
 }
 
-void slr::OpencvBackend::LiveCapture() {
+void slr::OpencvBackend::LiveCapture(CAP_FORMAT format) {
     if (!mContext.isCamOpen) {
         spdlog::warn("No cam is open\n Please init first");
         return;
@@ -37,10 +38,10 @@ void slr::OpencvBackend::LiveCapture() {
     }
 
     mContext.isCapturing = true;
-    mContext.thread = std::make_unique<std::jthread>(&OpencvBackend::LiveCapture_, this, std::ref(mContext));
+    mContext.thread = std::make_unique<std::jthread>(&OpencvBackend::Capture_, this, std::ref(mContext), format, -1);
 }
 
-void slr::OpencvBackend::SequenceCapture(uint32_t nFrames) {
+void slr::OpencvBackend::SequenceCapture(uint32_t nFrames, CAP_FORMAT format) {
     if (!mContext.isCamOpen) {
         spdlog::warn("No cam is open\n Please init first");
         return;
@@ -52,8 +53,8 @@ void slr::OpencvBackend::SequenceCapture(uint32_t nFrames) {
     }
 
     mContext.isCapturing = true;
-    mContext.thread = std::make_unique<std::jthread>(&OpencvBackend::SequenceCapture_, this, std::ref(mContext),
-                                                     nFrames);
+    mContext.thread = std::make_unique<std::jthread>(&OpencvBackend::Capture_, this, std::ref(mContext),
+                                                     format, nFrames);
 }
 
 void slr::OpencvBackend::TerminateCapture() {
@@ -73,7 +74,8 @@ void slr::OpencvBackend::Init_(slr::OpencvCameraCtx &ctx) {
     spdlog::info("Successful camera init");
 }
 
-void slr::OpencvBackend::LiveCapture_(slr::OpencvCameraCtx &ctx) {
+//TODO: Refactor repeating blocks of code
+void slr::OpencvBackend::Capture_(OpencvCameraCtx &ctx, CAP_FORMAT format, int16_t nFrames) {
     const auto t = std::time(nullptr);
     const auto tm = *std::localtime(&t);
 
@@ -81,15 +83,40 @@ void slr::OpencvBackend::LiveCapture_(slr::OpencvCameraCtx &ctx) {
     oss << std::put_time(&tm, "%H-%M-%S");
     const auto curTime = oss.str();
 
-    const auto videoPath = fmt::format("{}{}.mp4", LIVE_CAPTURE_PREFIX, curTime);
+    auto videoPath = curTime;
+    if (nFrames <= 0) {
+        videoPath = fmt::format("{}{}", LIVE_CAPTURE_PREFIX, videoPath);
+    } else {
+        videoPath = fmt::format("{}{}", SEQ_CAPTURE_PREFIX, videoPath);
+    }
 
-    cv::VideoWriter writer{videoPath, cv::VideoWriter::fourcc('X', '2', '6', '4'),
-                           static_cast<double>(ctx.framerate),
-                           cv::Size{static_cast<int>(ctx.camera->get(cv::CAP_PROP_FRAME_WIDTH)),
-                                    static_cast<int>(ctx.camera->get(cv::CAP_PROP_FRAME_HEIGHT))}};
+    switch (format) {
+        case TIF:
+            videoPath.append(".tif");
+            break;
+        case MP4:
+            videoPath.append(".mp4");
+            break;
+        default:
+            spdlog::error("Undefined format");
+    }
+
+    const int xres = ctx.camera->get(cv::CAP_PROP_FRAME_WIDTH);
+    const int yres = ctx.camera->get(cv::CAP_PROP_FRAME_HEIGHT);
+    const int channels = ctx.camera->get(cv::CAP_PROP_XI_IMAGE_IS_COLOR) ? 3 : 1;
+
+    const int singleFrameSize = xres * yres * channels;
+
+    std::vector <std::uint8_t> pixels;
 
     auto counter = 0;
     while (ctx.isCapturing) {
+        // Condition to quit sequence capture
+        if (nFrames > 0 && counter >= nFrames) {
+            ctx.isCapturing = false;
+            break;
+        }
+
         ++counter;
 
         cv::Mat frame;
@@ -99,72 +126,68 @@ void slr::OpencvBackend::LiveCapture_(slr::OpencvCameraCtx &ctx) {
             spdlog::error("Got empty frame. Stopping capture...");
             ctx.isCapturing = false;
             ctx.camera->release();
-            writer.release();
             ctx.isCamOpen = false;
             break;
         }
 
-        spdlog::debug("Frame no {}", counter);
-
-        writer.write(frame);
+        spdlog::info("Frame no {}", counter);
 
         cv::cvtColor(frame, frame, cv::COLOR_BGR2RGB);
+
+        std::copy(frame.data, frame.data + singleFrameSize, std::back_inserter(pixels));
+
         const auto image = MatToImage(frame);
 
         std::scoped_lock lock(mTextureMutex);
         mCurrentTexture.loadFromImage(image);
         std::this_thread::sleep_for(
-                std::chrono::milliseconds(static_cast<uint64_t>(1.f / static_cast<float>(ctx.framerate)) * 1000));
+                std::chrono::milliseconds(
+                        static_cast<uint64_t>(1.f / static_cast<float>(ctx.framerate)) * 1000));
     }
     ctx.camera->release();
-    ctx.isCamOpen = false;
-    writer.release();
-}
-
-void slr::OpencvBackend::SequenceCapture_(OpencvCameraCtx &ctx, uint16_t nFrames) {
-    const auto t = std::time(nullptr);
-    const auto tm = *std::localtime(&t);
-
-    std::ostringstream oss;
-    oss << std::put_time(&tm, "%H-%M-%S");
-    const auto curTime = oss.str();
-
-    const auto videoPath = fmt::format("{}{}.mp4", SEQ_CAPTURE_PREFIX, curTime);
-
-    cv::VideoWriter writer{videoPath, cv::VideoWriter::fourcc('X', '2', '6', '4'),
-                           static_cast<double>(ctx.framerate),
-                           cv::Size{static_cast<int>(ctx.camera->get(cv::CAP_PROP_FRAME_WIDTH)),
-                                    static_cast<int>(ctx.camera->get(cv::CAP_PROP_FRAME_HEIGHT))}};
-
-    for (uint32_t counter = 0; counter < nFrames && ctx.isCapturing; ++counter) {
-        spdlog::debug("Counter: {}", counter);
-        cv::Mat frame;
-
-        *ctx.camera >> frame;
-        if (frame.empty()) {
-            spdlog::info("Got empty frame. Stopping capture...");
-            ctx.isCapturing = false;
-            ctx.camera->release();
-            writer.release();
-            ctx.isCamOpen = false;
-            break;
-        }
-
-        spdlog::debug("Frame no {}", counter);
-
-        writer.write(frame);
-
-        cv::cvtColor(frame, frame, cv::COLOR_BGR2RGB);
-        const auto image = MatToImage(frame);
-
-        std::scoped_lock lock(mTextureMutex);
-        mCurrentTexture.loadFromImage(image);
-        std::this_thread::sleep_for(
-                std::chrono::milliseconds(static_cast<uint64_t>(1.f / static_cast<float>(ctx.framerate)) * 1000));
-    }
-
-    ctx.camera->release();
-    ctx.isCamOpen = false;
     ctx.isCapturing = false;
-    writer.release();
+    ctx.isCamOpen = false;
+
+    switch (format) {
+        case TIF: {
+            using namespace OIIO;
+
+            std::unique_ptr <ImageOutput> out = ImageOutput::create(videoPath);
+            if (!out)
+                return;
+            ImageSpec spec(xres, yres, channels, TypeDesc::UINT8);
+
+            if (!out->supports("multiimage") ||
+                !out->supports("appendsubimage")) {
+                spdlog::error("Current plugin doesn't support tif subimages");
+                return;
+            }
+
+            ImageOutput::OpenMode appendmode = ImageOutput::Create;
+
+            for (int s = 0; s < counter; ++s) {
+                out->open(videoPath, spec, appendmode);
+                out->write_image(TypeDesc::UINT8, pixels.data() + singleFrameSize * s);
+                appendmode = ImageOutput::AppendSubimage;
+            }
+            break;
+        }
+
+        case MP4: {
+            cv::VideoWriter writer{videoPath, cv::VideoWriter::fourcc('X', '2', '6', '4'),
+                                   static_cast<double>(ctx.framerate),
+                                   cv::Size{xres, yres}};
+
+            for (int s = 0; s < counter; ++s) {
+                auto mat = cv::Mat(yres, xres, CV_8UC3, pixels.data() + singleFrameSize * s);
+                cv::cvtColor(mat, mat, cv::COLOR_RGB2BGR);
+                writer.write(mat);
+            }
+            writer.release();
+            break;
+        }
+        default:
+            spdlog::error("Undefined format");
+    }
+    spdlog::info("File written to {}", videoPath);
 }

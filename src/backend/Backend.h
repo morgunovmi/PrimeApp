@@ -10,6 +10,11 @@
 #include "messages/messages.h"
 
 namespace slr {
+    enum CAP_FORMAT {
+        TIF = 0,
+        MP4 = 1
+    };
+
     class Backend {
     public:
         Backend(int argc, char **argv, sf::RenderWindow &window, sf::Texture &texture,
@@ -25,9 +30,9 @@ namespace slr {
 
         virtual void Init() {}
 
-        virtual void LiveCapture() {}
+        virtual void LiveCapture(CAP_FORMAT format) {}
 
-        virtual void SequenceCapture(uint32_t nFrames) {}
+        virtual void SequenceCapture(uint32_t nFrames, CAP_FORMAT format) {}
 
         virtual void TerminateCapture() {}
 

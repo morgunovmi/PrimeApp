@@ -643,7 +643,7 @@ namespace slr {
         return false;
     }
 
-    void PhotometricsBackend::LiveCapture() {
+    void PhotometricsBackend::LiveCapture(CAP_FORMAT format) {
         auto &ctx = mCameraContexts[0];
         uns32 exposureBytes;
         const uns32 exposureTime = 40; // milliseconds

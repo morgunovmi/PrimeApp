@@ -189,15 +189,20 @@ namespace slr {
 //                mIsInit = true;
             }
 
+            static auto captureFormat = TIF;
+            ImGui::RadioButton("tif", (int *) &captureFormat, 0);
+            ImGui::SameLine();
+            ImGui::RadioButton("mp4", (int *) &captureFormat, 1);
+
             if (ImGui::Button("Live capture")/* && mIsInit && !mIsCapturing*/) {
 //                mIsCapturing = true;
-                mBackend->LiveCapture();
+                mBackend->LiveCapture(captureFormat);
             }
 
             static int nFrames = 100;
             if (ImGui::Button("Sequence capture")/* && mIsInit && !mIsCapturing*/) {
                 //                mIsCapturing = true;
-                mBackend->SequenceCapture(nFrames);
+                mBackend->SequenceCapture(nFrames, captureFormat);
             }
             ImGui::SameLine();
             ImGui::PushItemWidth(mInputFieldWidth);
@@ -221,7 +226,9 @@ namespace slr {
         if (mShowVideoProcessor) ShowVideoProcessor();
         if (mShowAppLog) ShowAppLog();
 
+#ifndef NDEBUG
         ImGui::ShowDemoWindow();
+#endif
 
         ImGui::PopFont();
         ImGui::SFML::Render(mWindow);

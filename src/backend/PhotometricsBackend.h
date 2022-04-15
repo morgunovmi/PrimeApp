@@ -135,7 +135,7 @@ namespace slr {
 
         void Init() override;
 
-        void LiveCapture() override;
+        void LiveCapture(CAP_FORMAT format) override;
 
         void TerminateCapture() override;
 
