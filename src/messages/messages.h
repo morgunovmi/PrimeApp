@@ -3,17 +3,18 @@
 
 #include <SFML/Graphics.hpp>
 
-#include <vector>
-#include <variant>
 #include <string>
+#include <variant>
+#include <vector>
 
-#include "imgui.h"
+#include <imgui.h>
 
 // PythonWorker
 
 const uint16_t MAX_DEBUG_STR_LEN = 256;
 
-struct PythonWorkerRunString {
+struct PythonWorkerRunString
+{
 #ifndef NDEBUG
     const char debugString[MAX_DEBUG_STR_LEN] = "Run python string message";
 #endif
@@ -24,15 +25,14 @@ struct PythonWorkerRunString {
     std::vector<std::pair<std::string, double>> floatVariables{};
 };
 
-struct PythonWorkerQuit {
+struct PythonWorkerQuit
+{
 #ifndef NDEBUG
     const char debugString[MAX_DEBUG_STR_LEN] = "Python worker quit message";
 #endif
 };
 
-using PythonWorkerMessage = std::variant<
-        PythonWorkerRunString,
-        PythonWorkerQuit
->;
+using PythonWorkerMessage =
+        std::variant<PythonWorkerRunString, PythonWorkerQuit>;
 
 #endif

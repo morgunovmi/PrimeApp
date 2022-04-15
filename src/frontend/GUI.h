@@ -5,29 +5,28 @@
 
 #include <SFML/Graphics.hpp>
 
-#include "misc/Log.h"
-#include "backend/PhotometricsBackend.h"
-#include "videoproc/VideoProcessor.h"
 #include "backend/BackendOption.h"
+#include "backend/PhotometricsBackend.h"
+#include "misc/Log.h"
+#include "videoproc/VideoProcessor.h"
 
-namespace slr {
+namespace slr
+{
     const uint16_t FRAME_QUEUE_SIZE = 60;
 
-    class GUI {
+    class GUI
+    {
     public:
-        GUI(sf::RenderWindow &window, sf::Time &dt, std::unique_ptr<Backend> &backend, BackendOption &curr,
-            VideoProcessor &videoproc, Log &log) : mWindow(window), mDt(dt), mFrameTimeQueue(),
-                                                   mShowMainMenuBar(true),
-                                                   mShowFrameInfoOverlay(false),
-                                                   mShowAppLog(true),
-                                                   mShowVideoProcessor(false),
-                                                   mBackend(backend),
-                                                   mCurrBackend(curr),
-                                                   mVideoProcessor(videoproc),
-                                                   mAppLog(log),
-                                                   mHubballiFont(),
-                                                   mIsInit(false),
-                                                   mIsCapturing(false) {}
+        GUI(sf::RenderWindow& window, sf::Time& dt,
+            std::unique_ptr<Backend>& backend, BackendOption& curr,
+            VideoProcessor& videoproc, Log& log)
+            : m_window(window), m_dt(dt), m_frameTimeQueue(),
+              m_bShowMainMenuBar(true), m_bShowFrameInfoOverlay(false),
+              m_bShowAppLog(true), m_bShowVideoProcessor(false),
+              m_backend(backend), m_selectedBackend(curr),
+              m_videoProcessor(videoproc), m_appLog(log), m_hubballiFont()
+        {
+        }
 
         bool Init();
 
@@ -53,29 +52,26 @@ namespace slr {
         void ShowCameraButtons();
 
     private:
-        sf::RenderWindow &mWindow;
-        sf::Time &mDt;
+        sf::RenderWindow& m_window;
+        sf::Time& m_dt;
 
-        std::queue<float> mFrameTimeQueue;
+        std::queue<float> m_frameTimeQueue;
 
-        std::unique_ptr<Backend> &mBackend;
-        BackendOption &mCurrBackend;
+        std::unique_ptr<Backend>& m_backend;
+        BackendOption& m_selectedBackend;
 
-        VideoProcessor &mVideoProcessor;
-        Log &mAppLog;
+        VideoProcessor& m_videoProcessor;
+        Log& m_appLog;
 
-        ImFont *mHubballiFont;
+        ImFont* m_hubballiFont;
 
-        bool mShowMainMenuBar;
-        bool mShowFrameInfoOverlay;
-        bool mShowAppLog;
-        bool mShowVideoProcessor;
+        bool m_bShowMainMenuBar;
+        bool m_bShowFrameInfoOverlay;
+        bool m_bShowAppLog;
+        bool m_bShowVideoProcessor;
 
-        bool mIsInit;
-        bool mIsCapturing;
-
-        const uint16_t mInputFieldWidth = 150;
+        const uint16_t m_inputFieldWidth = 150;
     };
-}
+}// namespace slr
 
-#endif //SOLAR_GUI_H
+#endif//SOLAR_GUI_H

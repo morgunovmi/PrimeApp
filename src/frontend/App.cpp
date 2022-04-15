@@ -1,15 +1,18 @@
 #include "frontend/App.h"
 
-namespace slr {
-    void App::Run() {
-        mGUI.Init();
-        while (mWindow.isOpen()) {
-            mDt = mDeltaClock.restart();
-            mGUI.Update();
-            mRenderer.Render();
-            mGUI.Render();
-            mRenderer.Display();
+namespace slr
+{
+    void App::Run()
+    {
+        m_gui.Init();
+        while (m_window.isOpen())
+        {
+            m_dt = m_deltaClock.restart();
+            m_gui.Update();
+            m_renderer.Render();
+            m_gui.Render();
+            m_renderer.Display();
         }
-        mGUI.Shutdown();
+        m_gui.Shutdown();
     }
-}
+}// namespace slr

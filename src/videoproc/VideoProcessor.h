@@ -1,47 +1,53 @@
 #ifndef PRIME_APP_VIDEOPROCESSOR_H
 #define PRIME_APP_VIDEOPROCESSOR_H
 
-#include <pybind11/embed.h>
 #include <SFML/Graphics.hpp>
+#include <pybind11/embed.h>
+#include <spdlog/spdlog.h>
 
 #include "workers/PythonWorker.h"
-#include "spdlog/spdlog.h"
 
 namespace py = pybind11;
 using namespace py::literals;
 
-class VideoProcessor {
+class VideoProcessor
+{
 public:
-    VideoProcessor(sf::Texture &texture, std::mutex &mutex) : mCurrentTexture(texture), mTextureMutex(mutex),
-                                                              mMessageQueue(), mPythonWorker(1, mMessageQueue) {
-        mPythonWorker.Run();
+    VideoProcessor(sf::Texture& texture, std::mutex& mutex)
+        : m_currentTexture(texture), m_textureMutex(mutex), m_messageQueue(),
+          m_pythonWorker(1, m_messageQueue)
+    {
+        m_pythonWorker.Run();
         Init();
     }
 
     void LoadVideo(std::string_view path);
 
-    void LocateOneFrame(int frameNum, int minm, double ecc, int size, int diameter);
+    void LocateOneFrame(int frameNum, int minm, double ecc, int size,
+                        int diameter);
 
     void LocateAllFrames();
 
-    void LinkAndFilter(int searchRange, int memory, int minTrajectoryLen, int driftSmoothing);
+    void LinkAndFilter(int searchRange, int memory, int minTrajectoryLen,
+                       int driftSmoothing);
 
     void GroupAndPlotTrajectory(int minDiagSize, int maxDiagSize);
 
-    ~VideoProcessor() {
+    ~VideoProcessor()
+    {
         spdlog::info("Killing video processor");
-        mMessageQueue.Send(PythonWorkerQuit{});
+        m_messageQueue.Send(PythonWorkerQuit{});
     }
 
 private:
     void Init();
 
-    sf::Texture &mCurrentTexture;
-    std::mutex &mTextureMutex;
+    sf::Texture& m_currentTexture;
+    std::mutex& m_textureMutex;
 
-    MessageQueue<PythonWorkerMessage> mMessageQueue;
+    MessageQueue<PythonWorkerMessage> m_messageQueue;
 
-    PythonWorker mPythonWorker;
+    PythonWorker m_pythonWorker;
 };
 
-#endif //PRIME_APP_VIDEOPROCESSOR_H
+#endif//PRIME_APP_VIDEOPROCESSOR_H

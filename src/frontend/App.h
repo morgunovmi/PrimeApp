@@ -1,56 +1,63 @@
 #ifndef SOLAR_APP_H
 #define SOLAR_APP_H
 
-#include <variant>
-
 #include <SFML/Graphics.hpp>
 
 #include "Renderer.h"
 #include "backend/Backend.h"
+#include "backend/BackendOption.h"
 #include "backend/OpencvBackend.h"
 #include "backend/PhotometricsBackend.h"
 #include "frontend/GUI.h"
-#include "videoproc/VideoProcessor.h"
 #include "misc/Log.h"
-#include "backend/BackendOption.h"
+#include "videoproc/VideoProcessor.h"
 
-namespace slr {
-    class App {
+namespace slr
+{
+    class App
+    {
     public:
-        App(int argc, char **argv, uint16_t width, uint16_t height, const sf::ContextSettings &settings, Log &log) :
-                mWindowWidth(width), mWindowHeight(height), mSettings(settings),
-                mWindow(sf::VideoMode{width, height},
-                        "Prime App", sf::Style::Close, settings),
-                mDeltaClock(), mDt(), mCurrentTexture(), mTextureMutex(),
-                mRenderer(mWindow, mDt, mCurrentTexture, mTextureMutex),
-                mBackend(std::make_unique<OpencvBackend>(argc, argv, mWindow, mCurrentTexture, mDt, mTextureMutex)),
-                mCurrentBackend(OPENCV),
-                mGUI(mWindow, mDt, mBackend, mCurrentBackend, mVideoProc, log),
-                mVideoProc(mCurrentTexture, mTextureMutex) {}
+        App(int argc, char** argv, uint16_t width, uint16_t height,
+            const sf::ContextSettings& settings, Log& log)
+            : m_windowWidth(width), m_windowHeight(height),
+              m_contextSettings(settings),
+              m_window(sf::VideoMode{width, height}, "Prime App",
+                       sf::Style::Close, settings),
+              m_deltaClock(), m_dt(), m_currentTexture(), m_textureMutex(),
+              m_renderer(m_window, m_dt, m_currentTexture, m_textureMutex),
+              m_backend(std::make_unique<OpencvBackend>(argc, argv, m_window,
+                                                        m_currentTexture, m_dt,
+                                                        m_textureMutex)),
+              m_selectedBackend(OPENCV),
+              m_gui(m_window, m_dt, m_backend, m_selectedBackend,
+                    m_videoProcessor, log),
+              m_videoProcessor(m_currentTexture, m_textureMutex)
+        {
+        }
 
         void Init();
 
         void Run();
 
     private:
-        uint16_t mWindowWidth, mWindowHeight;
-        sf::ContextSettings mSettings;
+        uint16_t m_windowWidth, m_windowHeight;
+        sf::ContextSettings m_contextSettings;
 
-        sf::RenderWindow mWindow;
+        sf::RenderWindow m_window;
 
-        sf::Clock mDeltaClock;
-        sf::Time mDt;
+        sf::Clock m_deltaClock;
+        sf::Time m_dt;
 
-        std::unique_ptr<Backend> mBackend;
-        BackendOption mCurrentBackend;
+        std::unique_ptr<Backend> m_backend;
+        BackendOption m_selectedBackend;
 
-        Renderer mRenderer;
-        GUI mGUI;
-        VideoProcessor mVideoProc;
+        Renderer m_renderer;
+        GUI m_gui;
+        VideoProcessor m_videoProcessor;
 
-        sf::Texture mCurrentTexture;
-        std::mutex mTextureMutex;
+        sf::Texture m_currentTexture;
+        std::mutex m_textureMutex;
     };
-}
+}// namespace slr
 
-#endif //SOLAR_APP_H
+#endif//SOLAR_APP_H

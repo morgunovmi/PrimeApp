@@ -2,18 +2,21 @@
 #define SOLAR_H
 
 #include <array>
+#include <mutex>
 
 #include <SFML/Graphics.hpp>
 #include <SFML/System/Clock.hpp>
 
-#include "misc/Log.h"
-
-namespace slr {
-    class Renderer {
+namespace slr
+{
+    class Renderer
+    {
     public:
-        Renderer(sf::RenderWindow &window, sf::Time &dt,
-                 sf::Texture &texture, std::mutex &mutex) :
-                mWindow(window), mDt(dt), mCurrentTexture(texture), mTextureMutex(mutex) {
+        Renderer(sf::RenderWindow& window, sf::Time& dt, sf::Texture& texture,
+                 std::mutex& mutex)
+            : m_window(window), m_dt(dt), m_currentTexture(texture),
+              m_textureMutex(mutex)
+        {
             Init();
         }
 
@@ -25,13 +28,13 @@ namespace slr {
         void Init();
 
     private:
-        sf::RenderWindow &mWindow;
+        sf::RenderWindow& m_window;
 
-        sf::Texture &mCurrentTexture;
-        std::mutex &mTextureMutex;
+        sf::Texture& m_currentTexture;
+        std::mutex& m_textureMutex;
 
-        sf::Time &mDt;
+        sf::Time& m_dt;
     };
-}
+}// namespace slr
 
 #endif

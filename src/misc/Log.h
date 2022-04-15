@@ -1,26 +1,31 @@
 #ifndef SOLAR_LOG_H
 #define SOLAR_LOG_H
 
-#include "imgui.h"
+#include <imgui.h>
 
-#include <mutex>
 #include <fmt/format.h>
+#include <mutex>
 
-namespace slr {
+namespace slr
+{
     // Taken straight from imgui_demo.cpp
-    struct Log {
+    struct Log
+    {
         ImGuiTextBuffer Buf;
         ImGuiTextFilter Filter;
-        ImVector<int> LineOffsets; // Index to lines offset. We maintain this with AddLog() calls.
-        bool AutoScroll;  // Keep scrolling if already at the bottom.
+        ImVector<int>
+                LineOffsets;// Index to lines offset. We maintain this with AddLog() calls.
+        bool AutoScroll;// Keep scrolling if already at the bottom.
         std::mutex logMutex;
 
-        Log() {
+        Log()
+        {
             AutoScroll = true;
             Clear();
         }
 
-        void Clear() {
+        void Clear()
+        {
             std::scoped_lock lock(logMutex);
 
             Buf.clear();
@@ -28,33 +33,34 @@ namespace slr {
             LineOffsets.push_back(0);
         }
 
-        void AddLog(const char *fmt, ...) IM_FMTARGS(2) {
+        void AddLog(const char* fmt, ...) IM_FMTARGS(2)
+        {
             int old_size = Buf.size();
             va_list args;
-                    va_start(args, fmt);
+            va_start(args, fmt);
             Buf.appendfv(fmt, args);
-                    va_end(args);
+            va_end(args);
             for (int new_size = Buf.size(); old_size < new_size; old_size++)
-                if (Buf[old_size] == '\n')
-                    LineOffsets.push_back(old_size + 1);
+                if (Buf[old_size] == '\n') LineOffsets.push_back(old_size + 1);
         }
 
-        void Draw(const char *title, bool *p_open = nullptr) {
-            if (!ImGui::Begin(title, p_open)) {
+        void Draw(const char* title, bool* p_open = nullptr)
+        {
+            if (!ImGui::Begin(title, p_open))
+            {
                 ImGui::End();
                 return;
             }
 
             // Options menu
-            if (ImGui::BeginPopup("Options")) {
+            if (ImGui::BeginPopup("Options"))
+            {
                 ImGui::Checkbox("Auto-scroll", &AutoScroll);
                 ImGui::EndPopup();
             }
 
             // Main window
-            if (ImGui::Button("Options")) {
-                ImGui::OpenPopup("Options");
-            }
+            if (ImGui::Button("Options")) { ImGui::OpenPopup("Options"); }
 
             ImGui::SameLine();
             bool clear = ImGui::Button("Clear");
@@ -64,32 +70,35 @@ namespace slr {
             Filter.Draw("Filter", -100.0f);
 
             ImGui::Separator();
-            ImGui::BeginChild("scrolling", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
+            ImGui::BeginChild("scrolling", ImVec2(0, 0), false,
+                              ImGuiWindowFlags_HorizontalScrollbar);
 
-            if (clear) {
-                Clear();
-            }
+            if (clear) { Clear(); }
 
-            if (copy) {
-                ImGui::LogToClipboard();
-            }
+            if (copy) { ImGui::LogToClipboard(); }
 
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
-            const char *buf = Buf.begin();
-            const char *buf_end = Buf.end();
-            if (Filter.IsActive()) {
+            const char* buf = Buf.begin();
+            const char* buf_end = Buf.end();
+            if (Filter.IsActive())
+            {
                 // In this example we don't use the clipper when Filter is enabled.
                 // This is because we don't have a random access on the result on our filter.
                 // A real application processing logs with ten of thousands of entries may want to store the result of
                 // search/filter.. especially if the filtering function is not trivial (e.g. reg-exp).
-                for (int line_no = 0; line_no < LineOffsets.Size; line_no++) {
-                    const char *line_start = buf + LineOffsets[line_no];
-                    const char *line_end = (line_no + 1 < LineOffsets.Size) ? (buf + LineOffsets[line_no + 1] - 1)
-                                                                            : buf_end;
+                for (int line_no = 0; line_no < LineOffsets.Size; line_no++)
+                {
+                    const char* line_start = buf + LineOffsets[line_no];
+                    const char* line_end =
+                            (line_no + 1 < LineOffsets.Size)
+                                    ? (buf + LineOffsets[line_no + 1] - 1)
+                                    : buf_end;
                     if (Filter.PassFilter(line_start, line_end))
                         ImGui::TextUnformatted(line_start, line_end);
                 }
-            } else {
+            }
+            else
+            {
                 // The simplest and easy way to display the entire buffer:
                 //   ImGui::TextUnformatted(buf_begin, buf_end);
                 // And it'll just work. TextUnformatted() has specialization for large blob of text and will fast-forward
@@ -105,11 +114,16 @@ namespace slr {
                 // it possible (and would be recommended if you want to search through tens of thousands of entries).
                 ImGuiListClipper clipper;
                 clipper.Begin(LineOffsets.Size);
-                while (clipper.Step()) {
-                    for (int line_no = clipper.DisplayStart; line_no < clipper.DisplayEnd; line_no++) {
-                        const char *line_start = buf + LineOffsets[line_no];
-                        const char *line_end = (line_no + 1 < LineOffsets.Size) ? (buf + LineOffsets[line_no + 1] - 1)
-                                                                                : buf_end;
+                while (clipper.Step())
+                {
+                    for (int line_no = clipper.DisplayStart;
+                         line_no < clipper.DisplayEnd; line_no++)
+                    {
+                        const char* line_start = buf + LineOffsets[line_no];
+                        const char* line_end =
+                                (line_no + 1 < LineOffsets.Size)
+                                        ? (buf + LineOffsets[line_no + 1] - 1)
+                                        : buf_end;
                         ImGui::TextUnformatted(line_start, line_end);
                     }
                 }
@@ -124,6 +138,6 @@ namespace slr {
             ImGui::End();
         }
     };
-}
+}// namespace slr
 
-#endif //SOLAR_LOG_H
+#endif//SOLAR_LOG_H

@@ -8,9 +8,10 @@
 #include <spdlog/spdlog.h>
 
 template<typename T>
-class MessageQueue {
+class MessageQueue
+{
 public:
-    void Send(T &&msg);
+    void Send(T&& msg);
 
     [[nodiscard]] T WaitForMessage();
 
@@ -21,41 +22,45 @@ public:
     [[nodiscard]] auto Size();
 
 private:
-    std::queue<T> mQueue;
-    std::condition_variable mCondVar;
-    std::mutex mMutex;
+    std::queue<T> m_queue;
+    std::condition_variable m_condVar;
+    std::mutex m_mutex;
 };
 
 template<typename T>
-void MessageQueue<T>::Send(T &&msg) {
+void MessageQueue<T>::Send(T&& msg)
+{
     {
         spdlog::debug("Sending message");
-        std::scoped_lock lock(mMutex);
-        mQueue.emplace(std::move(msg));
+        std::scoped_lock lock(m_mutex);
+        m_queue.emplace(std::move(msg));
     }
 
-    mCondVar.notify_all();
+    m_condVar.notify_all();
 }
 
 template<typename T>
-[[nodiscard]] T MessageQueue<T>::WaitForMessage() {
-    std::unique_lock lock(mMutex);
-    mCondVar.wait(lock, [&] { return !mQueue.empty(); });
+[[nodiscard]] T MessageQueue<T>::WaitForMessage()
+{
+    std::unique_lock lock(m_mutex);
+    m_condVar.wait(lock, [&] { return !m_queue.empty(); });
 
     spdlog::debug("received message!");
-    auto msg = mQueue.front();
-    mQueue.pop();
+    auto msg = m_queue.front();
+    m_queue.pop();
 
     return msg;
 }
 
 template<typename T>
-int MessageQueue<T>::Clear() {
-    std::scoped_lock lock(mMutex);
+int MessageQueue<T>::Clear()
+{
+    std::scoped_lock lock(m_mutex);
     auto messages_removed = 0;
 
-    while (!mQueue.empty()) {
-        mQueue.pop();
+    while (!m_queue.empty())
+    {
+        m_queue.pop();
         ++messages_removed;
     }
 
@@ -63,15 +68,17 @@ int MessageQueue<T>::Clear() {
 }
 
 template<typename T>
-[[nodiscard]] bool MessageQueue<T>::Empty() {
-    std::scoped_lock lock(mMutex);
-    return mQueue.empty();
+[[nodiscard]] bool MessageQueue<T>::Empty()
+{
+    std::scoped_lock lock(m_mutex);
+    return m_queue.empty();
 }
 
 template<typename T>
-[[nodiscard]] auto MessageQueue<T>::Size() {
-    std::scoped_lock lock(mMutex);
-    return mQueue.size();
+[[nodiscard]] auto MessageQueue<T>::Size()
+{
+    std::scoped_lock lock(m_mutex);
+    return m_queue.size();
 }
 
 #endif

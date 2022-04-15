@@ -1,32 +1,39 @@
 #ifndef PRIME_APP_BACKEND_H
 #define PRIME_APP_BACKEND_H
 
-#include "imgui-SFML.h"
-#include "spdlog/spdlog.h"
+#include <imgui-SFML.h>
+#include <spdlog/spdlog.h>
 #include <SFML/Graphics.hpp>
-#include <misc/Log.h>
 
+#include "misc/Log.h"
 #include "messages/MessageQueue.h"
 #include "messages/messages.h"
 
-namespace slr {
-    enum CAP_FORMAT {
+namespace slr
+{
+    enum CAP_FORMAT
+    {
         TIF = 0,
         MP4 = 1
     };
 
-    class Backend {
+    class Backend
+    {
     public:
-        Backend(int argc, char **argv, sf::RenderWindow &window, sf::Texture &texture,
-                sf::Time &dt, std::mutex &mutex) : margc(argc), margv(argv), mWindow(window),
-                                                   mCurrentTexture(texture),
-                                                   mDt(dt), mTextureMutex(mutex) {}
+        Backend(int argc, char** argv, sf::RenderWindow& window,
+                sf::Texture& texture, sf::Time& dt, std::mutex& mutex)
+            : m_argc(argc), m_argv(argv), m_window(window),
+              m_currentTexture(texture), m_dt(dt), m_textureMutex(mutex)
+        {
+        }
 
-        explicit Backend(const std::unique_ptr<Backend> &other) : margc(other->margc), margv(other->margv),
-                                                                  mWindow(other->mWindow),
-                                                                  mCurrentTexture(other->mCurrentTexture),
-                                                                  mDt(other->mDt),
-                                                                  mTextureMutex(other->mTextureMutex) {}
+        explicit Backend(const std::unique_ptr<Backend>& other)
+            : m_argc(other->m_argc), m_argv(other->m_argv),
+              m_window(other->m_window),
+              m_currentTexture(other->m_currentTexture), m_dt(other->m_dt),
+              m_textureMutex(other->m_textureMutex)
+        {
+        }
 
         virtual void Init() {}
 
@@ -39,20 +46,21 @@ namespace slr {
         virtual ~Backend() = default;
 
     protected:
-        int margc;
-        char **margv;
-        sf::RenderWindow &mWindow;
+        int m_argc;
+        char** m_argv;
+        sf::RenderWindow& m_window;
 
-        sf::Texture &mCurrentTexture;
-        std::mutex &mTextureMutex;
+        sf::Texture& m_currentTexture;
+        std::mutex& m_textureMutex;
 
-        sf::Time &mDt;
+        sf::Time& m_dt;
 
         template<typename... Args>
-        static void PrintError(fmt::format_string<Args...> fmt, Args &&...args) {
+        static void PrintError(fmt::format_string<Args...> fmt, Args&&... args)
+        {
             spdlog::error(fmt, args...);
         }
     };
-}
+}// namespace slr
 
-#endif // PRIME_APP_BACKEND_H
+#endif// PRIME_APP_BACKEND_H

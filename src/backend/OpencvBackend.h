@@ -2,13 +2,14 @@
 #define PRIME_APP_OPENCVBACKEND_H
 
 #include <string_view>
-
 #include <opencv2/opencv.hpp>
 
 #include "Backend.h"
 
-namespace slr {
-    struct CvEvent {
+namespace slr
+{
+    struct CvEvent
+    {
         // Mutex that guards all other members
         std::mutex mutex{};
         // Condition that any thread could wait on
@@ -17,7 +18,8 @@ namespace slr {
         bool flag{false};
     };
 
-    struct OpencvCameraCtx {
+    struct OpencvCameraCtx
+    {
         std::unique_ptr<cv::VideoCapture> camera;
         uint16_t framerate;
 
@@ -37,18 +39,23 @@ namespace slr {
 
     const uint16_t CV_DEFAULT_FPS = 30;
 
-    class OpencvBackend : public Backend {
+    class OpencvBackend : public Backend
+    {
     public:
-        OpencvBackend(int argc, char **argv, sf::RenderWindow &window, sf::Texture &currentTexture, sf::Time &dt,
-                      std::mutex &mutex) :
-                Backend(argc, argv, window, currentTexture, dt, mutex),
-                mContext(OpencvCameraCtx{nullptr, CV_DEFAULT_FPS, CvEvent{}, false}) {}
+        OpencvBackend(int argc, char** argv, sf::RenderWindow& window,
+                      sf::Texture& currentTexture, sf::Time& dt,
+                      std::mutex& mutex)
+            : Backend(argc, argv, window, currentTexture, dt, mutex),
+              m_context(OpencvCameraCtx{nullptr, CV_DEFAULT_FPS, CvEvent{},
+                                        false})
+        {
+        }
 
-        explicit OpencvBackend(const std::unique_ptr<Backend> &other) : Backend(other),
-                                                                        mContext(OpencvCameraCtx{nullptr,
-                                                                                                 CV_DEFAULT_FPS,
-                                                                                                 CvEvent{},
-                                                                                                 false}) {}
+        explicit OpencvBackend(const std::unique_ptr<Backend>& other)
+            : Backend(other), m_context(OpencvCameraCtx{nullptr, CV_DEFAULT_FPS,
+                                                        CvEvent{}, false})
+        {
+        }
 
         void Init() override;
 
@@ -58,23 +65,17 @@ namespace slr {
 
         void TerminateCapture() override;
 
-        ~OpencvBackend() override {
-            OpencvBackend::TerminateCapture();
-        };
+        ~OpencvBackend() override { OpencvBackend::TerminateCapture(); };
 
     private:
-        void Init_(OpencvCameraCtx &ctx);
+        void Init_(OpencvCameraCtx& ctx);
 
-        void LiveCapture_(OpencvCameraCtx &ctx, CAP_FORMAT format);
+        void Capture_(OpencvCameraCtx& ctx, CAP_FORMAT format, int16_t nFrames);
 
-        void SequenceCapture_(OpencvCameraCtx &ctx, uint16_t nFrames, CAP_FORMAT format);
+        static sf::Image MatToImage(const cv::Mat& mat);
 
-        void Capture_(OpencvCameraCtx &ctx, CAP_FORMAT format, int16_t nFrames);
-
-        static sf::Image MatToImage(const cv::Mat &mat);
-
-        OpencvCameraCtx mContext;
+        OpencvCameraCtx m_context;
     };
-}
+}// namespace slr
 
-#endif // PRIME_APP_OPENCVBACKEND_H
+#endif// PRIME_APP_OPENCVBACKEND_H
