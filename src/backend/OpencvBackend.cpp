@@ -18,7 +18,6 @@ sf::Image slr::OpencvBackend::MatToImage(const cv::Mat& mat)
                                      mat.at<cv::Vec3b>(y, x)[2]});
         }
     }
-
     return image;
 }
 
@@ -80,8 +79,8 @@ void slr::OpencvBackend::TerminateCapture() { m_context.isCapturing = false; }
 void slr::OpencvBackend::Init_(slr::OpencvCameraCtx& ctx)
 {
     spdlog::info("Opening camera");
-    ctx.camera = std::make_unique<cv::VideoCapture>(0);
 
+    ctx.camera = std::make_unique<cv::VideoCapture>(0);
     if (!ctx.camera->isOpened())
     {
         PrintError("ERROR: Could not open camera");
@@ -99,7 +98,7 @@ void slr::OpencvBackend::Capture_(OpencvCameraCtx& ctx, CAP_FORMAT format,
     const auto t = std::time(nullptr);
     const auto tm = *std::localtime(&t);
 
-    std::ostringstream oss;
+    std::ostringstream oss{};
     oss << std::put_time(&tm, "%H-%M-%S");
     const auto curTime = oss.str();
 
@@ -145,11 +144,9 @@ void slr::OpencvBackend::Capture_(OpencvCameraCtx& ctx, CAP_FORMAT format,
             ctx.isCapturing = false;
             break;
         }
-
         ++counter;
 
         cv::Mat frame;
-
         *ctx.camera >> frame;
         if (frame.empty())
         {
@@ -159,11 +156,9 @@ void slr::OpencvBackend::Capture_(OpencvCameraCtx& ctx, CAP_FORMAT format,
             ctx.isCamOpen = false;
             break;
         }
-
         spdlog::debug("Frame no {}", counter);
 
         cv::cvtColor(frame, frame, cv::COLOR_BGR2RGB);
-
         std::copy(frame.data, frame.data + singleFrameSize,
                   std::back_inserter(pixels));
 

@@ -36,11 +36,8 @@ namespace slr
         }
 
         virtual void Init() {}
-
         virtual void LiveCapture(CAP_FORMAT format) {}
-
         virtual void SequenceCapture(uint32_t nFrames, CAP_FORMAT format) {}
-
         virtual void TerminateCapture() {}
 
         virtual ~Backend() = default;
