@@ -1,5 +1,3 @@
-#include <filesystem>
-
 #include "VideoProcessor.h"
 #include "messages/messages.h"
 
@@ -87,17 +85,13 @@ class Video:
         return y_array, vel_array
 
     def get_size(self,fps, scale, cutoff = 0):
-        x10_scale = 1400/621
-        x20_scale = 600/594
-        #fps = 6.66
         em = tp.emsd(self.t, scale, fps) #Микрон на пиксель
 
         #Для 10x - 1400 мкм на 621 пиксель
         #Для 20x - 600 мкм на 594 пиксель
-        plt.figure()
-        plt.ylabel(r'$\langle \Delta r^2 \rangle$ [$\mu$m$^2$]')
-        plt.xlabel('lag time $t$');
-        res = tp.utils.fit_powerlaw(em[cutoff:])  # performs linear best fit in log space, plots]
+        #plt.ylabel(r'$\langle \Delta r^2 \rangle$ [$\mu$m$^2$]')
+        #plt.xlabel('lag time $t$');
+        res = tp.utils.fit_powerlaw(em[cutoff:], plot=False)  # performs linear best fit in log space, plots]
 
         A = float(res['A'])
         print(res)
@@ -109,20 +103,21 @@ class Video:
         R = k*T/(6*np.pi*D*eta)
         diam = 2*R*1e9
         print('diameter = ', diam, ' nm')
-
 )",
                                   .strVariables{{"py_exec", python_exec}}});
 }
 
 void VideoProcessor::LoadVideo(std::string_view path)
 {
-    if (!std::filesystem::exists(std::filesystem::path{path}))
+    vidPath = std::filesystem::path{path};
+    if (!std::filesystem::exists(vidPath))
     {
         spdlog::error("No such file, please check the path");
         return;
     }
 
-    spdlog::info("Instantiating Video and testing one frame");
+    spdlog::info("Instantiating Video Class");
+
     m_messageQueue.Send(
             PythonWorkerRunString{.string = R"(
 vid = Video(path)
@@ -196,4 +191,51 @@ plt.show()
 )"},
             .intVariables{{"min_diag_size", minDiagSize},
                           {"max_diag_size", maxDiagSize}}});
+}
+
+void VideoProcessor::PlotSizeHist(double fps, double scale)
+{
+    spdlog::info("Plotting the size distribution");
+    m_messageQueue.Send(PythonWorkerRunString{
+            .string{R"(
+im = tp.imsd(vid.t, scale, fps)
+sizes = []
+for i in im.columns:
+    res = tp.utils.fit_powerlaw(im[i].dropna(), plot = False)
+    A = float(res['A'])
+    eta = 0.89e-3
+    k = 1.380649e-23
+    T = 273 + 25
+    D = 1e-12*A/4
+    R = k*T/(6*np.pi*D*eta)
+    diam = 2*R*1e9
+    sizes.append(diam)
+num_bins = 700
+sizes = np.array(sizes)
+sizes = sizes[~np.isnan(sizes)]
+# the histogram of the data
+fig, ax = plt.subplots()
+n, bins, patches = ax.hist(sizes, num_bins, facecolor='blue', alpha=0.5)
+plt.savefig('size_hist.png')
+
+plt.xlim([0, 1000])
+plt.show()
+print(np.median(sizes))
+
+hist = pd.DataFrame({'n':np.append(n, 0), 'bins':bins})
+hist.to_csv(file_stem + "_hist.csv", index = False)
+pd.Series(sizes).to_csv(file_stem + '_raw_data.csv', index = False)
+)"},
+            .strVariables{{"file_stem", vidPath.stem().string()}},
+            .floatVariables = {{"scale", scale}, {"fps", fps}}});
+}
+
+void VideoProcessor::GetSize(double fps, double scale)
+{
+    spdlog::info("Fitting linear approximation, getting size of particle");
+    m_messageQueue.Send(PythonWorkerRunString{
+            .string{R"(
+vid.get_size(fps, scale)
+)"},
+            .floatVariables = {{"scale", scale}, {"fps", fps}}});
 }

@@ -4,6 +4,7 @@
 #include <SFML/Graphics.hpp>
 #include <pybind11/embed.h>
 #include <spdlog/spdlog.h>
+#include <filesystem>
 
 #include "workers/PythonWorker.h"
 
@@ -42,6 +43,10 @@ public:
 
     void GroupAndPlotTrajectory(int minDiagSize, int maxDiagSize);
 
+    void PlotSizeHist(double fps, double scale);
+
+    void GetSize(double fps, double scale);
+
     ~VideoProcessor()
     {
         spdlog::info("Killing video processor");
@@ -57,6 +62,8 @@ private:
     MessageQueue<PythonWorkerMessage> m_messageQueue;
 
     PythonWorker m_pythonWorker;
+
+    std::filesystem::path vidPath;
 };
 
 #endif//PRIME_APP_VIDEOPROCESSOR_H

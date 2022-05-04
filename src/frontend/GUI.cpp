@@ -345,8 +345,22 @@ namespace slr
             if (ImGui::Button("Find trajectories"))
             {
                 m_videoProcessor.LocateAllFrames();
-                m_videoProcessor.LinkAndFilter(7, 10, 5, 10);
-                m_videoProcessor.GroupAndPlotTrajectory(5, 30);
+                m_videoProcessor.LinkAndFilter(searchRange, memory, minTrajLen,
+                                               driftSmoothing);
+                m_videoProcessor.GroupAndPlotTrajectory(minDiagSize,
+                                                        maxDiagSize);
+            }
+
+            static double fps = 6.66;
+            static double scale = 330.0 / 675.0;
+            ImGui::InputDouble("fps", &fps, 0.0, 0.0, "%.3f");
+            ImGui::InputDouble("scale", &scale, 0.0, 0.0, "%.3f");
+            if (ImGui::Button("Plot size distribution")) {
+                m_videoProcessor.PlotSizeHist(fps, scale);
+            }
+
+            if (ImGui::Button("Get particle size")) {
+                m_videoProcessor.GetSize(fps, scale);
             }
         }
 
