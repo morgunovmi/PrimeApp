@@ -70,7 +70,7 @@ namespace slr
     private:
         void Init_(OpencvCameraCtx& ctx);
 
-        void Capture_(OpencvCameraCtx& ctx, CAP_FORMAT format, int16_t nFrames);
+        void Capture_(OpencvCameraCtx& ctx, CAP_FORMAT format, int32_t nFrames);
 
         static sf::Image MatToImage(const cv::Mat& mat);
 

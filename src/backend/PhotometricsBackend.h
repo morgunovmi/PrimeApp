@@ -89,6 +89,8 @@ namespace slr
         // Set to true when PVCAM opens camera
         bool isCamOpen{false};
 
+        bool isCapturing{false};
+
         // All members below are initialized once the camera is successfully open
 
         // Camera handle
@@ -125,7 +127,7 @@ namespace slr
         void* eofFrame{nullptr};
 
         // Used as an acquisition thread or for other independent tasks
-        std::thread* thread{nullptr};
+        std::unique_ptr<std::jthread> thread{nullptr};
         // Flag to be set to abort thread (used, for example, in multi-camera code samples)
         bool threadAbortFlag{false};
     };
@@ -136,26 +138,39 @@ namespace slr
         PhotometricsBackend(int argc, char** argv, sf::RenderWindow& window,
                             sf::Texture& currentTexture, sf::Time& dt,
                             std::mutex& mutex)
-            : Backend(argc, argv, window, currentTexture, dt, mutex),
-              m_pvcamMutex()
+            : Backend(argc, argv, window, currentTexture, dt, mutex)
         {
+            if (!ShowAppInfo(m_argc, m_argv))
+            {
+                PrintError("Couldn't show app info");
+            }
         }
 
 
         explicit PhotometricsBackend(const std::unique_ptr<Backend>& other)
-            : Backend(other), m_pvcamMutex()
+            : Backend(other)
         {
+            if (!ShowAppInfo(m_argc, m_argv))
+            {
+                PrintError("Couldn't show app info");
+            }
         }
 
         void Init() override;
 
         void LiveCapture(CAP_FORMAT format) override;
 
+        void SequenceCapture(uint32_t nFrames, CAP_FORMAT format) override;
+
         void TerminateCapture() override;
 
         ~PhotometricsBackend() override { CloseAllCamerasAndUninit(); }
 
     private:
+        void Init_();
+        void LiveCapture_(CAP_FORMAT format);
+        void SequenceCapture_(uint32_t nFrames, CAP_FORMAT format);
+
         bool InitAndOpenOneCamera();
 
         template<typename... Args>
@@ -187,9 +202,12 @@ namespace slr
                                  int16& expMode, int16 legacyTrigMode,
                                  int16 extendedTrigMode);
 
-    private:
-        std::mutex m_pvcamMutex;
+        static void CustomEofHandler(FRAME_INFO* pFrameInfo, void* pContext);
 
+        static bool WaitForEofEvent(CameraContext* ctx, uns32 timeoutMs,
+                                    bool& errorOccurred);
+
+    private:
         const uns16 m_cameraIndex = 0;
         std::vector<std::unique_ptr<CameraContext>> m_cameraContexts;
 

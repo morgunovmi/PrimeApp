@@ -355,11 +355,13 @@ namespace slr
             static double scale = 330.0 / 675.0;
             ImGui::InputDouble("fps", &fps, 0.0, 0.0, "%.3f");
             ImGui::InputDouble("scale", &scale, 0.0, 0.0, "%.3f");
-            if (ImGui::Button("Plot size distribution")) {
+            if (ImGui::Button("Plot size distribution"))
+            {
                 m_videoProcessor.PlotSizeHist(fps, scale);
             }
 
-            if (ImGui::Button("Get particle size")) {
+            if (ImGui::Button("Get particle size"))
+            {
                 m_videoProcessor.GetSize(fps, scale);
             }
         }

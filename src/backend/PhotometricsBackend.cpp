@@ -26,8 +26,6 @@ namespace slr
 
     bool PhotometricsBackend::ShowAppInfo(int argc, char* argv[])
     {
-        std::scoped_lock lock(m_pvcamMutex);
-
         auto appName = "<unable to get name>";
         if (argc > 0 && argv != nullptr && argv[0] != nullptr)
         {
@@ -56,8 +54,6 @@ namespace slr
 
     bool PhotometricsBackend::InitPVCAM()
     {
-        std::scoped_lock lock(m_pvcamMutex);
-
         if (m_isPvcamInitialized) { return true; }
 
         // Initialize PVCAM library
@@ -125,10 +121,13 @@ namespace slr
         m_cameraContexts.clear();
 
         // Uninitialize the PVCAM library
-        if (PV_OK != pl_pvcam_uninit()) { printf("pl_pvcam_uninit() error\n"); }
+        if (PV_OK != pl_pvcam_uninit())
+        {
+            spdlog::error("pl_pvcam_uninit() error\n");
+        }
         else
         {
-            printf("PVCAM uninitialized\n");
+            spdlog::info("PVCAM uninitialized\n");
         }
         m_isPvcamInitialized = false;
     }
@@ -538,19 +537,33 @@ namespace slr
 
     void PhotometricsBackend::Init()
     {
-        spdlog::info("Starting init");
-        InitAndOpenOneCamera();
+        if (m_isPvcamInitialized)
+        {
+            spdlog::info("Already initialized");
+            return;
+        }
+
+        if (!InitPVCAM())
+        {
+            spdlog::error("Couldn't init PVCAM");
+            return;
+        }
+
+        auto& ctx = m_cameraContexts[m_cameraIndex];
+
+        ctx->thread = std::make_unique<std::jthread>(
+                &PhotometricsBackend::Init_, this);
     }
 
     bool PhotometricsBackend::InitAndOpenOneCamera()
     {
-        if (!ShowAppInfo(m_argc, m_argv))
-        {
-            PrintError("Couldn't show app info");
-            return PV_FAIL;
-        }
+        //        if (!ShowAppInfo(m_argc, m_argv))
+        //        {
+        //            PrintError("Couldn't show app info");
+        //            return PV_FAIL;
+        //        }
 
-        if (!InitPVCAM()) return false;
+        //        if (!InitPVCAM()) return false;
 
         if (m_cameraIndex >= m_cameraContexts.size())
         {
@@ -726,11 +739,266 @@ namespace slr
         return false;
     }
 
+    void PhotometricsBackend::SequenceCapture(uint32_t nFrames,
+                                              CAP_FORMAT format)
+    {
+        if (!m_isPvcamInitialized) {
+            spdlog::warn("Initialize PVCAM first");
+            return;
+        }
+
+        auto& ctx = m_cameraContexts[m_cameraIndex];
+        if (!ctx->isCamOpen) {
+            spdlog::warn("Camera not opened");
+            return;
+        }
+
+        if (ctx->isCapturing) {
+            spdlog::warn("Already capturing");
+            return;
+        }
+
+        ctx->thread = std::make_unique<std::jthread>(
+                &PhotometricsBackend::SequenceCapture_, this, nFrames, format);
+    }
+
     void PhotometricsBackend::LiveCapture(CAP_FORMAT format)
     {
+        if (!m_isPvcamInitialized) {
+            spdlog::warn("Initialize PVCAM first");
+            return;
+        }
+
+        auto& ctx = m_cameraContexts[m_cameraIndex];
+        if (!ctx->isCamOpen) {
+            spdlog::warn("Camera not opened");
+            return;
+        }
+
+        if (ctx->isCapturing) {
+            spdlog::warn("Already capturing");
+            return;
+        }
+
+        ctx->thread = std::make_unique<std::jthread>(
+                &PhotometricsBackend::LiveCapture_, this, format);
+    }
+
+    void PhotometricsBackend::TerminateCapture()
+    {
+        spdlog::info("\n>>>\n"
+                     ">>> CLI TERMINATION HANDLER");
+
+        for (auto& ctx: m_cameraContexts)
+        {
+            if (!ctx || !ctx->isCamOpen) { continue; }
+
+            {
+                std::scoped_lock lock(ctx->eofEvent.mutex);
+                if (ctx->threadAbortFlag) { continue; }
+                ctx->threadAbortFlag = true;
+                spdlog::info(">>> Requesting ABORT on camera {}\n", ctx->hcam);
+            }
+            ctx->eofEvent.cond.notify_all();
+        }
+        spdlog::info(">>>\n\n");
+    }
+
+    void PhotometricsBackend::CustomEofHandler(FRAME_INFO* pFrameInfo,
+                                               void* pContext)
+    {
+        if (!pFrameInfo || !pContext) return;
+        auto ctx = static_cast<CameraContext*>(pContext);
+
+        // Store the frame information for later use on the main thread
+        ctx->eofFrameInfo = *pFrameInfo;
+
+        // Obtain a pointer to the last acquired frame
+        if (PV_OK != pl_exp_get_latest_frame(ctx->hcam, &ctx->eofFrame))
+        {
+            PrintError("pl_exp_get_latest_frame() error");
+            ctx->eofFrame = nullptr;
+        }
+
+        // Unblock the acquisition thread
+        {
+            std::lock_guard<std::mutex> lock(ctx->eofEvent.mutex);
+            ctx->eofEvent.flag = true;
+        }
+        ctx->eofEvent.cond.notify_all();
+    }
+
+    bool PhotometricsBackend::WaitForEofEvent(CameraContext* ctx,
+                                              uns32 timeoutMs,
+                                              bool& errorOccurred)
+    {
+        std::unique_lock<std::mutex> lock(ctx->eofEvent.mutex);
+
+        errorOccurred = false;
+        ctx->eofEvent.cond.wait_for(
+                lock, std::chrono::milliseconds(timeoutMs),
+                [ctx]() { return ctx->eofEvent.flag || ctx->threadAbortFlag; });
+        if (ctx->threadAbortFlag)
+        {
+            spdlog::info("Processing aborted on camera %d\n", ctx->hcam);
+            return false;
+        }
+        if (!ctx->eofEvent.flag)
+        {
+            spdlog::error("Camera %d timed out waiting for a frame\n",
+                          ctx->hcam);
+            errorOccurred = true;
+            return false;
+        }
+        ctx->eofEvent.flag = false;// Reset flag
+
+        if (!ctx->eofFrame)
+        {
+            errorOccurred = true;
+            return false;
+        }
+
+        return true;
+    }
+    void PhotometricsBackend::Init_()
+    {
+        spdlog::info("Starting init");
+        InitAndOpenOneCamera();
+    }
+    void PhotometricsBackend::SequenceCapture_(uint32_t nFrames,
+                                               CAP_FORMAT format)
+    {
         auto& ctx = m_cameraContexts[0];
+        if (PV_OK != pl_cam_register_callback_ex3(ctx->hcam, PL_CALLBACK_EOF,
+                                                  (void*) CustomEofHandler,
+                                                  (void*) ctx.get()))
+        {
+            PrintError("pl_cam_register_callback() error");
+            CloseAllCamerasAndUninit();
+            return;
+        }
+        spdlog::info("EOF callback handler registered on camera %d\n",
+                     ctx->hcam);
+
         uns32 exposureBytes;
         const uns32 exposureTime = 40;// milliseconds
+        // Select the appropriate internal trigger mode for this camera.
+        int16 expMode;
+        if (!SelectCameraExpMode(ctx, expMode, TIMED_MODE, EXT_TRIG_INTERNAL))
+        {
+            CloseAllCamerasAndUninit();
+            return;
+        }
+
+        /**
+    Prepare the acquisition. The pl_exp_setup_seq() function returns the size of the
+    frame buffer required for the entire frame sequence. Since we are requesting a
+    single frame only, size of one frame will be reported.
+    */
+        if (PV_OK != pl_exp_setup_seq(ctx->hcam, 1, 1, &ctx->region, expMode,
+                                      exposureTime, &exposureBytes))
+        {
+            PrintError("pl_exp_setup_seq() error");
+            CloseAllCamerasAndUninit();
+            return;
+        }
+        spdlog::info("Acquisition setup successful on camera %d\n", ctx->hcam);
+        UpdateCtxImageFormat(ctx);
+
+        // Allocate a buffer of the size reported by the pl_exp_setup_seq() function.
+        uns8* frameInMemory = new (std::nothrow) uns8[exposureBytes];
+        if (!frameInMemory)
+        {
+            spdlog::error("Unable to allocate buffer for camera %d\n",
+                          ctx->hcam);
+            CloseAllCamerasAndUninit();
+            return;
+        }
+
+        bool errorOccurred = false;
+        uns32 imageCounter = 0;
+        ctx->isCapturing = true;
+        while (imageCounter < nFrames)
+        {
+            /**
+        Start the acquisition. Since the pl_exp_setup_seq() was configured to use
+        the internal camera trigger, the acquisition is started immediately.
+        In hardware triggering modes the camera would wait for an external trigger signal.
+        */
+            if (PV_OK != pl_exp_start_seq(ctx->hcam, frameInMemory))
+            {
+                PrintError("pl_exp_start_seq() error");
+                errorOccurred = true;
+                break;
+            }
+            spdlog::info("Acquisition started on camera %d\n", ctx->hcam);
+
+            /**
+        Here we need to wait for a frame readout notification signaled by the eofEvent
+        in the CameraContext which is raised in the callback handler we registered.
+        If the frame does not arrive within 5 seconds, or if the user aborts the acquisition
+        with ctrl+c shortcut, the main 'while' loop is interrupted and the acquisition is
+        aborted.
+        */
+            spdlog::info("Waiting for EOF event to occur on camera %d\n",
+                         ctx->hcam);
+            if (!WaitForEofEvent(ctx.get(), 5000, errorOccurred)) break;
+
+            spdlog::info("Frame #%u has been delivered from camera %d\n",
+                         imageCounter + 1, ctx->hcam);
+
+            spdlog::info("Size is {} : {}", exposureBytes,
+                         ctx->sensorResX * ctx->sensorResY);
+
+            /**
+        When acquiring sequences, call the pl_exp_finish_seq() after the entire sequence
+        finishes. This call is not strictly necessary, especially with the latest camera models,
+        therefore, if fast, repeated calls to pl_exp_start_seq() are needed, this call can
+        be omitted. Omitting the call may increase frame rate with the 'emulated' software triggering
+        where pl_exp_start_seq() is usually called in a loop. However, testing is recommended
+        to ensure desired acquisition stability.
+        */
+            if (PV_OK != pl_exp_finish_seq(ctx->hcam, frameInMemory, 0))
+            {
+                PrintError("pl_exp_finish_seq() error");
+            }
+            else
+            {
+                spdlog::info("Acquisition finished on camera %d\n", ctx->hcam);
+            }
+
+            imageCounter++;
+        }
+
+        ctx->isCapturing = false;
+        /**
+    Here the pl_exp_abort() is not strictly required as correctly acquired sequence does not
+    need to be aborted. However, it is kept here for situations where the acquisition
+    is interrupted by the user or when it unexpectedly times out.
+    */
+        if (PV_OK != pl_exp_abort(ctx->hcam, CCS_HALT))
+        {
+            PrintError("pl_exp_abort() error");
+        }
+
+        // Cleanup before exiting the application.
+        delete[] frameInMemory;
+    }
+    void PhotometricsBackend::LiveCapture_(CAP_FORMAT format) {
+        auto& ctx = m_cameraContexts[0];
+        if (PV_OK != pl_cam_register_callback_ex3(ctx->hcam, PL_CALLBACK_EOF,
+                                                  (void*) CustomEofHandler,
+                                                  (void*) ctx.get()))
+        {
+            PrintError("pl_cam_register_callback() error");
+            CloseAllCamerasAndUninit();
+            return;
+        }
+        spdlog::info("EOF callback handler registered on camera %d\n",
+                     ctx->hcam);
+
+        uns32 exposureBytes;
+        const uns32 exposureTime = 5;// milliseconds
 
         const uns16 circBufferFrames = 20;
         int16 bufferMode = CIRC_OVERWRITE;
@@ -786,95 +1054,41 @@ namespace slr
 
         uns32 framesAcquired = 0;
         bool errorOccurred = false;
-        while (framesAcquired < 50)
+        ctx->isCapturing = true;
+        while (framesAcquired < 5)
         {
-
-            int16 status;
-            uns32 byte_cnt;
-            uns32 buffer_cnt;
             /**
-            Keep checking the camera readout status. If readout succeeds, print the ADU values
-            of the first five pixels. 'Sleep' is used to reduce CPU load while polling for status.
-            WARNING:
-            When acquisition is running, the status changes in the following order:
-            EXPOSURE_IN_PROGRESS -> READOUT_IN_PROGRESS -> FRAME_AVAILABLE -> EXPOSURE_IN_PROGRESS
-            and so on. This means that the FRAME_AVAILABLE status can be obtained only momentarily
-            between the frames (between the last EOF and the next BOF). Due to this constraint, the polling
-            approach introduces higher risk of lost frames than the callbacks approach because some frames
-            may be lost unnoticed.
-            */
-            while (PV_OK == pl_exp_check_cont_status(ctx->hcam, &status,
-                                                     &byte_cnt, &buffer_cnt) &&
-                   status != FRAME_AVAILABLE && status != READOUT_NOT_ACTIVE &&
-                   !ctx->threadAbortFlag)
-            {
-                /**
-                WARNING: Removing the sleep or setting it to a value too low may significantly increase
-                the CPU load. Shorter sleeps do not guarantee the code does not miss a frame 'notification'
-                if the frame rate is too high.
-                */
-                std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            }
-            if (ctx->threadAbortFlag)
-            {
-                // This flag is set when user presses ctrl+c. In such case, break the loop
-                // and abort the acquisition.
-                spdlog::info("Processing aborted on camera {}\n", ctx->hcam);
-                return;
-            }
-            if (status == READOUT_FAILED)
-            {
-                PrintError("Frame #{} readout failed on camera {}\n",
-                           framesAcquired + 1, ctx->hcam);
-                errorOccurred = true;
-                return;
-            }
+        Here we need to wait for a frame readout notification signaled by the eofEvent
+        in the CameraContext which is raised in the callback handler we registered.
+        If the frame does not arrive within 5 seconds or if user aborts the acquisition
+        with ctrl+c keyboard shortcut, the main 'while' loop is interrupted and the
+        acquisition is aborted.
+        */
+            spdlog::info("Waiting for EOF event to occur on camera %d\n",
+                         ctx->hcam);
+            if (!WaitForEofEvent(ctx.get(), 5000, errorOccurred)) break;
 
-            /**
-            Obtain the address of the latest frame in the buffer with the pl_exp_get_latest_frame()
-            function. Optionally, the pl_exp_get_latest_frame_ex() can be used to receive the address
-            together with a #FRAME_INFO structure. This structure contains frame number and timestamps.
-            */
-            void* frameAddress;
-
-            FRAME_INFO info{};
-            if (PV_OK !=
-                pl_exp_get_latest_frame_ex(ctx->hcam, &frameAddress, &info))
-            {
-                PrintError("pl_exp_get_latest_frame() error");
-                errorOccurred = true;
-                return;
-            }
-
-            spdlog::info(
-                    "Frame #{} readout successfully completed on camera {}",
-                    framesAcquired + 1, ctx->hcam);
+            // Timestamp is in hundreds of microseconds
+            spdlog::info("Frame #%d acquired, timestamp = %lldus\n",
+                         ctx->eofFrameInfo.FrameNr,
+                         100 * ctx->eofFrameInfo.TimeStamp);
 
             spdlog::info("Size is {} : {}", exposureBytes,
                          ctx->sensorResX * ctx->sensorResY);
-            //ShowImage(ctx, frameAddress, exposureBytes);
 
             framesAcquired++;
         }
-    }
+        ctx->isCapturing = false;
 
-    void PhotometricsBackend::TerminateCapture()
-    {
-        spdlog::info("\n>>>\n"
-                     ">>> CLI TERMINATION HANDLER");
-
-        for (auto& ctx: m_cameraContexts)
+        if (PV_OK != pl_exp_abort(ctx->hcam, CCS_HALT))
         {
-            if (!ctx || !ctx->isCamOpen) { continue; }
-
-            {
-                std::scoped_lock lock(ctx->eofEvent.mutex);
-                if (ctx->threadAbortFlag) { continue; }
-                ctx->threadAbortFlag = true;
-                spdlog::info(">>> Requesting ABORT on camera {}\n", ctx->hcam);
-            }
-            ctx->eofEvent.cond.notify_all();
+            PrintError("pl_exp_abort() error");
         }
-        spdlog::info(">>>\n\n");
+        else
+        {
+            spdlog::info("Acquisition stopped on camera %d\n", ctx->hcam);
+        }
+
+        delete[] circBufferInMemory;
     }
 }// namespace slr

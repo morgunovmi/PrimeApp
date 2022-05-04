@@ -93,7 +93,7 @@ void slr::OpencvBackend::Init_(slr::OpencvCameraCtx& ctx)
 
 //TODO: Refactor repeating blocks of code
 void slr::OpencvBackend::Capture_(OpencvCameraCtx& ctx, CAP_FORMAT format,
-                                  int16_t nFrames)
+                                  int32_t nFrames)
 {
     const auto t = std::time(nullptr);
     const auto tm = *std::localtime(&t);
