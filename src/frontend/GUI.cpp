@@ -367,6 +367,15 @@ namespace prm
             {
                 m_videoProcessor.GetSize(fps, scale);
             }
+
+            static std::string pythonQuery{};
+            ImGui::InputTextWithHint("Run random python string", "Python Query",
+                                     &pythonQuery);
+
+            if (ImGui::Button("Run python query"))
+            {
+                m_videoProcessor.RunPythonQuery(pythonQuery);
+            }
         }
 
         ImGui::End();

@@ -242,4 +242,10 @@ vid.get_size(fps, scale)
 )"},
                 .floatVariables = {{"scale", scale}, {"fps", fps}}});
     }
+
+    void VideoProcessor::RunPythonQuery(std::string_view query)
+    {
+        spdlog::info("Running a python string");
+        m_messageQueue.Send(PythonWorkerRunString{.string = std::string{query}});
+    }
 }// namespace prm

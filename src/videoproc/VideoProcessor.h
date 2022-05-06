@@ -49,6 +49,8 @@ namespace prm
 
         void GetSize(double fps, double scale);
 
+        void RunPythonQuery(std::string_view query);
+
         ~VideoProcessor()
         {
             spdlog::info("Killing video processor");
