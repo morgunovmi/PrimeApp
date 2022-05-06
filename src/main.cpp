@@ -46,7 +46,7 @@ int main(int argc, char** argv)
         settings.antialiasingLevel = antialiasingLevel;
 
         prm::App app{argc, argv, width, height, settings, log};
-        system.Run();
+        app.Run();
     }
     catch (std::exception& e)
     {
