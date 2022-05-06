@@ -6,29 +6,32 @@
 
 #include "messages/MessageQueue.h"
 
-template<typename MessageType>
-class Worker
+namespace prm
 {
-public:
-    Worker(int id, MessageQueue<MessageType>& queue)
-        : m_id(id), m_isRunning(false), m_messageQueue(queue)
+    template<typename MessageType>
+    class Worker
     {
-    }
+    public:
+        Worker(int id, MessageQueue<MessageType>& queue)
+            : m_id(id), m_isRunning(false), m_messageQueue(queue)
+        {
+        }
 
-    virtual void Run() { m_thread = std::jthread(&Worker::Main, this); }
+        virtual void Run() { m_thread = std::jthread(&Worker::Main, this); }
 
-    virtual ~Worker() = default;
+        virtual ~Worker() = default;
 
-    const int m_id;
+        const int m_id;
 
-protected:
-    virtual void Main() {}
+    protected:
+        virtual void Main() {}
 
-    bool m_isRunning;
+        bool m_isRunning;
 
-    std::jthread m_thread;
+        std::jthread m_thread;
 
-    MessageQueue<MessageType>& m_messageQueue;
-};
+        MessageQueue<MessageType>& m_messageQueue;
+    };
+}// namespace prm
 
 #endif//PRIME_APP_WORKER_H

@@ -2,12 +2,12 @@
 #include <iomanip>
 #include <spdlog/spdlog.h>
 
-#include <opencv2/opencv.hpp>
 #include <OpenImageIO/imageio.h>
+#include <opencv2/opencv.hpp>
 
 #include "backend/PhotometricsBackend.h"
 
-namespace slr
+namespace prm
 {
     template<typename... Args>
     void PhotometricsBackend::PrintError(fmt::format_string<Args...> fmt,
@@ -743,7 +743,7 @@ namespace slr
     }
 
     void PhotometricsBackend::SequenceCapture(uint32_t nFrames,
-                                              CAP_FORMAT format)
+                                              SAVE_FORMAT format)
     {
         if (!m_isPvcamInitialized)
         {
@@ -768,7 +768,7 @@ namespace slr
                 &PhotometricsBackend::SequenceCapture_, this, nFrames, format);
     }
 
-    void PhotometricsBackend::LiveCapture(CAP_FORMAT format)
+    void PhotometricsBackend::LiveCapture(SAVE_FORMAT format)
     {
         if (!m_isPvcamInitialized)
         {
@@ -875,37 +875,14 @@ namespace slr
         InitAndOpenOneCamera();
     }
     void PhotometricsBackend::SequenceCapture_(uint32_t nFrames,
-                                               CAP_FORMAT format)
+                                               SAVE_FORMAT format)
     {
-        const auto t = std::time(nullptr);
-        const auto tm = *std::localtime(&t);
-
-        std::ostringstream oss{};
-        oss << std::put_time(&tm, "%H-%M-%S");
-        const auto curTime = oss.str();
-
-        auto videoPath = curTime;
-        if (nFrames <= 0)
+        const auto videoPath =
+                FileUtils::GenerateVideoPath(SEQ_CAPTURE_PREFIX, format);
+        if (videoPath.empty())
         {
-            videoPath = fmt::format("{}{}", LIVE_CAPTURE_PREFIX, videoPath);
-        }
-        else
-        {
-            videoPath = fmt::format("{}{}", SEQ_CAPTURE_PREFIX, videoPath);
-        }
-
-        switch (format)
-        {
-            case TIF:
-                videoPath.append(".tif");
-                break;
-
-            case MP4:
-                videoPath.append(".mp4");
-                break;
-
-            default:
-                spdlog::error("Undefined format");
+            spdlog::error("Couldn't generate videopath");
+            return;
         }
 
         auto& ctx = m_cameraContexts[0];
@@ -1057,14 +1034,17 @@ namespace slr
             {
                 using namespace OIIO;
 
-                std::unique_ptr<ImageOutput> out = ImageOutput::create(videoPath);
+                std::unique_ptr<ImageOutput> out =
+                        ImageOutput::create(videoPath);
                 if (!out) return;
-                ImageSpec spec(ctx->sensorResX, ctx->sensorResY, 1, TypeDesc::UINT16);
+                ImageSpec spec(ctx->sensorResX, ctx->sensorResY, 1,
+                               TypeDesc::UINT16);
 
                 if (!out->supports("multiimage") ||
                     !out->supports("appendsubimage"))
                 {
-                    spdlog::error("Current plugin doesn't support tif subimages");
+                    spdlog::error(
+                            "Current plugin doesn't support tif subimages");
                     return;
                 }
 
@@ -1085,10 +1065,17 @@ namespace slr
                 spdlog::error("Undefined format");
         }
         spdlog::info("File written to {}", videoPath);
-
     }
-    void PhotometricsBackend::LiveCapture_(CAP_FORMAT format)
+    void PhotometricsBackend::LiveCapture_(SAVE_FORMAT format)
     {
+        const auto videoPath =
+                FileUtils::GenerateVideoPath(LIVE_CAPTURE_PREFIX, format);
+        if (videoPath.empty())
+        {
+            spdlog::error("Couldn't generate videopath");
+            return;
+        }
+
         auto& ctx = m_cameraContexts[0];
         if (PV_OK != pl_cam_register_callback_ex3(ctx->hcam, PL_CALLBACK_EOF,
                                                   (void*) CustomEofHandler,
@@ -1195,4 +1182,4 @@ namespace slr
 
         delete[] circBufferInMemory;
     }
-}// namespace slr
+}// namespace prm

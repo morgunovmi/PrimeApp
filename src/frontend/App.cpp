@@ -1,6 +1,6 @@
 #include "frontend/App.h"
 
-namespace slr
+namespace prm
 {
     void App::Run()
     {
@@ -15,4 +15,4 @@ namespace slr
         }
         m_gui.Shutdown();
     }
-}// namespace slr
+}// namespace prm

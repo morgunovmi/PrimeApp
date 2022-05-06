@@ -10,13 +10,13 @@ template<typename Mutex>
 class LogSink : public spdlog::sinks::base_sink<Mutex>
 {
 public:
-    explicit LogSink(slr::Log& log)
+    explicit LogSink(prm::Log& log)
         : spdlog::sinks::base_sink<Mutex>(), m_log(log)
     {
     }
 
 private:
-    slr::Log& m_log;
+    prm::Log& m_log;
 
 protected:
     void sink_it_(const spdlog::details::log_msg& msg) override

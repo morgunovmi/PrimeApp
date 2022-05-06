@@ -2,9 +2,9 @@
 #define PRIME_APP_VIDEOPROCESSOR_H
 
 #include <SFML/Graphics.hpp>
+#include <filesystem>
 #include <pybind11/embed.h>
 #include <spdlog/spdlog.h>
-#include <filesystem>
 
 #include "workers/PythonWorker.h"
 
@@ -20,50 +20,53 @@ const std::string python_exec{"Well Well Well, How the turn tables"};
 namespace py = pybind11;
 using namespace py::literals;
 
-class VideoProcessor
+namespace prm
 {
-public:
-    VideoProcessor(sf::Texture& texture, std::mutex& mutex)
-        : m_currentTexture(texture), m_textureMutex(mutex), m_messageQueue(),
-          m_pythonWorker(1, m_messageQueue)
+    class VideoProcessor
     {
-        m_pythonWorker.Run();
-        Init();
-    }
+    public:
+        VideoProcessor(sf::Texture& texture, std::mutex& mutex)
+            : m_currentTexture(texture), m_textureMutex(mutex),
+              m_messageQueue(), m_pythonWorker(1, m_messageQueue)
+        {
+            m_pythonWorker.Run();
+            Init();
+        }
 
-    void LoadVideo(std::string_view path);
+        void LoadVideo(std::string_view path);
 
-    void LocateOneFrame(int frameNum, int minm, double ecc, int size,
-                        int diameter);
+        void LocateOneFrame(int frameNum, int minm, double ecc, int size,
+                            int diameter);
 
-    void LocateAllFrames();
+        void LocateAllFrames();
 
-    void LinkAndFilter(int searchRange, int memory, int minTrajectoryLen,
-                       int driftSmoothing);
+        void LinkAndFilter(int searchRange, int memory, int minTrajectoryLen,
+                           int driftSmoothing);
 
-    void GroupAndPlotTrajectory(int minDiagSize, int maxDiagSize);
+        void GroupAndPlotTrajectory(int minDiagSize, int maxDiagSize);
 
-    void PlotSizeHist(double fps, double scale);
+        void PlotSizeHist(double fps, double scale);
 
-    void GetSize(double fps, double scale);
+        void GetSize(double fps, double scale);
 
-    ~VideoProcessor()
-    {
-        spdlog::info("Killing video processor");
-        m_messageQueue.Send(PythonWorkerQuit{});
-    }
+        ~VideoProcessor()
+        {
+            spdlog::info("Killing video processor");
+            m_messageQueue.Send(PythonWorkerQuit{});
+        }
 
-private:
-    void Init();
+    private:
+        void Init();
 
-    sf::Texture& m_currentTexture;
-    std::mutex& m_textureMutex;
+        sf::Texture& m_currentTexture;
+        std::mutex& m_textureMutex;
 
-    MessageQueue<PythonWorkerMessage> m_messageQueue;
+        MessageQueue<PythonWorkerMessage> m_messageQueue;
 
-    PythonWorker m_pythonWorker;
+        PythonWorker m_pythonWorker;
 
-    std::filesystem::path vidPath;
-};
+        std::filesystem::path vidPath;
+    };
+}// namespace prm
 
 #endif//PRIME_APP_VIDEOPROCESSOR_H

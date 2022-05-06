@@ -6,7 +6,7 @@
 #include <fmt/format.h>
 #include <mutex>
 
-namespace slr
+namespace prm
 {
     // Taken straight from imgui_demo.cpp
     struct Log
@@ -138,6 +138,6 @@ namespace slr
             ImGui::End();
         }
     };
-}// namespace slr
+}// namespace prm
 
 #endif//SOLAR_LOG_H

@@ -12,7 +12,7 @@
 #include "misc/Log.h"
 #include "videoproc/VideoProcessor.h"
 
-namespace slr
+namespace prm
 {
     class App
     {
@@ -58,6 +58,6 @@ namespace slr
         sf::Texture m_currentTexture;
         std::mutex m_textureMutex;
     };
-}// namespace slr
+}// namespace prm
 
 #endif//SOLAR_APP_H

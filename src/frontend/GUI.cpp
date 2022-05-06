@@ -5,7 +5,7 @@
 #include "frontend/GUI.h"
 
 //TODO Disabled blocks
-namespace slr
+namespace prm
 {
     bool GUI::Init()
     {
@@ -371,4 +371,4 @@ namespace slr
 
         ImGui::End();
     }
-}// namespace slr
+}// namespace prm

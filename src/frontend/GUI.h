@@ -10,7 +10,7 @@
 #include "misc/Log.h"
 #include "videoproc/VideoProcessor.h"
 
-namespace slr
+namespace prm
 {
     const uint16_t FRAME_QUEUE_SIZE = 60;
 
@@ -72,6 +72,6 @@ namespace slr
 
         const uint16_t m_inputFieldWidth = 150;
     };
-}// namespace slr
+}// namespace prm
 
 #endif//SOLAR_GUI_H

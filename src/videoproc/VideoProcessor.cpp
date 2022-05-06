@@ -1,11 +1,13 @@
 #include "VideoProcessor.h"
 #include "messages/messages.h"
 
-void VideoProcessor::Init()
+namespace prm
 {
-    spdlog::info("Initializing video processor module");
-    m_messageQueue.Send(
-            PythonWorkerRunString{.string = R"(
+    void VideoProcessor::Init()
+    {
+        spdlog::info("Initializing video processor module");
+        m_messageQueue.Send(
+                PythonWorkerRunString{.string = R"(
 import pims
 import numpy as np
 import trackpy as tp
@@ -104,65 +106,65 @@ class Video:
         diam = 2*R*1e9
         print('diameter = ', diam, ' nm')
 )",
-                                  .strVariables{{"py_exec", python_exec}}});
-}
-
-void VideoProcessor::LoadVideo(std::string_view path)
-{
-    vidPath = std::filesystem::path{path};
-    if (!std::filesystem::exists(vidPath))
-    {
-        spdlog::error("No such file, please check the path");
-        return;
+                                      .strVariables{{"py_exec", python_exec}}});
     }
 
-    spdlog::info("Instantiating Video Class");
+    void VideoProcessor::LoadVideo(std::string_view path)
+    {
+        vidPath = std::filesystem::path{path};
+        if (!std::filesystem::exists(vidPath))
+        {
+            spdlog::error("No such file, please check the path");
+            return;
+        }
 
-    m_messageQueue.Send(
-            PythonWorkerRunString{.string = R"(
+        spdlog::info("Instantiating Video Class");
+
+        m_messageQueue.Send(PythonWorkerRunString{
+                .string = R"(
 vid = Video(path)
 )",
-                                  .strVariables{{"path", std::string{path}}}});
-}
+                .strVariables{{"path", std::string{path}}}});
+    }
 
-void VideoProcessor::LocateOneFrame(int frameNum, int minm, double ecc,
-                                    int size, int diameter)
-{
-    spdlog::info("Locating features on one frame");
-    m_messageQueue.Send(
-            PythonWorkerRunString{.string = R"(
+    void VideoProcessor::LocateOneFrame(int frameNum, int minm, double ecc,
+                                        int size, int diameter)
+    {
+        spdlog::info("Locating features on one frame");
+        m_messageQueue.Send(
+                PythonWorkerRunString{.string = R"(
 vid.minmass = minm
 mass = minm
 #Эта функция для подбора параметров на одном кадре. Изменяем параметры (в основном, mass),
 #пока картинка не станет хорошей, и только тогда запускаем locate_all
 vid.locate_1_frame(10, ecc, mass, size, diam=diameter)
 )",
-                                  .intVariables{{"frameNum", frameNum},
-                                                {"minm", minm},
-                                                {"size", size},
-                                                {"diameter", diameter}},
-                                  .floatVariables{{"ecc", ecc}}});
-}
+                                      .intVariables{{"frameNum", frameNum},
+                                                    {"minm", minm},
+                                                    {"size", size},
+                                                    {"diameter", diameter}},
+                                      .floatVariables{{"ecc", ecc}}});
+    }
 
-void VideoProcessor::LocateAllFrames()
-{
-    spdlog::info("Locating features for all frames");
-    m_messageQueue.Send(PythonWorkerRunString{.string = R"(
+    void VideoProcessor::LocateAllFrames()
+    {
+        spdlog::info("Locating features for all frames");
+        m_messageQueue.Send(PythonWorkerRunString{.string = R"(
 import time
 starttime = time.time()
 vid.locate_all(ecc, mass, size, diam=diameter)
 print(time.time() - starttime)
 
 )"});
-}
+    }
 
-void VideoProcessor::LinkAndFilter(int searchRange, int memory,
-                                   int minTrajectoryLen, int driftSmoothing)
-{
-    spdlog::info(
-            "Linking features, filtering trajectory and subtracting drift");
-    m_messageQueue.Send(PythonWorkerRunString{
-            .string = R"(
+    void VideoProcessor::LinkAndFilter(int searchRange, int memory,
+                                       int minTrajectoryLen, int driftSmoothing)
+    {
+        spdlog::info(
+                "Linking features, filtering trajectory and subtracting drift");
+        m_messageQueue.Send(PythonWorkerRunString{
+                .string = R"(
 vid.raw_t = tp.link_df(vid.f, search_range, memory = mem)
 
 vid.filter_traj(min_len = min_traj_len)
@@ -170,18 +172,19 @@ vid.filter_traj(min_len = min_traj_len)
 d = tp.compute_drift(vid.t, smoothing = drift_smoothing)
 vid.t = tp.subtract_drift(vid.t, d)
 )",
-            .intVariables{{"search_range", searchRange},
-                          {"mem", memory},
-                          {"min_traj_len", minTrajectoryLen},
-                          {"drift_smoothing", driftSmoothing}}});
-}
+                .intVariables{{"search_range", searchRange},
+                              {"mem", memory},
+                              {"min_traj_len", minTrajectoryLen},
+                              {"drift_smoothing", driftSmoothing}}});
+    }
 
-void VideoProcessor::GroupAndPlotTrajectory(int minDiagSize, int maxDiagSize)
-{
-    spdlog::info("Grouping by particle, filtering by diagonal \ntrajectory "
-                 "size, plotting trajectory");
-    m_messageQueue.Send(PythonWorkerRunString{
-            .string{R"(
+    void VideoProcessor::GroupAndPlotTrajectory(int minDiagSize,
+                                                int maxDiagSize)
+    {
+        spdlog::info("Grouping by particle, filtering by diagonal \ntrajectory "
+                     "size, plotting trajectory");
+        m_messageQueue.Send(PythonWorkerRunString{
+                .string{R"(
 vid.t = vid.t.groupby('particle').filter(lambda x: tp.diagonal_size(x) > min_diag_size and tp.diagonal_size(x) < max_diag_size)
 
 fig, ax = plt.subplots()
@@ -189,15 +192,15 @@ tp.plot_traj(vid.t, ax=ax)
 plt.savefig('trajectory.png')
 plt.show()
 )"},
-            .intVariables{{"min_diag_size", minDiagSize},
-                          {"max_diag_size", maxDiagSize}}});
-}
+                .intVariables{{"min_diag_size", minDiagSize},
+                              {"max_diag_size", maxDiagSize}}});
+    }
 
-void VideoProcessor::PlotSizeHist(double fps, double scale)
-{
-    spdlog::info("Plotting the size distribution");
-    m_messageQueue.Send(PythonWorkerRunString{
-            .string{R"(
+    void VideoProcessor::PlotSizeHist(double fps, double scale)
+    {
+        spdlog::info("Plotting the size distribution");
+        m_messageQueue.Send(PythonWorkerRunString{
+                .string{R"(
 im = tp.imsd(vid.t, scale, fps)
 sizes = []
 for i in im.columns:
@@ -226,16 +229,17 @@ hist = pd.DataFrame({'n':np.append(n, 0), 'bins':bins})
 hist.to_csv(file_stem + "_hist.csv", index = False)
 pd.Series(sizes).to_csv(file_stem + '_raw_data.csv', index = False)
 )"},
-            .strVariables{{"file_stem", vidPath.stem().string()}},
-            .floatVariables = {{"scale", scale}, {"fps", fps}}});
-}
+                .strVariables{{"file_stem", vidPath.stem().string()}},
+                .floatVariables = {{"scale", scale}, {"fps", fps}}});
+    }
 
-void VideoProcessor::GetSize(double fps, double scale)
-{
-    spdlog::info("Fitting linear approximation, getting size of particle");
-    m_messageQueue.Send(PythonWorkerRunString{
-            .string{R"(
+    void VideoProcessor::GetSize(double fps, double scale)
+    {
+        spdlog::info("Fitting linear approximation, getting size of particle");
+        m_messageQueue.Send(PythonWorkerRunString{
+                .string{R"(
 vid.get_size(fps, scale)
 )"},
-            .floatVariables = {{"scale", scale}, {"fps", fps}}});
-}
+                .floatVariables = {{"scale", scale}, {"fps", fps}}});
+    }
+}// namespace prm

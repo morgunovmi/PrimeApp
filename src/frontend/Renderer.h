@@ -7,7 +7,7 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/System/Clock.hpp>
 
-namespace slr
+namespace prm
 {
     class Renderer
     {
@@ -35,6 +35,6 @@ namespace slr
 
         sf::Time& m_dt;
     };
-}// namespace slr
+}// namespace prm
 
 #endif

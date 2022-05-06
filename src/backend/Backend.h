@@ -8,17 +8,12 @@
 #include "misc/Log.h"
 #include "messages/MessageQueue.h"
 #include "messages/messages.h"
+#include "utils/FileUtils.h"
 
-namespace slr
+namespace prm
 {
     constexpr std::string_view LIVE_CAPTURE_PREFIX{"LiveCapture_"};
     constexpr std::string_view SEQ_CAPTURE_PREFIX{"SequenceCapture_"};
-
-    enum CAP_FORMAT
-    {
-        TIF = 0,
-        MP4 = 1
-    };
 
     class Backend
     {
@@ -39,8 +34,8 @@ namespace slr
         }
 
         virtual void Init() {}
-        virtual void LiveCapture(CAP_FORMAT format) {}
-        virtual void SequenceCapture(uint32_t nFrames, CAP_FORMAT format) {}
+        virtual void LiveCapture(SAVE_FORMAT format) {}
+        virtual void SequenceCapture(uint32_t nFrames, SAVE_FORMAT format) {}
         virtual void TerminateCapture() {}
 
         virtual ~Backend() = default;
@@ -61,6 +56,6 @@ namespace slr
             spdlog::error(fmt, args...);
         }
     };
-}// namespace slr
+}// namespace prm
 
 #endif// PRIME_APP_BACKEND_H

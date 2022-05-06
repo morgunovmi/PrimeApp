@@ -11,20 +11,23 @@
 namespace py = pybind11;
 using namespace py::literals;
 
-class PythonWorker : public Worker<PythonWorkerMessage>
+namespace prm
 {
-public:
-    PythonWorker(int id, MessageQueue<PythonWorkerMessage>& queue)
-        : Worker(id, queue)
+    class PythonWorker : public Worker<PythonWorkerMessage>
     {
-    }
+    public:
+        PythonWorker(int id, MessageQueue<PythonWorkerMessage>& queue)
+            : Worker(id, queue)
+        {
+        }
 
-private:
-    [[noreturn]] void Main() override;
+    private:
+        [[noreturn]] void Main() override;
 
-    void HandleMessage(PythonWorkerRunString&& runString);
+        void HandleMessage(PythonWorkerRunString&& runString);
 
-    void HandleMessage(PythonWorkerQuit&& quit);
-};
+        void HandleMessage(PythonWorkerQuit&& quit);
+    };
+}// namespace prm
 
 #endif//PRIME_APP_PYTHONWORKER_H

@@ -9,13 +9,11 @@
 #include "misc/Log.h"
 #include "misc/LogSink.h"
 
-
-
 int main(int argc, char** argv)
 {
     try
     {
-        slr::Log log;
+        prm::Log log;
 
         auto sink = std::make_shared<LogSinkMt>(log);
 
@@ -47,7 +45,7 @@ int main(int argc, char** argv)
         sf::ContextSettings settings{};
         settings.antialiasingLevel = antialiasingLevel;
 
-        slr::App system{argc, argv, width, height, settings, log};
+        prm::App app{argc, argv, width, height, settings, log};
         system.Run();
     }
     catch (std::exception& e)

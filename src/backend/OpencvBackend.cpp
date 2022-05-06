@@ -3,7 +3,7 @@
 
 #include "OpencvBackend.h"
 
-sf::Image slr::OpencvBackend::MatToImage(const cv::Mat& mat)
+sf::Image prm::OpencvBackend::MatToImage(const cv::Mat& mat)
 {
     sf::Image image;
 
@@ -21,7 +21,7 @@ sf::Image slr::OpencvBackend::MatToImage(const cv::Mat& mat)
     return image;
 }
 
-void slr::OpencvBackend::Init()
+void prm::OpencvBackend::Init()
 {
     if (m_context.isCamOpen)
     {
@@ -33,7 +33,7 @@ void slr::OpencvBackend::Init()
             &OpencvBackend::Init_, this, std::ref(m_context));
 }
 
-void slr::OpencvBackend::LiveCapture(CAP_FORMAT format)
+void prm::OpencvBackend::LiveCapture(SAVE_FORMAT format)
 {
     if (!m_context.isCamOpen)
     {
@@ -53,7 +53,7 @@ void slr::OpencvBackend::LiveCapture(CAP_FORMAT format)
             &OpencvBackend::Capture_, this, std::ref(m_context), format, -1);
 }
 
-void slr::OpencvBackend::SequenceCapture(uint32_t nFrames, CAP_FORMAT format)
+void prm::OpencvBackend::SequenceCapture(uint32_t nFrames, SAVE_FORMAT format)
 {
     if (!m_context.isCamOpen)
     {
@@ -74,9 +74,9 @@ void slr::OpencvBackend::SequenceCapture(uint32_t nFrames, CAP_FORMAT format)
                                                       format, nFrames);
 }
 
-void slr::OpencvBackend::TerminateCapture() { m_context.isCapturing = false; }
+void prm::OpencvBackend::TerminateCapture() { m_context.isCapturing = false; }
 
-void slr::OpencvBackend::Init_(slr::OpencvCameraCtx& ctx)
+void prm::OpencvBackend::Init_(prm::OpencvCameraCtx& ctx)
 {
     spdlog::info("Opening camera");
 
@@ -92,38 +92,22 @@ void slr::OpencvBackend::Init_(slr::OpencvCameraCtx& ctx)
 }
 
 //TODO: Refactor repeating blocks of code
-void slr::OpencvBackend::Capture_(OpencvCameraCtx& ctx, CAP_FORMAT format,
+void prm::OpencvBackend::Capture_(OpencvCameraCtx& ctx, SAVE_FORMAT format,
                                   int32_t nFrames)
 {
-    const auto t = std::time(nullptr);
-    const auto tm = *std::localtime(&t);
-
-    std::ostringstream oss{};
-    oss << std::put_time(&tm, "%H-%M-%S");
-    const auto curTime = oss.str();
-
-    auto videoPath = curTime;
+    std::string videoPath{};
     if (nFrames <= 0)
     {
-        videoPath = fmt::format("{}{}", LIVE_CAPTURE_PREFIX, videoPath);
+        videoPath = FileUtils::GenerateVideoPath(LIVE_CAPTURE_PREFIX, format);
     }
     else
     {
-        videoPath = fmt::format("{}{}", SEQ_CAPTURE_PREFIX, videoPath);
+        videoPath = FileUtils::GenerateVideoPath(SEQ_CAPTURE_PREFIX, format);
     }
 
-    switch (format)
-    {
-        case TIF:
-            videoPath.append(".tif");
-            break;
-
-        case MP4:
-            videoPath.append(".mp4");
-            break;
-
-        default:
-            spdlog::error("Undefined format");
+    if (videoPath.empty()) {
+        spdlog::error("Couldn't generate videopath");
+        return;
     }
 
     const int xres = ctx.camera->get(cv::CAP_PROP_FRAME_WIDTH);

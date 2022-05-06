@@ -6,7 +6,7 @@
 
 #include "Backend.h"
 
-namespace slr
+namespace prm
 {
     struct CvEvent
     {
@@ -56,9 +56,9 @@ namespace slr
 
         void Init() override;
 
-        void LiveCapture(CAP_FORMAT format) override;
+        void LiveCapture(SAVE_FORMAT format) override;
 
-        void SequenceCapture(uint32_t nFrames, CAP_FORMAT format) override;
+        void SequenceCapture(uint32_t nFrames, SAVE_FORMAT format) override;
 
         void TerminateCapture() override;
 
@@ -67,12 +67,12 @@ namespace slr
     private:
         void Init_(OpencvCameraCtx& ctx);
 
-        void Capture_(OpencvCameraCtx& ctx, CAP_FORMAT format, int32_t nFrames);
+        void Capture_(OpencvCameraCtx& ctx, SAVE_FORMAT format, int32_t nFrames);
 
         static sf::Image MatToImage(const cv::Mat& mat);
 
         OpencvCameraCtx m_context;
     };
-}// namespace slr
+}// namespace prm
 
 #endif// PRIME_APP_OPENCVBACKEND_H

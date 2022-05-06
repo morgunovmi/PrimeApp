@@ -13,7 +13,7 @@
 #include "Backend.h"
 #include "misc/Log.h"
 
-namespace slr
+namespace prm
 {
     typedef struct NVP
     {
@@ -158,9 +158,9 @@ namespace slr
 
         void Init() override;
 
-        void LiveCapture(CAP_FORMAT format) override;
+        void LiveCapture(SAVE_FORMAT format) override;
 
-        void SequenceCapture(uint32_t nFrames, CAP_FORMAT format) override;
+        void SequenceCapture(uint32_t nFrames, SAVE_FORMAT format) override;
 
         void TerminateCapture() override;
 
@@ -168,8 +168,8 @@ namespace slr
 
     private:
         void Init_();
-        void LiveCapture_(CAP_FORMAT format);
-        void SequenceCapture_(uint32_t nFrames, CAP_FORMAT format);
+        void LiveCapture_(SAVE_FORMAT format);
+        void SequenceCapture_(uint32_t nFrames, SAVE_FORMAT format);
 
         bool InitAndOpenOneCamera();
 
@@ -213,6 +213,6 @@ namespace slr
 
         bool m_isPvcamInitialized = false;
     };
-}// namespace slr
+}// namespace prm
 
 #endif//SOLAR_GAME_H

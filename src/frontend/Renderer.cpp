@@ -1,6 +1,6 @@
 #include "frontend/Renderer.h"
 
-namespace slr
+namespace prm
 {
     void Renderer::Init() { m_window.setFramerateLimit(60); }
 
@@ -13,4 +13,4 @@ namespace slr
     }
 
     void Renderer::Display() { m_window.display(); }
-}// namespace slr
+}// namespace prm

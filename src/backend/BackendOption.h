@@ -4,10 +4,13 @@
 #include "OpencvBackend.h"
 #include "PhotometricsBackend.h"
 
-enum BackendOption
+namespace prm
 {
-    OPENCV = 0,
-    PVCAM = 1,
-};
+    enum BackendOption
+    {
+        OPENCV = 0,
+        PVCAM = 1,
+    };
+}
 
 #endif//PRIME_APP_BACKENDOPTION_H
