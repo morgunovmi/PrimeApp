@@ -11,6 +11,9 @@
 
 namespace slr
 {
+    constexpr std::string_view LIVE_CAPTURE_PREFIX{"LiveCapture_"};
+    constexpr std::string_view SEQ_CAPTURE_PREFIX{"SequenceCapture_"};
+
     enum CAP_FORMAT
     {
         TIF = 0,

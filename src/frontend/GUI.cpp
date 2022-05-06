@@ -240,8 +240,11 @@ namespace slr
 
             static auto captureFormat = TIF;
             ImGui::RadioButton("tif", (int*) &captureFormat, 0);
-            ImGui::SameLine();
-            ImGui::RadioButton("mp4", (int*) &captureFormat, 1);
+            if (m_selectedBackend != PVCAM)
+            {
+                ImGui::SameLine();
+                ImGui::RadioButton("mp4", (int*) &captureFormat, 1);
+            }
 
             if (ImGui::Button("Live capture"))
             {

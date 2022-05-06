@@ -30,7 +30,6 @@ find_package(imgui CONFIG REQUIRED)
 find_package(SFML COMPONENTS system window graphics CONFIG REQUIRED)
 find_package(ImGui-SFML CONFIG REQUIRED)
 find_package(OpenCV CONFIG REQUIRED)
-find_package(fmt CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 find_package(pybind11 CONFIG REQUIRED)
 find_package(OpenImageIO CONFIG REQUIRED)
@@ -62,7 +61,6 @@ target_link_libraries(
         ImGui-SFML::ImGui-SFML
         pvcam64
         ${OpenCV_LIBS}
-        fmt::fmt
         spdlog::spdlog spdlog::spdlog_header_only
         pybind11::embed
         OpenImageIO::OpenImageIO

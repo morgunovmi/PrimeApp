@@ -34,9 +34,6 @@ namespace slr
         bool threadAbortFlag{false};
     };
 
-    constexpr std::string_view LIVE_CAPTURE_PREFIX{"LiveCapture_"};
-    constexpr std::string_view SEQ_CAPTURE_PREFIX{"SequenceCapture_"};
-
     const uint16_t CV_DEFAULT_FPS = 30;
 
     class OpencvBackend : public Backend

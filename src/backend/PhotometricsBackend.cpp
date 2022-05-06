@@ -1,8 +1,11 @@
 #include <fmt/format.h>
+#include <iomanip>
 #include <spdlog/spdlog.h>
 
-#include "backend/PhotometricsBackend.h"
+#include <opencv2/opencv.hpp>
+#include <OpenImageIO/imageio.h>
 
+#include "backend/PhotometricsBackend.h"
 
 namespace slr
 {
@@ -742,18 +745,21 @@ namespace slr
     void PhotometricsBackend::SequenceCapture(uint32_t nFrames,
                                               CAP_FORMAT format)
     {
-        if (!m_isPvcamInitialized) {
+        if (!m_isPvcamInitialized)
+        {
             spdlog::warn("Initialize PVCAM first");
             return;
         }
 
         auto& ctx = m_cameraContexts[m_cameraIndex];
-        if (!ctx->isCamOpen) {
+        if (!ctx->isCamOpen)
+        {
             spdlog::warn("Camera not opened");
             return;
         }
 
-        if (ctx->isCapturing) {
+        if (ctx->isCapturing)
+        {
             spdlog::warn("Already capturing");
             return;
         }
@@ -764,18 +770,21 @@ namespace slr
 
     void PhotometricsBackend::LiveCapture(CAP_FORMAT format)
     {
-        if (!m_isPvcamInitialized) {
+        if (!m_isPvcamInitialized)
+        {
             spdlog::warn("Initialize PVCAM first");
             return;
         }
 
         auto& ctx = m_cameraContexts[m_cameraIndex];
-        if (!ctx->isCamOpen) {
+        if (!ctx->isCamOpen)
+        {
             spdlog::warn("Camera not opened");
             return;
         }
 
-        if (ctx->isCapturing) {
+        if (ctx->isCapturing)
+        {
             spdlog::warn("Already capturing");
             return;
         }
@@ -868,7 +877,41 @@ namespace slr
     void PhotometricsBackend::SequenceCapture_(uint32_t nFrames,
                                                CAP_FORMAT format)
     {
+        const auto t = std::time(nullptr);
+        const auto tm = *std::localtime(&t);
+
+        std::ostringstream oss{};
+        oss << std::put_time(&tm, "%H-%M-%S");
+        const auto curTime = oss.str();
+
+        auto videoPath = curTime;
+        if (nFrames <= 0)
+        {
+            videoPath = fmt::format("{}{}", LIVE_CAPTURE_PREFIX, videoPath);
+        }
+        else
+        {
+            videoPath = fmt::format("{}{}", SEQ_CAPTURE_PREFIX, videoPath);
+        }
+
+        switch (format)
+        {
+            case TIF:
+                videoPath.append(".tif");
+                break;
+
+            case MP4:
+                videoPath.append(".mp4");
+                break;
+
+            default:
+                spdlog::error("Undefined format");
+        }
+
         auto& ctx = m_cameraContexts[0];
+
+        std::vector<std::uint8_t> bytes;
+
         if (PV_OK != pl_cam_register_callback_ex3(ctx->hcam, PL_CALLBACK_EOF,
                                                   (void*) CustomEofHandler,
                                                   (void*) ctx.get()))
@@ -947,8 +990,32 @@ namespace slr
             spdlog::info("Frame #%u has been delivered from camera %d\n",
                          imageCounter + 1, ctx->hcam);
 
+            std::copy((uint8_t*) ctx->eofFrame,
+                      (uint8_t*) ctx->eofFrame + exposureBytes,
+                      std::back_inserter(bytes));
+
             spdlog::info("Size is {} : {}", exposureBytes,
                          ctx->sensorResX * ctx->sensorResY);
+
+            sf::Image image{};
+
+            image.create(ctx->sensorResX, ctx->sensorResY);
+            for (std::size_t y = 0; y < ctx->sensorResY; ++y)
+            {
+                for (std::size_t x = 0; x < ctx->sensorResX; ++x)
+                {
+                    uint16_t val = *((uint16_t*) ctx->eofFrame +
+                                     y * ctx->sensorResY + x);
+                    image.setPixel(x, y,
+                                   sf::Color{static_cast<uint8_t>(val),
+                                             static_cast<uint8_t>(val),
+                                             static_cast<uint8_t>(val)});
+                }
+            }
+
+            std::scoped_lock lock(m_textureMutex);
+            m_currentTexture.loadFromImage(image);
+            //TODO sleep from framerate
 
             /**
         When acquiring sequences, call the pl_exp_finish_seq() after the entire sequence
@@ -983,8 +1050,45 @@ namespace slr
 
         // Cleanup before exiting the application.
         delete[] frameInMemory;
+
+        switch (format)
+        {
+            case TIF:
+            {
+                using namespace OIIO;
+
+                std::unique_ptr<ImageOutput> out = ImageOutput::create(videoPath);
+                if (!out) return;
+                ImageSpec spec(ctx->sensorResX, ctx->sensorResY, 1, TypeDesc::UINT16);
+
+                if (!out->supports("multiimage") ||
+                    !out->supports("appendsubimage"))
+                {
+                    spdlog::error("Current plugin doesn't support tif subimages");
+                    return;
+                }
+
+                ImageOutput::OpenMode appendmode = ImageOutput::Create;
+
+                for (int s = 0; s < imageCounter; ++s)
+                {
+                    out->open(videoPath, spec, appendmode);
+                    out->write_image(TypeDesc::UINT16,
+                                     bytes.data() + exposureBytes * s);
+                    appendmode = ImageOutput::AppendSubimage;
+                }
+                break;
+            }
+
+                //TODO mp4
+            default:
+                spdlog::error("Undefined format");
+        }
+        spdlog::info("File written to {}", videoPath);
+
     }
-    void PhotometricsBackend::LiveCapture_(CAP_FORMAT format) {
+    void PhotometricsBackend::LiveCapture_(CAP_FORMAT format)
+    {
         auto& ctx = m_cameraContexts[0];
         if (PV_OK != pl_cam_register_callback_ex3(ctx->hcam, PL_CALLBACK_EOF,
                                                   (void*) CustomEofHandler,
