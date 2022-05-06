@@ -6,8 +6,7 @@ namespace prm
     void VideoProcessor::Init()
     {
         spdlog::info("Initializing video processor module");
-        m_messageQueue.Send(
-                PythonWorkerRunString{.string = R"(
+        m_messageQueue.Send(PythonWorkerRunString{.string = R"(
 import pims
 import numpy as np
 import trackpy as tp
@@ -19,7 +18,7 @@ from skimage import exposure
 from PIL import Image
 
 import multiprocessing
-multiprocessing.set_executable(py_exec)
+multiprocessing.set_executable('./python/python.exe')
 
 from tifffile import imsave
 import os
@@ -105,8 +104,7 @@ class Video:
         R = k*T/(6*np.pi*D*eta)
         diam = 2*R*1e9
         print('diameter = ', diam, ' nm')
-)",
-                                      .strVariables{{"py_exec", python_exec}}});
+)"});
     }
 
     void VideoProcessor::LoadVideo(std::string_view path)
@@ -246,6 +244,7 @@ vid.get_size(fps, scale)
     void VideoProcessor::RunPythonQuery(std::string_view query)
     {
         spdlog::info("Running a python string");
-        m_messageQueue.Send(PythonWorkerRunString{.string = std::string{query}});
+        m_messageQueue.Send(
+                PythonWorkerRunString{.string = std::string{query}});
     }
 }// namespace prm

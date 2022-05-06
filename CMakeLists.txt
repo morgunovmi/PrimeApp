@@ -17,14 +17,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE})
 # Hardcoded pvcam directory
 link_directories("C:\\Program Files\\Photometrics\\PVCamSDK\\Lib\\amd64")
 
-if(PYTHON_EXECUTABLE)
-    message(${PYTHON_EXECUTABLE})
-else()
-    message(FATAL_ERROR "PYTHON_EXECUTABLE env variable not set")
-endif()
-
-add_definitions( -DPYTHON_EXECUTABLE=${PYTHON_EXECUTABLE} )
-
 # Find necessary libs
 find_package(imgui CONFIG REQUIRED)
 find_package(SFML COMPONENTS system window graphics CONFIG REQUIRED)

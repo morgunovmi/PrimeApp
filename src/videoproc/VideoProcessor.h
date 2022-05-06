@@ -8,15 +8,6 @@
 
 #include "workers/PythonWorker.h"
 
-#define STRINGIFY(x) #x
-#define TOSTRING(x) STRINGIFY(x)
-
-#ifdef PYTHON_EXECUTABLE
-const std::string python_exec{TOSTRING(PYTHON_EXECUTABLE)};
-#else
-const std::string python_exec{"Well Well Well, How the turn tables"};
-#endif
-
 namespace py = pybind11;
 using namespace py::literals;
 
