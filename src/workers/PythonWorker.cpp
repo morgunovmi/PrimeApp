@@ -53,13 +53,22 @@ namespace prm
             }
 
             py::exec(runString.string);
-            spdlog::debug("String {}... ran successfully!",
-                          runString.string.substr(0, stringPeekLen));
+            spdlog::info("String {}... ran successfully!",
+                         runString.string.substr(0, stringPeekLen));
         }
         catch (const py::error_already_set& e)
         {
             spdlog::error("Error running python string {}\n\nError: {}",
                           runString.string, e.what());
+        }
+
+        try
+        {
+            auto res_string = py::globals()["result"].cast<std::string>();
+            if (!res_string.empty()) { spdlog::info("Result: {}", res_string); }
+        }
+        catch (const std::exception& e)
+        {
         }
     }
 

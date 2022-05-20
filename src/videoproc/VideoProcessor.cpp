@@ -104,6 +104,7 @@ class Video:
         R = k*T/(6*np.pi*D*eta)
         diam = 2*R*1e9
         print('diameter = ', diam, ' nm')
+        return diam
 )"});
     }
 
@@ -236,7 +237,8 @@ pd.Series(sizes).to_csv(file_stem + '_raw_data.csv', index = False)
         spdlog::info("Fitting linear approximation, getting size of particle");
         m_messageQueue.Send(PythonWorkerRunString{
                 .string{R"(
-vid.get_size(fps, scale)
+diam = vid.get_size(fps, scale)
+result = f"Final diameter is {diam}"
 )"},
                 .floatVariables = {{"scale", scale}, {"fps", fps}}});
     }
