@@ -764,6 +764,7 @@ namespace prm
             return;
         }
 
+        ctx->threadAbortFlag = false;
         ctx->thread = std::make_unique<std::jthread>(
                 &PhotometricsBackend::SequenceCapture_, this, nFrames, format);
     }
@@ -789,6 +790,7 @@ namespace prm
             return;
         }
 
+        ctx->threadAbortFlag = false;
         ctx->thread = std::make_unique<std::jthread>(
                 &PhotometricsBackend::LiveCapture_, this, format);
     }

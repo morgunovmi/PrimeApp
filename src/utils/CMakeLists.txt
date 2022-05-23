@@ -1,1 +1,1 @@
-target_sources(${APP_NAME} PRIVATE FileUtils.cpp)
+target_sources(${APP_NAME} PRIVATE FileUtils.cpp Timer.cpp)
