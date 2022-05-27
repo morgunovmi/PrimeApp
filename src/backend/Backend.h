@@ -1,13 +1,13 @@
 #ifndef PRIME_APP_BACKEND_H
 #define PRIME_APP_BACKEND_H
 
+#include <SFML/Graphics.hpp>
 #include <imgui-SFML.h>
 #include <spdlog/spdlog.h>
-#include <SFML/Graphics.hpp>
 
-#include "misc/Log.h"
 #include "messages/MessageQueue.h"
 #include "messages/messages.h"
+#include "misc/Log.h"
 #include "utils/FileUtils.h"
 
 namespace prm
@@ -34,8 +34,11 @@ namespace prm
         }
 
         virtual void Init() {}
-        virtual void LiveCapture(SAVE_FORMAT format) {}
-        virtual void SequenceCapture(uint32_t nFrames, SAVE_FORMAT format) {}
+        virtual void LiveCapture(SAVE_FORMAT format, bool save) {}
+        virtual void SequenceCapture(uint32_t nFrames, SAVE_FORMAT format,
+                                     bool save)
+        {
+        }
         virtual void TerminateCapture() {}
 
         virtual ~Backend() = default;

@@ -246,20 +246,23 @@ namespace prm
                 ImGui::RadioButton("mp4", (int*) &captureFormat, 1);
             }
 
+            static bool save = false;
+            ImGui::Checkbox("Save to file", &save);
             if (ImGui::Button("Live capture"))
             {
-                m_backend->LiveCapture(captureFormat);
+                m_backend->LiveCapture(captureFormat, save);
             }
 
-            static int nFrames = 100;
+            static int nFrames = 50;
             if (ImGui::Button("Sequence capture"))
             {
-                m_backend->SequenceCapture(nFrames, captureFormat);
+                m_backend->SequenceCapture(nFrames, captureFormat, save);
             }
             ImGui::SameLine();
             ImGui::PushItemWidth(m_inputFieldWidth);
             if (ImGui::SliderInt("Number of frames", &nFrames, 0, 1000)) {}
             ImGui::PopItemWidth();
+
 
             if (ImGui::Button("Terminate capture"))
             {

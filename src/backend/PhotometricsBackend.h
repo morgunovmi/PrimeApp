@@ -158,9 +158,10 @@ namespace prm
 
         void Init() override;
 
-        void LiveCapture(SAVE_FORMAT format) override;
+        void LiveCapture(SAVE_FORMAT format, bool save) override;
 
-        void SequenceCapture(uint32_t nFrames, SAVE_FORMAT format) override;
+        void SequenceCapture(uint32_t nFrames, SAVE_FORMAT format,
+                             bool save) override;
 
         void TerminateCapture() override;
 
@@ -168,8 +169,8 @@ namespace prm
 
     private:
         void Init_();
-        void LiveCapture_(SAVE_FORMAT format);
-        void SequenceCapture_(uint32_t nFrames, SAVE_FORMAT format);
+        void LiveCapture_(SAVE_FORMAT format, bool save);
+        void SequenceCapture_(uint32_t nFrames, SAVE_FORMAT format, bool save);
 
         bool InitAndOpenOneCamera();
 

@@ -1,8 +1,8 @@
 #ifndef PRIME_APP_OPENCVBACKEND_H
 #define PRIME_APP_OPENCVBACKEND_H
 
-#include <string_view>
 #include <opencv2/opencv.hpp>
+#include <string_view>
 
 #include "Backend.h"
 
@@ -56,9 +56,10 @@ namespace prm
 
         void Init() override;
 
-        void LiveCapture(SAVE_FORMAT format) override;
+        void LiveCapture(SAVE_FORMAT format, bool save) override;
 
-        void SequenceCapture(uint32_t nFrames, SAVE_FORMAT format) override;
+        void SequenceCapture(uint32_t nFrames, SAVE_FORMAT format,
+                             bool save) override;
 
         void TerminateCapture() override;
 
@@ -67,7 +68,8 @@ namespace prm
     private:
         void Init_(OpencvCameraCtx& ctx);
 
-        void Capture_(OpencvCameraCtx& ctx, SAVE_FORMAT format, int32_t nFrames);
+        void Capture_(OpencvCameraCtx& ctx, SAVE_FORMAT format,
+                      int32_t nFrames, bool save);
 
         static sf::Image MatToImage(const cv::Mat& mat);
 

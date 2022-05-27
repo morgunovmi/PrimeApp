@@ -33,7 +33,7 @@ void prm::OpencvBackend::Init()
             &OpencvBackend::Init_, this, std::ref(m_context));
 }
 
-void prm::OpencvBackend::LiveCapture(SAVE_FORMAT format)
+void prm::OpencvBackend::LiveCapture(SAVE_FORMAT format, bool save)
 {
     if (!m_context.isCamOpen)
     {
@@ -50,10 +50,10 @@ void prm::OpencvBackend::LiveCapture(SAVE_FORMAT format)
 
     m_context.isCapturing = true;
     m_context.thread = std::make_unique<std::jthread>(
-            &OpencvBackend::Capture_, this, std::ref(m_context), format, -1);
+            &OpencvBackend::Capture_, this, std::ref(m_context), format, -1, save);
 }
 
-void prm::OpencvBackend::SequenceCapture(uint32_t nFrames, SAVE_FORMAT format)
+void prm::OpencvBackend::SequenceCapture(uint32_t nFrames, SAVE_FORMAT format, bool save)
 {
     if (!m_context.isCamOpen)
     {
@@ -71,7 +71,7 @@ void prm::OpencvBackend::SequenceCapture(uint32_t nFrames, SAVE_FORMAT format)
     m_context.isCapturing = true;
     m_context.thread = std::make_unique<std::jthread>(&OpencvBackend::Capture_,
                                                       this, std::ref(m_context),
-                                                      format, nFrames);
+                                                      format, nFrames, save);
 }
 
 void prm::OpencvBackend::TerminateCapture() { m_context.isCapturing = false; }
@@ -93,7 +93,7 @@ void prm::OpencvBackend::Init_(prm::OpencvCameraCtx& ctx)
 
 //TODO: Refactor repeating blocks of code
 void prm::OpencvBackend::Capture_(OpencvCameraCtx& ctx, SAVE_FORMAT format,
-                                  int32_t nFrames)
+                                  int32_t nFrames, bool save)
 {
     std::string videoPath{};
     if (nFrames <= 0)
@@ -143,8 +143,11 @@ void prm::OpencvBackend::Capture_(OpencvCameraCtx& ctx, SAVE_FORMAT format,
         spdlog::debug("Frame no {}", counter);
 
         cv::cvtColor(frame, frame, cv::COLOR_BGR2RGB);
-        std::copy(frame.data, frame.data + singleFrameSize,
-                  std::back_inserter(pixels));
+        if (save)
+        {
+            std::copy(frame.data, frame.data + singleFrameSize,
+                      std::back_inserter(pixels));
+        }
 
         const auto image = MatToImage(frame);
 
@@ -158,53 +161,59 @@ void prm::OpencvBackend::Capture_(OpencvCameraCtx& ctx, SAVE_FORMAT format,
     ctx.isCapturing = false;
     ctx.isCamOpen = false;
 
-    switch (format)
+    if (save)
     {
-        case TIF:
+        switch (format)
         {
-            using namespace OIIO;
-
-            std::unique_ptr<ImageOutput> out = ImageOutput::create(videoPath);
-            if (!out) return;
-            ImageSpec spec(xres, yres, channels, TypeDesc::UINT8);
-
-            if (!out->supports("multiimage") ||
-                !out->supports("appendsubimage"))
+            case TIF:
             {
-                spdlog::error("Current plugin doesn't support tif subimages");
-                return;
+                using namespace OIIO;
+
+                std::unique_ptr<ImageOutput> out =
+                        ImageOutput::create(videoPath);
+                if (!out) return;
+                ImageSpec spec(xres, yres, channels, TypeDesc::UINT8);
+
+                if (!out->supports("multiimage") ||
+                    !out->supports("appendsubimage"))
+                {
+                    spdlog::error(
+                            "Current plugin doesn't support tif subimages");
+                    return;
+                }
+
+                ImageOutput::OpenMode appendmode = ImageOutput::Create;
+
+                for (int s = 0; s < counter; ++s)
+                {
+                    out->open(videoPath, spec, appendmode);
+                    out->write_image(TypeDesc::UINT8,
+                                     pixels.data() + singleFrameSize * s);
+                    appendmode = ImageOutput::AppendSubimage;
+                }
+                break;
             }
 
-            ImageOutput::OpenMode appendmode = ImageOutput::Create;
-
-            for (int s = 0; s < counter; ++s)
+            case MP4:
             {
-                out->open(videoPath, spec, appendmode);
-                out->write_image(TypeDesc::UINT8,
-                                 pixels.data() + singleFrameSize * s);
-                appendmode = ImageOutput::AppendSubimage;
+                cv::VideoWriter writer{
+                        videoPath, cv::VideoWriter::fourcc('X', '2', '6', '4'),
+                        static_cast<double>(ctx.framerate),
+                        cv::Size{xres, yres}};
+
+                for (int s = 0; s < counter; ++s)
+                {
+                    auto mat = cv::Mat(yres, xres, CV_8UC3,
+                                       pixels.data() + singleFrameSize * s);
+                    cv::cvtColor(mat, mat, cv::COLOR_RGB2BGR);
+                    writer.write(mat);
+                }
+                writer.release();
+                break;
             }
-            break;
+            default:
+                spdlog::error("Undefined format");
         }
-
-        case MP4:
-        {
-            cv::VideoWriter writer{
-                    videoPath, cv::VideoWriter::fourcc('X', '2', '6', '4'),
-                    static_cast<double>(ctx.framerate), cv::Size{xres, yres}};
-
-            for (int s = 0; s < counter; ++s)
-            {
-                auto mat = cv::Mat(yres, xres, CV_8UC3,
-                                   pixels.data() + singleFrameSize * s);
-                cv::cvtColor(mat, mat, cv::COLOR_RGB2BGR);
-                writer.write(mat);
-            }
-            writer.release();
-            break;
-        }
-        default:
-            spdlog::error("Undefined format");
+        spdlog::info("File written to {}", videoPath);
     }
-    spdlog::info("File written to {}", videoPath);
 }

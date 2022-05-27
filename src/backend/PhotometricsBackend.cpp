@@ -744,7 +744,7 @@ namespace prm
     }
 
     void PhotometricsBackend::SequenceCapture(uint32_t nFrames,
-                                              SAVE_FORMAT format)
+                                              SAVE_FORMAT format, bool save)
     {
         if (!m_isPvcamInitialized)
         {
@@ -767,10 +767,11 @@ namespace prm
 
         ctx->threadAbortFlag = false;
         ctx->thread = std::make_unique<std::jthread>(
-                &PhotometricsBackend::SequenceCapture_, this, nFrames, format);
+                &PhotometricsBackend::SequenceCapture_, this, nFrames, format,
+                save);
     }
 
-    void PhotometricsBackend::LiveCapture(SAVE_FORMAT format)
+    void PhotometricsBackend::LiveCapture(SAVE_FORMAT format, bool save)
     {
         if (!m_isPvcamInitialized)
         {
@@ -793,7 +794,7 @@ namespace prm
 
         ctx->threadAbortFlag = false;
         ctx->thread = std::make_unique<std::jthread>(
-                &PhotometricsBackend::LiveCapture_, this, format);
+                &PhotometricsBackend::LiveCapture_, this, format, save);
     }
 
     void PhotometricsBackend::TerminateCapture()
@@ -878,7 +879,7 @@ namespace prm
         InitAndOpenOneCamera();
     }
     void PhotometricsBackend::SequenceCapture_(uint32_t nFrames,
-                                               SAVE_FORMAT format)
+                                               SAVE_FORMAT format, bool save)
     {
         const auto videoPath =
                 FileUtils::GenerateVideoPath(SEQ_CAPTURE_PREFIX, format);
@@ -975,9 +976,12 @@ namespace prm
             spdlog::info("Frame #{} has been delivered from camera {}\n",
                          imageCounter + 1, ctx->hcam);
 
-            std::copy((uint8_t*) ctx->eofFrame,
-                      (uint8_t*) ctx->eofFrame + exposureBytes,
-                      std::back_inserter(bytes));
+            if (save)
+            {
+                std::copy((uint8_t*) ctx->eofFrame,
+                          (uint8_t*) ctx->eofFrame + exposureBytes,
+                          std::back_inserter(bytes));
+            }
 
             sf::Image image{};
 
@@ -1038,47 +1042,49 @@ namespace prm
         // Cleanup before exiting the application.
         delete[] frameInMemory;
 
-        switch (format)
+        if (save)
         {
-            case TIF:
+            switch (format)
             {
-                using namespace OIIO;
-
-                std::unique_ptr<ImageOutput> out =
-                        ImageOutput::create(videoPath);
-                if (!out) return;
-                ImageSpec spec(ctx->sensorResX, ctx->sensorResY, 1,
-                               TypeDesc::UINT16);
-
-                if (!out->supports("multiimage") ||
-                    !out->supports("appendsubimage"))
+                case TIF:
                 {
-                    spdlog::error(
-                            "Current plugin doesn't support tif subimages");
-                    return;
+                    using namespace OIIO;
+
+                    std::unique_ptr<ImageOutput> out =
+                            ImageOutput::create(videoPath);
+                    if (!out) return;
+                    ImageSpec spec(ctx->sensorResX, ctx->sensorResY, 1,
+                                   TypeDesc::UINT16);
+
+                    if (!out->supports("multiimage") ||
+                        !out->supports("appendsubimage"))
+                    {
+                        spdlog::error(
+                                "Current plugin doesn't support tif subimages");
+                        return;
+                    }
+
+                    ImageOutput::OpenMode appendmode = ImageOutput::Create;
+
+                    for (int s = 0; s < imageCounter; ++s)
+                    {
+                        out->open(videoPath, spec, appendmode);
+                        out->write_image(TypeDesc::UINT16,
+                                         bytes.data() + exposureBytes * s);
+                        appendmode = ImageOutput::AppendSubimage;
+                    }
+                    break;
                 }
 
-                ImageOutput::OpenMode appendmode = ImageOutput::Create;
-
-                for (int s = 0; s < imageCounter; ++s)
-                {
-                    out->open(videoPath, spec, appendmode);
-                    out->write_image(TypeDesc::UINT16,
-                                     bytes.data() + exposureBytes * s);
-                    appendmode = ImageOutput::AppendSubimage;
-                }
-                break;
+                    //TODO mp4
+                default:
+                    spdlog::error("Undefined format");
             }
-
-                //TODO mp4
-            default:
-                spdlog::error("Undefined format");
+            spdlog::info("File written to {}", videoPath);
         }
-
-        spdlog::info("File written to {}", videoPath);
     }
 
-    void PhotometricsBackend::LiveCapture_(SAVE_FORMAT format)
+    void PhotometricsBackend::LiveCapture_(SAVE_FORMAT format, bool save)
     {
         const auto videoPath =
                 FileUtils::GenerateVideoPath(LIVE_CAPTURE_PREFIX, format);
@@ -1180,9 +1186,12 @@ namespace prm
                          ctx->eofFrameInfo.FrameNr,
                          100 * ctx->eofFrameInfo.TimeStamp);
 
-            std::copy((uint8_t*) ctx->eofFrame,
-                      (uint8_t*) ctx->eofFrame + exposureBytes,
-                      std::back_inserter(bytes));
+            if (save)
+            {
+                std::copy((uint8_t*) ctx->eofFrame,
+                          (uint8_t*) ctx->eofFrame + exposureBytes,
+                          std::back_inserter(bytes));
+            }
 
             sf::Image image{};
 
@@ -1226,43 +1235,45 @@ namespace prm
 
         delete[] circBufferInMemory;
 
-        switch (format)
+        if (save)
         {
-            case TIF:
+            switch (format)
             {
-                using namespace OIIO;
-
-                std::unique_ptr<ImageOutput> out =
-                        ImageOutput::create(videoPath);
-                if (!out) return;
-                ImageSpec spec(ctx->sensorResX, ctx->sensorResY, 1,
-                               TypeDesc::UINT16);
-
-                if (!out->supports("multiimage") ||
-                    !out->supports("appendsubimage"))
+                case TIF:
                 {
-                    spdlog::error(
-                            "Current plugin doesn't support tif subimages");
-                    return;
+                    using namespace OIIO;
+
+                    std::unique_ptr<ImageOutput> out =
+                            ImageOutput::create(videoPath);
+                    if (!out) return;
+                    ImageSpec spec(ctx->sensorResX, ctx->sensorResY, 1,
+                                   TypeDesc::UINT16);
+
+                    if (!out->supports("multiimage") ||
+                        !out->supports("appendsubimage"))
+                    {
+                        spdlog::error(
+                                "Current plugin doesn't support tif subimages");
+                        return;
+                    }
+
+                    ImageOutput::OpenMode appendmode = ImageOutput::Create;
+
+                    for (int s = 0; s < imageCounter; ++s)
+                    {
+                        out->open(videoPath, spec, appendmode);
+                        out->write_image(TypeDesc::UINT16,
+                                         bytes.data() + exposureBytes * s);
+                        appendmode = ImageOutput::AppendSubimage;
+                    }
+                    break;
                 }
 
-                ImageOutput::OpenMode appendmode = ImageOutput::Create;
-
-                for (int s = 0; s < imageCounter; ++s)
-                {
-                    out->open(videoPath, spec, appendmode);
-                    out->write_image(TypeDesc::UINT16,
-                                     bytes.data() + exposureBytes * s);
-                    appendmode = ImageOutput::AppendSubimage;
-                }
-                break;
+                    //TODO mp4
+                default:
+                    spdlog::error("Undefined format");
             }
-
-                //TODO mp4
-            default:
-                spdlog::error("Undefined format");
+            spdlog::info("File written to {}", videoPath);
         }
-
-        spdlog::info("File written to {}", videoPath);
     }
 }// namespace prm
