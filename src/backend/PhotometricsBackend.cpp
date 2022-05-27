@@ -6,6 +6,7 @@
 #include <opencv2/opencv.hpp>
 
 #include "backend/PhotometricsBackend.h"
+#include "utils/Timer.h"
 
 namespace prm
 {
@@ -851,12 +852,12 @@ namespace prm
                 [ctx]() { return ctx->eofEvent.flag || ctx->threadAbortFlag; });
         if (ctx->threadAbortFlag)
         {
-            spdlog::info("Processing aborted on camera %d\n", ctx->hcam);
+            spdlog::info("Processing aborted on camera {}\n", ctx->hcam);
             return false;
         }
         if (!ctx->eofEvent.flag)
         {
-            spdlog::error("Camera %d timed out waiting for a frame\n",
+            spdlog::error("Camera {} timed out waiting for a frame\n",
                           ctx->hcam);
             errorOccurred = true;
             return false;
@@ -899,11 +900,11 @@ namespace prm
             CloseAllCamerasAndUninit();
             return;
         }
-        spdlog::info("EOF callback handler registered on camera %d\n",
-                     ctx->hcam);
+        //        spdlog::info("EOF callback handler registered on camera {}\n",
+        //                     ctx->hcam);
 
         uns32 exposureBytes;
-        const uns32 exposureTime = 40;// milliseconds
+        const uns32 exposureTime = 10;// milliseconds
         // Select the appropriate internal trigger mode for this camera.
         int16 expMode;
         if (!SelectCameraExpMode(ctx, expMode, TIMED_MODE, EXT_TRIG_INTERNAL))
@@ -924,14 +925,16 @@ namespace prm
             CloseAllCamerasAndUninit();
             return;
         }
-        spdlog::info("Acquisition setup successful on camera %d\n", ctx->hcam);
+        //        spdlog::info("Acquisition setup successful on camera {}\n", ctx->hcam);
         UpdateCtxImageFormat(ctx);
 
+        const auto bitDepth = ctx->speedTable[0].speeds[0].gains[0].bitDepth;
+        spdlog::info("Bit depth for camera: {}", bitDepth);
         // Allocate a buffer of the size reported by the pl_exp_setup_seq() function.
         uns8* frameInMemory = new (std::nothrow) uns8[exposureBytes];
         if (!frameInMemory)
         {
-            spdlog::error("Unable to allocate buffer for camera %d\n",
+            spdlog::error("Unable to allocate buffer for camera {}\n",
                           ctx->hcam);
             CloseAllCamerasAndUninit();
             return;
@@ -940,6 +943,9 @@ namespace prm
         bool errorOccurred = false;
         uns32 imageCounter = 0;
         ctx->isCapturing = true;
+
+        Timer timer{};
+        spdlog::info("Starting sequence capture loop on cam {}\n", ctx->hcam);
         while (imageCounter < nFrames)
         {
             /**
@@ -953,7 +959,7 @@ namespace prm
                 errorOccurred = true;
                 break;
             }
-            spdlog::info("Acquisition started on camera %d\n", ctx->hcam);
+            //            spdlog::info("Acquisition started on camera {}\n", ctx->hcam);
 
             /**
         Here we need to wait for a frame readout notification signaled by the eofEvent
@@ -962,19 +968,16 @@ namespace prm
         with ctrl+c shortcut, the main 'while' loop is interrupted and the acquisition is
         aborted.
         */
-            spdlog::info("Waiting for EOF event to occur on camera %d\n",
-                         ctx->hcam);
+            //            spdlog::info("Waiting for EOF event to occur on camera {}\n",
+            //                         ctx->hcam);
             if (!WaitForEofEvent(ctx.get(), 5000, errorOccurred)) break;
 
-            spdlog::info("Frame #%u has been delivered from camera %d\n",
+            spdlog::info("Frame #{} has been delivered from camera {}\n",
                          imageCounter + 1, ctx->hcam);
 
             std::copy((uint8_t*) ctx->eofFrame,
                       (uint8_t*) ctx->eofFrame + exposureBytes,
                       std::back_inserter(bytes));
-
-            spdlog::info("Size is {} : {}", exposureBytes,
-                         ctx->sensorResX * ctx->sensorResY);
 
             sf::Image image{};
 
@@ -984,18 +987,20 @@ namespace prm
                 for (std::size_t x = 0; x < ctx->sensorResX; ++x)
                 {
                     uint16_t val = *((uint16_t*) ctx->eofFrame +
-                                     y * ctx->sensorResY + x);
-                    image.setPixel(x, y,
-                                   sf::Color{static_cast<uint8_t>(val),
-                                             static_cast<uint8_t>(val),
-                                             static_cast<uint8_t>(val)});
+                                     y * ctx->sensorResX + x);
+                    image.setPixel(
+                            x, y,
+                            sf::Color{
+                                    static_cast<uint8_t>(val / 4096.f * 256.f),
+                                    static_cast<uint8_t>(val / 4096.f * 256.f),
+                                    static_cast<uint8_t>(val / 4096.f *
+                                                         256.f)});
                 }
             }
 
             std::scoped_lock lock(m_textureMutex);
             m_currentTexture.loadFromImage(image);
             //TODO sleep from framerate
-
             /**
         When acquiring sequences, call the pl_exp_finish_seq() after the entire sequence
         finishes. This call is not strictly necessary, especially with the latest camera models,
@@ -1010,12 +1015,16 @@ namespace prm
             }
             else
             {
-                spdlog::info("Acquisition finished on camera %d\n", ctx->hcam);
+                spdlog::info("Acquisition finished on camera {}\n", ctx->hcam);
             }
 
             imageCounter++;
         }
         ctx->isCapturing = false;
+
+        auto captureTime = timer.stop();
+        spdlog::info("Captured {} frames in {} seconds\nAvg fps: {}",
+                     imageCounter, captureTime, imageCounter / captureTime);
         /**
     Here the pl_exp_abort() is not strictly required as correctly acquired sequence does not
     need to be aborted. However, it is kept here for situations where the acquisition
@@ -1065,6 +1074,7 @@ namespace prm
             default:
                 spdlog::error("Undefined format");
         }
+
         spdlog::info("File written to {}", videoPath);
     }
 
@@ -1080,7 +1090,7 @@ namespace prm
 
         auto& ctx = m_cameraContexts[0];
 
-        std::vector<std::uint8_t> bytes;
+        std::vector<uint8_t> bytes;
 
         if (PV_OK != pl_cam_register_callback_ex3(ctx->hcam, PL_CALLBACK_EOF,
                                                   (void*) CustomEofHandler,
@@ -1090,11 +1100,11 @@ namespace prm
             CloseAllCamerasAndUninit();
             return;
         }
-        spdlog::info("EOF callback handler registered on camera %d\n",
+        spdlog::info("EOF callback handler registered on camera {}\n",
                      ctx->hcam);
 
         uns32 exposureBytes;
-        const uns32 exposureTime = 5;// milliseconds
+        const uns32 exposureTime = 10;// milliseconds
 
         const uns16 circBufferFrames = 20;
         int16 bufferMode = CIRC_OVERWRITE;
@@ -1148,9 +1158,10 @@ namespace prm
         }
         spdlog::info("Acquisition started on camera {}\n", ctx->hcam);
 
-        uns32 framesAcquired = 0;
+        uns32 imageCounter = 0;
         bool errorOccurred = false;
         ctx->isCapturing = true;
+        Timer timer{};
         while (true)
         {
             /**
@@ -1160,12 +1171,12 @@ namespace prm
         with ctrl+c keyboard shortcut, the main 'while' loop is interrupted and the
         acquisition is aborted.
         */
-            spdlog::info("Waiting for EOF event to occur on camera %d\n",
+            spdlog::info("Waiting for EOF event to occur on camera {}\n",
                          ctx->hcam);
             if (!WaitForEofEvent(ctx.get(), 5000, errorOccurred)) break;
 
             // Timestamp is in hundreds of microseconds
-            spdlog::info("Frame #%d acquired, timestamp = %lldus\n",
+            spdlog::info("Frame #{} acquired, timestamp = {}\n",
                          ctx->eofFrameInfo.FrameNr,
                          100 * ctx->eofFrameInfo.TimeStamp);
 
@@ -1173,12 +1184,36 @@ namespace prm
                       (uint8_t*) ctx->eofFrame + exposureBytes,
                       std::back_inserter(bytes));
 
-            spdlog::info("Size is {} : {}", exposureBytes,
-                         ctx->sensorResX * ctx->sensorResY);
+            sf::Image image{};
 
-            framesAcquired++;
+            image.create(ctx->sensorResX, ctx->sensorResY);
+            for (std::size_t y = 0; y < ctx->sensorResY; ++y)
+            {
+                for (std::size_t x = 0; x < ctx->sensorResX; ++x)
+                {
+                    uint16_t val = *((uint16_t*) ctx->eofFrame +
+                                     y * ctx->sensorResX + x);
+                    image.setPixel(
+                            x, y,
+                            sf::Color{
+                                    static_cast<uint8_t>(val / 4096.f * 256.f),
+                                    static_cast<uint8_t>(val / 4096.f * 256.f),
+                                    static_cast<uint8_t>(val / 4096.f *
+                                                         256.f)});
+                }
+            }
+
+            std::scoped_lock lock(m_textureMutex);
+            m_currentTexture.loadFromImage(image);
+            //TODO sleep from framerate
+
+            imageCounter++;
         }
         ctx->isCapturing = false;
+
+        auto captureTime = timer.stop();
+        spdlog::info("Captured {} frames in {} seconds\nAvg fps: {}",
+                     imageCounter, captureTime, imageCounter / captureTime);
 
         if (PV_OK != pl_exp_abort(ctx->hcam, CCS_HALT))
         {
@@ -1186,7 +1221,7 @@ namespace prm
         }
         else
         {
-            spdlog::info("Acquisition stopped on camera %d\n", ctx->hcam);
+            spdlog::info("Acquisition stopped on camera {}\n", ctx->hcam);
         }
 
         delete[] circBufferInMemory;
@@ -1213,7 +1248,7 @@ namespace prm
 
                 ImageOutput::OpenMode appendmode = ImageOutput::Create;
 
-                for (int s = 0; s < framesAcquired; ++s)
+                for (int s = 0; s < imageCounter; ++s)
                 {
                     out->open(videoPath, spec, appendmode);
                     out->write_image(TypeDesc::UINT16,
@@ -1227,6 +1262,7 @@ namespace prm
             default:
                 spdlog::error("Undefined format");
         }
+
         spdlog::info("File written to {}", videoPath);
     }
 }// namespace prm
