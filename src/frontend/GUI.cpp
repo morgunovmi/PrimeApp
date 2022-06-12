@@ -397,16 +397,21 @@ namespace prm
     void GUI::ShowHelp()
     {
         auto window_flags = ImGuiWindowFlags_AlwaysAutoResize |
-                            ImGuiWindowFlags_NoFocusOnAppearing |
                             ImGuiWindowFlags_NoResize;
         if (ImGui::Begin("Help", &m_bShowHelp, window_flags))
         {
             ImGui::Text("1. Choose the backend in the Backend section:\n"
-                        "   OpenCV: Captures images from device's webcam\n"
-                        "   PVCam: Captures images from a connected Teledyne camera\n\n"
-                        "2. Use the Camera Buttons to capture images\n\n"
+                        "   - OpenCV: Captures images from device's webcam\n"
+                        "   - PVCam: Captures images from a connected Teledyne camera\n\n"
+                        "2. Use the Camera Buttons to capture images:\n"
+                        "   - First initialize the camera with the Init button\n"
+                        "   - Choose the file format\n"
+                        "   - Choose the image acquisition mode and specify number of frames if necessary\n"
+                        "       - For pvcam, Live Capture yields better fps \n"
+                        "   - Abort ongoing image acquisition with Terminate Capture\n\n"
                         "3. Use the Video Processor module from the Windows menu \n"
-                        "to analyze the captured image stacks with trackpy\n");
+                        "to analyze the captured image stacks with trackpy\n"
+                        "   (Make sure there is no cyrillic in the tif stack path)\n");
         }
     }
 }// namespace prm
