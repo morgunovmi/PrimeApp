@@ -7,6 +7,8 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/System/Clock.hpp>
 
+#include "frontend/ViewPort.h"
+
 namespace prm
 {
     class Renderer
@@ -14,8 +16,10 @@ namespace prm
     public:
         Renderer(sf::RenderWindow& window, sf::Time& dt, sf::Texture& texture,
                  std::mutex& mutex)
-            : m_window(window), m_dt(dt), m_currentTexture(texture),
-              m_textureMutex(mutex)
+            : m_window(window),
+              m_viewport(static_cast<float>(window.getSize().x),
+                         static_cast<float>(window.getSize().y)),
+              m_dt(dt), m_currentTexture(texture), m_textureMutex(mutex)
         {
             Init();
         }
@@ -29,6 +33,7 @@ namespace prm
 
     private:
         sf::RenderWindow& m_window;
+        ViewPort m_viewport;
 
         sf::Texture& m_currentTexture;
         std::mutex& m_textureMutex;

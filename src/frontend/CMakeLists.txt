@@ -3,4 +3,5 @@ target_sources(
         App.cpp
         Renderer.cpp
         GUI.cpp
+        ViewPort.cpp
 )
