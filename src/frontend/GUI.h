@@ -23,7 +23,7 @@ namespace prm
             : m_window(window), m_dt(dt), m_frameTimeQueue(),
               m_bShowMainMenuBar(true), m_bShowFrameInfoOverlay(false),
               m_bShowAppLog(true), m_bShowVideoProcessor(false),
-              m_backend(backend), m_selectedBackend(curr),
+              m_bShowHelp(true), m_backend(backend), m_selectedBackend(curr),
               m_videoProcessor(videoproc), m_appLog(log), m_hubballiFont()
         {
         }
@@ -51,6 +51,8 @@ namespace prm
 
         void ShowCameraButtons();
 
+        void ShowHelp();
+
     private:
         sf::RenderWindow& m_window;
         sf::Time& m_dt;
@@ -69,6 +71,7 @@ namespace prm
         bool m_bShowFrameInfoOverlay;
         bool m_bShowAppLog;
         bool m_bShowVideoProcessor;
+        bool m_bShowHelp;
 
         const uint16_t m_inputFieldWidth = 150;
     };

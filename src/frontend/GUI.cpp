@@ -165,6 +165,15 @@ namespace prm
                         break;
                 }
             }
+
+            if (ImGui::BeginMenu("Help"))
+            {
+                if (ImGui::MenuItem("Show Help", nullptr,
+                                    &m_bShowHelp))
+                {
+                }
+                ImGui::EndMenu();
+            }
             ImGui::EndMainMenuBar();
         }
     }
@@ -281,6 +290,7 @@ namespace prm
         if (m_bShowFrameInfoOverlay) ShowFrameInfoOverlay();
         if (m_bShowVideoProcessor) ShowVideoProcessor();
         if (m_bShowAppLog) ShowAppLog();
+        if (m_bShowHelp) ShowHelp();
 
 #ifndef NDEBUG
         ImGui::ShowDemoWindow();
@@ -382,5 +392,21 @@ namespace prm
         }
 
         ImGui::End();
+    }
+
+    void GUI::ShowHelp()
+    {
+        auto window_flags = ImGuiWindowFlags_AlwaysAutoResize |
+                            ImGuiWindowFlags_NoFocusOnAppearing |
+                            ImGuiWindowFlags_NoResize;
+        if (ImGui::Begin("Help", &m_bShowHelp, window_flags))
+        {
+            ImGui::Text("1. Choose the backend in the Backend section:\n"
+                        "   OpenCV: Captures images from device's webcam\n"
+                        "   PVCam: Captures images from a connected Teledyne camera\n\n"
+                        "2. Use the Camera Buttons to capture images\n\n"
+                        "3. Use the Video Processor module from the Windows menu \n"
+                        "to analyze the captured image stacks with trackpy\n");
+        }
     }
 }// namespace prm
