@@ -408,10 +408,12 @@ namespace prm
                         "   - Choose the file format\n"
                         "   - Choose the image acquisition mode and specify number of frames if necessary\n"
                         "       - For pvcam, Live Capture yields better fps \n"
-                        "   - Abort ongoing image acquisition with Terminate Capture\n\n"
+                        "   - Stop the ongoing image acquisition with Terminate Capture\n"
                         "3. Use the Video Processor module from the Windows menu \n"
                         "to analyze the captured image stacks with trackpy\n"
-                        "   (Make sure there is no cyrillic in the tif stack path)\n");
+                        "   (Make sure there is no cyrillic in the tif stack path)\n\n"
+                        "- To move the image around use the arrow keys\n"
+                        "- Zoom it with J and K keys\n");
         }
     }
 }// namespace prm

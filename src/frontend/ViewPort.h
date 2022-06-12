@@ -16,41 +16,35 @@ namespace prm
         ViewPort(float width, float height)
             : sf::View(sf::FloatRect(sf::Vector2f{0, 0},
                                      sf::Vector2f{width, height})),
-              mMoveVelocity(), mZoomSpeed(), mZoomLevel(1.f)
+              m_moveVelocity(), m_zoomSpeed(), m_zoomLevel(1.f)
         {
         }
 
         void Update(float dt);
 
-        float GetZoomLevel() const { return mZoomLevel; }
+        float GetZoomLevel() const { return m_zoomLevel; }
 
-        const sf::Vector2f& GetMoveVelocity() const { return mMoveVelocity; }
+        const sf::Vector2f& GetMoveVelocity() const { return m_moveVelocity; }
 
-        float GetZoomSpeed() const { return mZoomSpeed; }
+        float GetZoomSpeed() const { return m_zoomSpeed; }
 
         void SetMoveVelocity(const sf::Vector2f& moveVelocity)
         {
-            mMoveVelocity = moveVelocity;
+            m_moveVelocity = moveVelocity;
         }
 
-        void SetZoomSpeed(float zoomSpeed)
-        {
-            mZoomSpeed = zoomSpeed;
-        }
+        void SetZoomSpeed(float zoomSpeed) { m_zoomSpeed = zoomSpeed; }
 
-        void SetZoomLevel(float zoomLevel)
-        {
-            mZoomLevel = zoomLevel;
-        }
+        void SetZoomLevel(float zoomLevel) { m_zoomLevel = zoomLevel; }
 
     private:
-
-        static float norm(const sf::Vector2f& vec) {
+        static float norm(const sf::Vector2f& vec)
+        {
             return std::sqrt(vec.x * vec.x + vec.y * vec.y);
         }
 
-        sf::Vector2f mMoveVelocity;
-        float mZoomSpeed;
-        float mZoomLevel;
+        sf::Vector2f m_moveVelocity;
+        float m_zoomSpeed;
+        float m_zoomLevel;
     };
 }// namespace prm
