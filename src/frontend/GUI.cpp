@@ -7,7 +7,7 @@
 //TODO Disabled blocks
 namespace prm
 {
-    bool GUI::Init()
+    void GUI::Init()
     {
         ImGui::SFML::Init(m_window);
 
@@ -15,8 +15,6 @@ namespace prm
         m_hubballiFont = io.Fonts->AddFontFromFileTTF(
                 "./resources/fonts/hubballi-regular.ttf", 20);
         ImGui::SFML::UpdateFontTexture();
-
-        return true;
     }
 
     void GUI::PollEvents()
@@ -176,23 +174,6 @@ namespace prm
             }
             ImGui::EndMainMenuBar();
         }
-    }
-
-    void GUI::ShowViewport()
-    {
-        const auto* main_viewport = ImGui::GetMainViewport();
-        ImGui::SetNextWindowPos(
-                ImVec2(main_viewport->WorkPos.x, main_viewport->WorkPos.y));
-        ImGui::SetNextWindowSize(
-                ImVec2(static_cast<float>(m_window.getSize().x) * 0.6f,
-                       static_cast<float>(m_window.getSize().y)));
-
-        ImGuiWindowFlags window_flags = 0;
-        window_flags |= ImGuiWindowFlags_NoTitleBar;
-        window_flags |= ImGuiWindowFlags_NoMove;
-        window_flags |= ImGuiWindowFlags_NoResize;
-        window_flags |= ImGuiWindowFlags_NoCollapse;
-        window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
     }
 
     void GUI::ShowAppLog()

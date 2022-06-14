@@ -11,6 +11,9 @@
 
 namespace prm
 {
+    /**
+     * Class for drawing stuff to the SFML window
+     */
     class Renderer
     {
     public:
@@ -21,23 +24,31 @@ namespace prm
                          static_cast<float>(window.getSize().y)),
               m_dt(dt), m_currentTexture(texture), m_textureMutex(mutex)
         {
-            Init();
+            m_window.setFramerateLimit(60);
         }
 
+        /**
+         * Draws a texture to the SFML window each frame
+         */
         void Render();
 
+        /**
+         * Displays everything drawn to the SFML window on the display
+         */
         void Display();
 
     private:
-        void Init();
-
-    private:
+        /// Reference to the SFML render window
         sf::RenderWindow& m_window;
+        /// ViewPort instance that describes what region of the image is displayed
         ViewPort m_viewport;
 
+        /// Reference to the SFML texture that is to be drawn this frame
         sf::Texture& m_currentTexture;
+        /// Mutex for texture synchronisation
         std::mutex& m_textureMutex;
 
+        /// Delta time for last frame
         sf::Time& m_dt;
     };
 }// namespace prm

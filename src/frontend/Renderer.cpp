@@ -2,8 +2,6 @@
 
 namespace prm
 {
-    void Renderer::Init() { m_window.setFramerateLimit(60); }
-
     void Renderer::Render()
     {
         m_viewport.Update(m_dt.asSeconds());

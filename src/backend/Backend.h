@@ -86,7 +86,6 @@ namespace prm
 
         /// Reference to the SFML texture that is to be drawn this frame
         sf::Texture& m_currentTexture;
-
         /// Mutex for texture synchronisation
         std::mutex& m_textureMutex;
 
