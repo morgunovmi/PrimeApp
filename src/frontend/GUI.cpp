@@ -350,8 +350,10 @@ namespace prm
 
             static double fps = 6.66;
             static double scale = 330.0 / 675.0;
+            ImGui::PushItemWidth(m_inputFieldWidth);
             ImGui::InputDouble("fps", &fps, 0.0, 0.0, "%.3f");
             ImGui::InputDouble("scale", &scale, 0.0, 0.0, "%.3f");
+            ImGui::PopItemWidth();
             if (ImGui::Button("Plot size distribution"))
             {
                 m_videoProcessor.PlotSizeHist(fps, scale);
@@ -363,8 +365,10 @@ namespace prm
             }
 
             static std::string pythonQuery{};
+            ImGui::PushItemWidth(m_inputFieldWidth);
             ImGui::InputTextWithHint("Run random python string", "Python Query",
                                      &pythonQuery);
+            ImGui::PopItemWidth();
 
             if (ImGui::Button("Run python query"))
             {
