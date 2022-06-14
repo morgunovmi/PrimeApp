@@ -1,11 +1,13 @@
-#ifndef PRIME_APP_LOG_SINK_H
-#define PRIME_APP_LOG_SINK_H
-
 #include <spdlog/sinks/base_sink.h>
 #include <mutex>
 
 #include "misc/Log.h"
 
+/**
+ * Class that defines a special spdlog sink that dumps output to a Log instance
+ *
+ * @tparam Mutex mutex type for spdlog
+ */
 template<typename Mutex>
 class LogSink : public spdlog::sinks::base_sink<Mutex>
 {
@@ -34,5 +36,3 @@ protected:
 };
 
 using LogSinkMt = LogSink<std::mutex>;
-
-#endif// PRIME_APP_LOG_SINK_H

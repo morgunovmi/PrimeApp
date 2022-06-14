@@ -1,5 +1,4 @@
-#ifndef MESSAGE_QUEUE_H
-#define MESSAGE_QUEUE_H
+#pragma once
 
 #include <condition_variable>
 #include <mutex>
@@ -9,23 +8,56 @@
 
 namespace prm
 {
+    /**
+     * Thread safe queue for communication between threads using generic messages
+     *
+     * @tparam T Message type of the queue (should be an std::variant of all available message types)
+     */
     template<typename T>
     class MessageQueue
     {
     public:
+        /**
+         * Sends the given message to the queue
+         *
+         * @param msg Message to send
+         */
         void Send(T&& msg);
 
+        /**
+         * Waits for a message to arrive
+         *
+         * @return The received message
+         */
         [[nodiscard]] T WaitForMessage();
 
+        /**
+         * Clears the queue
+         *
+         * @return number of items cleared
+         */
         int Clear();
 
+        /**
+         * Checks if the queue is empty
+         *
+         * @return true if the queue is empty
+         */
         [[nodiscard]] bool Empty();
 
+        /**
+         * Gives the current number of items in the queue
+         *
+         * @return Number of items in the queue
+         */
         [[nodiscard]] auto Size();
 
     private:
+        /// Underlying queue
         std::queue<T> m_queue;
+        /// Condition variable on which to wait
         std::condition_variable m_condVar;
+        /// Mutex for queue synchronisation
         std::mutex m_mutex;
     };
 
@@ -83,5 +115,3 @@ namespace prm
         return m_queue.size();
     }
 }// namespace prm
-
-#endif

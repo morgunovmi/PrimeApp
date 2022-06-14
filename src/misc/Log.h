@@ -1,5 +1,4 @@
-#ifndef SOLAR_LOG_H
-#define SOLAR_LOG_H
+#pragma once
 
 #include <imgui.h>
 
@@ -9,6 +8,9 @@
 namespace prm
 {
     // Taken straight from imgui_demo.cpp
+    /**
+     * Log struct that defines how to store and manage text and display it with imgui
+     */
     struct Log
     {
         ImGuiTextBuffer Buf;
@@ -139,5 +141,3 @@ namespace prm
         }
     };
 }// namespace prm
-
-#endif//SOLAR_LOG_H
