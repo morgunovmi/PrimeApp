@@ -1,5 +1,4 @@
-#ifndef PRIME_APP_TIMER_H
-#define PRIME_APP_TIMER_H
+#pragma once
 
 #include <chrono>
 
@@ -37,5 +36,3 @@ private:
     /// Flag that shows if the timer is running
     bool is_counting;
 };
-
-#endif//PRIME_APP_TIMER_H
