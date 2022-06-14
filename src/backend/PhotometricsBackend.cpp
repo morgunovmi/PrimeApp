@@ -561,14 +561,6 @@ namespace prm
 
     bool PhotometricsBackend::InitAndOpenOneCamera()
     {
-        //        if (!ShowAppInfo(m_argc, m_argv))
-        //        {
-        //            PrintError("Couldn't show app info");
-        //            return PV_FAIL;
-        //        }
-
-        //        if (!InitPVCAM()) return false;
-
         if (m_cameraIndex >= m_cameraContexts.size())
         {
             PrintError("Camera index #{} is invalid", m_cameraIndex);

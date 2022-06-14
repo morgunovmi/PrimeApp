@@ -1,5 +1,4 @@
-#ifndef SOLAR_GAME_H
-#define SOLAR_GAME_H
+#pragma once
 
 #include <SFML/Graphics.hpp>
 
@@ -15,22 +14,24 @@
 
 namespace prm
 {
-    typedef struct NVP
+    /// Name-Value Pair Container type - an enumeration type
+    struct NVP
     {
         int32 value;
         std::string name;
-    } NVP;
-    /* Name-Value Pair Container type - an enumeration type */
-    typedef std::vector<NVP> NVPC;
+    };
 
-    typedef struct READOUT_OPTION
+    /// Container of name-value pairs
+    using NVPC = std::vector<NVP>;
+
+    struct READOUT_OPTION
     {
         NVP port;
         int16 speedIndex;
         float readoutFrequency;
         int16 bitDepth;
         std::vector<int16> gains;
-    } READOUT_OPTION;
+    };
 
     struct SpdtabGain
     {
@@ -71,67 +72,75 @@ namespace prm
         std::vector<SpdtabSpeed> speeds;
     };
 
+    /// Struct for camera event synchronisation
     struct Event
     {
-        // Mutex that guards all other members
+        /// Mutex that guards all other members
         std::mutex mutex{};
-        // Condition that any thread could wait on
+        /// Condition that any thread could wait on
         std::condition_variable cond{};
-        // A flag that helps with spurious wakeups
+        /// A flag that helps with spurious wakeups
         bool flag{false};
     };
 
+    /// Struct grouping camera related info
     struct CameraContext
     {
-        // Camera name, the only member valid before opening camera
+        /// Camera name, the only member valid before opening camera
         char camName[CAM_NAME_LEN]{'\0'};
 
-        // Set to true when PVCAM opens camera
+        /// Set to true when PVCAM opens camera
         bool isCamOpen{false};
 
+        /// Specifies if the camera is currently capturing
         bool isCapturing{false};
 
         // All members below are initialized once the camera is successfully open
 
-        // Camera handle
+        /// Camera handle
         int16 hcam{-1};
 
+        /// Event used for communication between acq. loop and EOF callback routine
         Event eofEvent{};
 
-        // Camera sensor serial size (sensor width)
+        /// Camera sensor serial size (sensor width)
         uns16 sensorResX{0};
-        // Camera sensor parallel size (sensor height)
+        /// Camera sensor parallel size (sensor height)
         uns16 sensorResY{0};
-        // Sensor region and binning factors to be used for the acquisition,
-        // initialized to full sensor size with 1x1 binning upon opening the camera.
+        /**
+         * Sensor region and binning factors to be used for the acquisition,
+         * initialized to full sensor size with 1x1 binning upon opening the camera.
+         */
         rgn_type region{0, 0, 0, 0, 0, 0};
 
-        // Vector of camera readout options, commonly referred to as 'speed table'
+        /// Vector of camera readout options, commonly referred to as 'speed table'
         std::vector<SpdtabPort> speedTable{};
 
-        // Image format reported after acq. setup, value from PL_IMAGE_FORMATS
+        /// Image format reported after acq. setup, value from PL_IMAGE_FORMATS
         int32 imageFormat{PL_IMAGE_FORMAT_MONO16};
-        // Sensor type (if not Frame Transfer CCD then camera is Interline CCD or sCMOS).
-        // Not relevant for sCMOS sensors.
+        /**
+         * Sensor type (if not Frame Transfer CCD then camera is Interline CCD or sCMOS).
+         * Not relevant for sCMOS sensors.
+         */
         bool isFrameTransfer{false};
-        // Flag marking the camera as Smart Streaming capable
+        /// Flag marking the camera as Smart Streaming capable
         bool isSmartStreaming{false};
 
-        // Event used for communication between acq. loop and EOF callback routine
-        //Event eofEvent{};
-        // Storage for a code sample specific context data if needed for callback acquisition
-        void* eofContext{nullptr};
-        // Frame info structure used to store data, for example, in EOF callback handlers
+        /// Frame info structure used to store data, for example, in EOF callback handlers
         FRAME_INFO eofFrameInfo{};
-        // The address of latest frame stored, for example, in EOF callback handlers
+        /// The address of latest frame stored, for example, in EOF callback handlers
         void* eofFrame{nullptr};
 
-        // Used as an acquisition thread or for other independent tasks
+        /// Used as an acquisition thread or for other independent tasks
         std::unique_ptr<std::jthread> thread{nullptr};
-        // Flag to be set to abort thread (used, for example, in multi-camera code samples)
+        /// Flag to be set to abort thread (used, for example, in multi-camera code samples)
         bool threadAbortFlag{false};
     };
 
+    /**
+     * Backend implementation for Teledyne Photometrics cameras
+     * Connects to the usb camera and captures image sequence from it
+     */
     class PhotometricsBackend : public Backend
     {
     public:
@@ -147,6 +156,11 @@ namespace prm
         }
 
 
+        /**
+         * Explicit "copy"  constructor from a unique_ptr
+         *
+         * @param other unique_ptr to a Backend from which to construct a new one
+         */
         explicit PhotometricsBackend(const std::unique_ptr<Backend>& other)
             : Backend(other)
         {
@@ -156,64 +170,210 @@ namespace prm
             }
         }
 
+        /**
+         * Handles generic camera initialization
+         */
         void Init() override;
 
+        /**
+         * Captures live image sequence
+         *
+         * @param format Save file format from the SAVE_FORMAT enum
+         * @param save Flag indicating the need to save the captured sequence
+         */
         void LiveCapture(SAVE_FORMAT format, bool save) override;
 
+        /**
+         * Captures image sequence of specified length
+         *
+         * @param nFrames Image sequence length
+         * @param format Save file format from the SAVE_FORMAT enum
+         * @param save Flag indicating the need to save the captured sequence
+         */
         void SequenceCapture(uint32_t nFrames, SAVE_FORMAT format,
                              bool save) override;
 
+        /**
+         * Stops the ongoing capture process
+         */
         void TerminateCapture() override;
 
         ~PhotometricsBackend() override { CloseAllCamerasAndUninit(); }
 
     private:
+        /**
+         * Internal init function to send to the worker thread
+         */
         void Init_();
+        /**
+         * Internal live capture implementation to send to the worker thread
+         *
+         * @param format Save file format from the SAVE_FORMAT enum
+         * @param save Flag indicating the need to save the captured sequence
+         */
         void LiveCapture_(SAVE_FORMAT format, bool save);
+        /**
+         * Internal sequence capture implementation to send to the worker thread
+         *
+         * @param nFrames Image sequence length
+         * @param format Save file format from the SAVE_FORMAT enum
+         * @param save Flag indicating the need to save the captured sequence
+         */
         void SequenceCapture_(uint32_t nFrames, SAVE_FORMAT format, bool save);
 
+        /**
+         * Initializes PVCAM library, obtains basic camera availability information,
+         * opens one camera and retrieves basic camera parameters and characteristics.
+         * @return true if camera opened successfully
+         */
         bool InitAndOpenOneCamera();
 
+        /**
+         * PVCam error printing function
+         *
+         * @tparam Args Variadic format string arguments pack
+         * @param fmt Format string
+         * @param args Arguments to insert in the format string
+         */
         template<typename... Args>
         static void PrintError(fmt::format_string<Args...> fmt, Args&&... args);
 
+        /**
+         * Displays application name and version
+         *
+         * @param argc Command line argument count
+         * @param argv Command line argument string array
+         * @return true on success
+         */
         bool ShowAppInfo(int argc, char* argv[]);
 
+        /**
+         * Reads name-value pairs for given PVCAM enum-type parameter.
+         *
+         * @param[in] hcam Camera handle
+         * @param[out] pNvpc Pointer to the container to read the enumeration to
+         * @param[in] paramID ID of the parameter
+         * @param[in] paramName String name of the parameter
+         * @return true on success
+         */
         bool ReadEnumeration(int16 hcam, NVPC* pNvpc, uns32 paramID,
                              const char* paramName);
 
+        /**
+         * Checks parameter availability
+         *
+         * @param hcam Camera handle
+         * @param paramID ID of the parameter
+         * @param paramName String name of the parameter
+         * @return true if parameter is available
+         */
         bool IsParamAvailable(int16 hcam, uns32 paramID, const char* paramName);
 
+        /**
+         * Builds and returns the camera speed table.
+         *
+         * @param[in] ctx unique_ptr to the camera context
+         * @param[out] speedTable Vector to read the table to
+         * @return true on success
+         */
         bool GetSpeedTable(const std::unique_ptr<CameraContext>& ctx,
                            std::vector<SpdtabPort>& speedTable);
 
+        /**
+         * Opens camera if not open yet
+         *
+         * @param ctx unique_ptr to camera context
+         * @return true on success
+         */
         bool OpenCamera(std::unique_ptr<CameraContext>& ctx);
 
+        /**
+         * Closes given camera if not closed yet
+         *
+         * @param ctx unique_ptr to camera context
+         */
         void CloseCamera(std::unique_ptr<CameraContext>& ctx);
 
+        /**
+         * Initializes PVCAM library and allocates camera context for all detected cameras
+         *
+         * @return true on success
+         */
         bool InitPVCAM();
 
+        /**
+         * Releases allocated camera contexts and uninitializes the PVCAM library
+         */
         void UninitPVCAM();
 
+        /**
+         * Closes the cameras and uninitializes PVCAM
+         */
         void CloseAllCamerasAndUninit();
 
+        /**
+         * This function is called after pl_exp_setup_seq and pl_exp_setup_cont functions,
+         * or after changing value of the selected post-processing parameters. The function reads
+         * the current image format reported by the camera.
+         * With most cameras, each pixel is transferred in 2 bytes, up to 16 bits per pixel.
+         * However, selected cameras support 8-bit sensor readouts and some post processing features
+         * also enable 32-bit image format.
+         * The actual bit depth, i.e. the number of bits holding pixel values, is still
+         * independent and reported by PARAM_BIT_DEPTH parameter.
+         *
+         * @param ctx unique_ptr to the camera context
+         */
         void UpdateCtxImageFormat(std::unique_ptr<CameraContext>& ctx);
 
+        /**
+         *
+         * Selects an appropriate exposure mode for use in pl_exp_setup_seq() and pl_exp_setup_cont()
+         * functions. The function checks whether the camera supports the legacy (TIMED_MODE, STROBED_MODE, ...)
+         * or extended trigger modes (EXT_TRIG_INTERNAL, ...) and returns a correct value together
+         * with the first expose-out mode option, if applicable. Usually, if an application works with
+         * one camera model, such dynamic discovery is not required. However, the SDK examples
+         * are written so that they will function with the older, legacy cameras, too.
+         *
+         * @param ctx unique_ptr to the camera context
+         * @param expMode
+         * @param legacyTrigMode
+         * @param extendedTrigMode
+         * @return true on success
+         */
         bool SelectCameraExpMode(const std::unique_ptr<CameraContext>& ctx,
                                  int16& expMode, int16 legacyTrigMode,
                                  int16 extendedTrigMode);
 
+        /**
+         *
+         * Generic EOF callback handler used in most code samples.
+         * This is the function registered as a callback function and PVCAM will call it
+         * every time a new frame arrives.
+         *
+         * @param pFrameInfo Pointer to the captured frame info struct
+         * @param pContext Pointer to the camera context
+         */
         static void CustomEofHandler(FRAME_INFO* pFrameInfo, void* pContext);
 
+        /**
+         * Waits for a notification that is usually sent by EOF callback handler.
+         *
+         * @param[in] ctx Pointer to the camera context
+         * @param[in] timeoutMs Time to wait for in milliseconds
+         * @param[out] errorOccurred Flag that shows if an error has ocurred
+         * @return false if the event didn't occur before the specified timeout, or when user aborted the waiting.
+         */
         static bool WaitForEofEvent(CameraContext* ctx, uns32 timeoutMs,
                                     bool& errorOccurred);
 
     private:
+        /// Index of the current camera
         const uns16 m_cameraIndex = 0;
+
+        /// Vector of all camera contexts
         std::vector<std::unique_ptr<CameraContext>> m_cameraContexts;
 
+        /// Shows if PVCam environment is initialized
         bool m_isPvcamInitialized = false;
     };
 }// namespace prm
-
-#endif//SOLAR_GAME_H

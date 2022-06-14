@@ -1,16 +1,14 @@
-#ifndef PRIME_APP_BACKENDOPTION_H
-#define PRIME_APP_BACKENDOPTION_H
+#pragma once
 
 #include "OpencvBackend.h"
 #include "PhotometricsBackend.h"
 
 namespace prm
 {
+    /// Enumeration for possible camera backend options
     enum BackendOption
     {
-        OPENCV = 0,
-        PVCAM = 1,
+        OPENCV = 0, ///< Backend for webcams
+        PVCAM = 1, ///< Backend for connected Teledyne Photometrics cameras
     };
 }
-
-#endif//PRIME_APP_BACKENDOPTION_H
