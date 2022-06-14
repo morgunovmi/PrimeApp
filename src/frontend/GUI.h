@@ -86,6 +86,24 @@ namespace prm
         void ShowHelp();
 
     private:
+        /**
+         * Helper to display a little (?) mark which shows a tooltip when hovered.
+         *
+         * @param desc CString to display
+         */
+        static void HelpMarker(const char* desc)
+        {
+            ImGui::TextDisabled("(?)");
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::BeginTooltip();
+                ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+                ImGui::TextUnformatted(desc);
+                ImGui::PopTextWrapPos();
+                ImGui::EndTooltip();
+            }
+        }
+
         /// Reference to the SFML render window
         sf::RenderWindow& m_window;
         /// Delta time last frame

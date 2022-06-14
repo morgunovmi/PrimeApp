@@ -287,6 +287,7 @@ namespace prm
     {
         auto window_flags = 0;
         window_flags |= ImGuiWindowFlags_NoCollapse;
+        window_flags |= ImGuiWindowFlags_AlwaysAutoResize;
         window_flags |= ImGuiWindowFlags_NoResize;
 
         if (ImGui::Begin("Video Processor", nullptr, window_flags))
@@ -307,11 +308,27 @@ namespace prm
             static int diameter = 19;
 
             ImGui::PushItemWidth(m_inputFieldWidth);
+
             ImGui::InputInt("frame num", &frameNum);
+            ImGui::SameLine();
+            HelpMarker("Number of the frame to analyze");
+
             ImGui::InputInt("min mass", &minMass);
+            ImGui::SameLine();
+            HelpMarker("The minimum integrated brightness.\n"
+                       "This is a crucial parameter for eliminating spurious features.");
+
             ImGui::InputInt("size", &size);
+            ImGui::SameLine();
+            HelpMarker("Max radius of gyration of blob's Gaussian-like profile");
+
             ImGui::InputInt("diameter", &diameter);
+            ImGui::SameLine();
+            HelpMarker("The feature’s extent in each dimension");
+
             ImGui::InputDouble("eccentricity", &ecc, 0.0, 0.0, "%.2f");
+            ImGui::SameLine();
+            HelpMarker("Max eccentricity");
             ImGui::PopItemWidth();
 
             if (ImGui::Button("Locate on one frame"))
@@ -328,15 +345,36 @@ namespace prm
             static int minDiagSize = 5;
             static int maxDiagSize = 30;
             ImGui::PushItemWidth(m_inputFieldWidth);
+
             ImGui::InputInt("search range", &searchRange);
             ImGui::SameLine();
+            HelpMarker("The maximum distance features can move between frames");
+
+            ImGui::SameLine();
             ImGui::InputInt("memory", &memory);
+            ImGui::SameLine();
+            HelpMarker("the maximum number of frames during which a feature can vanish,\n"
+                       "then reappear nearby, and be considered the same particle");
+
             ImGui::InputInt("min traj. len", &minTrajLen);
             ImGui::SameLine();
+            HelpMarker("minimum number of points (video frames) to survive");
+
+            ImGui::SameLine();
             ImGui::InputInt("drift smooth.", &driftSmoothing);
+            ImGui::SameLine();
+            HelpMarker("Smooth the drift using a forward-looking\n"
+                       "rolling mean over this many frames.");
+
             ImGui::InputInt("min diag. size", &minDiagSize);
             ImGui::SameLine();
+            HelpMarker("Min particle diagonal size to survive");
+
+            ImGui::SameLine();
             ImGui::InputInt("max diag. size", &maxDiagSize);
+            ImGui::SameLine();
+            HelpMarker("Max particle diagonal size to survive");
+
             ImGui::PopItemWidth();
 
             if (ImGui::Button("Find trajectories"))
@@ -352,7 +390,12 @@ namespace prm
             static double scale = 330.0 / 675.0;
             ImGui::PushItemWidth(m_inputFieldWidth);
             ImGui::InputDouble("fps", &fps, 0.0, 0.0, "%.3f");
+            ImGui::SameLine();
+            HelpMarker("Framerate of the image sequence capture");
+
             ImGui::InputDouble("scale", &scale, 0.0, 0.0, "%.3f");
+            ImGui::SameLine();
+            HelpMarker("Microns per pixel");
             ImGui::PopItemWidth();
             if (ImGui::Button("Plot size distribution"))
             {
@@ -400,5 +443,6 @@ namespace prm
                         "- To move the image around use the arrow keys\n"
                         "- Zoom it with J and K keys\n");
         }
+        ImGui::End();
     }
 }// namespace prm
