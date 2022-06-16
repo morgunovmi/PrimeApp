@@ -177,29 +177,21 @@ namespace prm
         }
     }
 
+    void GUI::ShowViewport() {
+        if (ImGui::Begin("Viewport")) {
+            std::scoped_lock lock{m_textureMutex};
+            ImGui::Image(m_currentTexture);
+        }
+        ImGui::End();
+    }
+
     void GUI::ShowAppLog()
     {
         // For the demo: add a debug button _BEFORE_ the normal log window contents
         // We take advantage of a rarely used feature: multiple calls to Begin()/End() are appending to the _same_ window.
         // Most of the contents of the window will be added by the log.Draw() call.
 
-        const auto* main_viewport = ImGui::GetMainViewport();
-        ImGui::SetNextWindowPos(
-                ImVec2(static_cast<float>(main_viewport->WorkPos.x) +
-                               static_cast<float>(m_window.getSize().x) * 0.6f,
-                       main_viewport->WorkPos.y));
-        ImGui::SetNextWindowSize(
-                ImVec2(static_cast<float>(m_window.getSize().x) * 0.4f,
-                       static_cast<float>(m_window.getSize().y) / 2.f));
-
-        ImGuiWindowFlags window_flags = 0;
-        window_flags |= ImGuiWindowFlags_NoTitleBar;
-        window_flags |= ImGuiWindowFlags_NoMove;
-        window_flags |= ImGuiWindowFlags_NoResize;
-        window_flags |= ImGuiWindowFlags_NoCollapse;
-        window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
-
-        ImGui::Begin("App Log", nullptr, window_flags);
+        ImGui::Begin("App Log", &m_bShowAppLog);
         ImGui::End();
 
         // Actually call in the regular Log helper (which will Begin() into the same window as we just did)
@@ -208,24 +200,7 @@ namespace prm
 
     void GUI::ShowCameraButtons()
     {
-        const auto* main_viewport = ImGui::GetMainViewport();
-        ImGui::SetNextWindowPos(
-                ImVec2(static_cast<float>(main_viewport->WorkPos.x) +
-                               static_cast<float>(m_window.getSize().x) * 0.6f,
-                       main_viewport->WorkPos.y +
-                               static_cast<float>(m_window.getSize().y) / 2.f));
-        ImGui::SetNextWindowSize(
-                ImVec2(static_cast<float>(m_window.getSize().x) * 0.4f,
-                       static_cast<float>(m_window.getSize().y) / 2.f -
-                               main_viewport->WorkPos.y));
-
-        auto window_flags = 0;
-        window_flags |= ImGuiWindowFlags_NoMove;
-        window_flags |= ImGuiWindowFlags_NoResize;
-        window_flags |= ImGuiWindowFlags_NoCollapse;
-        window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
-
-        if (ImGui::Begin("Camera Buttons", nullptr, window_flags))
+        if (ImGui::Begin("Camera Buttons", &m_bShowCameraButtons))
         {
             if (ImGui::Button("Init")) { m_backend->Init(); }
 
@@ -267,8 +242,11 @@ namespace prm
     void GUI::Render()
     {
         ImGui::PushFont(m_hubballiFont);
-        ShowCameraButtons();
+        ImGui::DockSpaceOverViewport();
+
+        if (m_bShowCameraButtons) ShowCameraButtons();
         if (m_bShowMainMenuBar) ShowMainMenuBar();
+        if (m_bShowViewport) ShowViewport();
         if (m_bShowFrameInfoOverlay) ShowFrameInfoOverlay();
         if (m_bShowVideoProcessor) ShowVideoProcessor();
         if (m_bShowAppLog) ShowAppLog();

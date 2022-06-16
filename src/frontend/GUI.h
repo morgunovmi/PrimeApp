@@ -23,12 +23,16 @@ namespace prm
     public:
         GUI(sf::RenderWindow& window, sf::Time& dt,
             std::unique_ptr<Backend>& backend, BackendOption& curr,
-            VideoProcessor& videoproc, Log& log)
+            VideoProcessor& videoproc, Log& log, sf::Texture& texture,
+            std::mutex& mutex)
             : m_window(window), m_dt(dt), m_frameTimeQueue(),
               m_bShowMainMenuBar(true), m_bShowFrameInfoOverlay(false),
               m_bShowAppLog(true), m_bShowVideoProcessor(false),
-              m_bShowHelp(true), m_backend(backend), m_selectedBackend(curr),
-              m_videoProcessor(videoproc), m_appLog(log), m_hubballiFont()
+              m_bShowHelp(true), m_bShowViewport(true),
+              m_bShowCameraButtons(true), m_backend(backend),
+              m_selectedBackend(curr), m_videoProcessor(videoproc),
+              m_appLog(log), m_hubballiFont(), m_currentTexture(texture),
+              m_textureMutex(mutex)
         {
         }
 
@@ -62,6 +66,11 @@ namespace prm
          * Draws the main menu bar at the top of the window
          */
         void ShowMainMenuBar();
+
+        /**
+         * Draws the latest captured image from the camera
+         */
+        void ShowViewport();
 
         /**
          * Draws the frame time info plot in separate window
@@ -109,6 +118,11 @@ namespace prm
         /// Delta time last frame
         sf::Time& m_dt;
 
+        /// Reference to the SFML texture that is to be drawn this frame
+        sf::Texture& m_currentTexture;
+        /// Mutex for texture synchronisation
+        std::mutex& m_textureMutex;
+
         /// Queue with recent frame times
         std::queue<float> m_frameTimeQueue;
 
@@ -125,7 +139,9 @@ namespace prm
         /// Pointer to a fancy font
         ImFont* m_hubballiFont;
 
+        bool m_bShowCameraButtons;
         bool m_bShowMainMenuBar;
+        bool m_bShowViewport;
         bool m_bShowFrameInfoOverlay;
         bool m_bShowAppLog;
         bool m_bShowVideoProcessor;

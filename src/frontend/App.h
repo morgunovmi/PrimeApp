@@ -21,18 +21,16 @@ namespace prm
     public:
         App(int argc, char** argv, uint16_t width, uint16_t height,
             const sf::ContextSettings& settings, Log& log)
-            : m_windowWidth(width), m_windowHeight(height),
-              m_contextSettings(settings),
-              m_window(sf::VideoMode{width, height}, "Prime App",
+            : m_window(sf::VideoMode{width, height}, "Prime App",
                        sf::Style::Close, settings),
               m_deltaClock(), m_dt(), m_currentTexture(), m_textureMutex(),
-              m_renderer(m_window, m_dt, m_currentTexture, m_textureMutex),
+              m_renderer(m_window),
               m_backend(std::make_unique<OpencvBackend>(argc, argv, m_window,
                                                         m_currentTexture, m_dt,
                                                         m_textureMutex)),
               m_selectedBackend(OPENCV),
               m_gui(m_window, m_dt, m_backend, m_selectedBackend,
-                    m_videoProcessor, log),
+                    m_videoProcessor, log, m_currentTexture, m_textureMutex),
               m_videoProcessor(m_currentTexture, m_textureMutex)
         {
         }
@@ -43,11 +41,6 @@ namespace prm
         void Run();
 
     private:
-        /// Render window width and height
-        uint16_t m_windowWidth, m_windowHeight;
-        /// SFML context settings for the app (currently only antialiasing used)
-        sf::ContextSettings m_contextSettings;
-
         /// SFML Render Window to draw the image to
         sf::RenderWindow m_window;
 
