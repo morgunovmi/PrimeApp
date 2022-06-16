@@ -34,7 +34,7 @@ namespace prm
               m_videoProcessor(m_currentTexture, m_textureMutex)
         {
             sf::Image icon{};
-            if (!icon.loadFromFile("./resources/images/cam_icon.jpg"))
+            if (!icon.loadFromFile("./resources/images/cam_icon.png"))
             {
                 spdlog::error("Failed to load app icon");
             }
