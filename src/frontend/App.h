@@ -33,6 +33,16 @@ namespace prm
                     m_videoProcessor, log, m_currentTexture, m_textureMutex),
               m_videoProcessor(m_currentTexture, m_textureMutex)
         {
+            sf::Image icon{};
+            if (!icon.loadFromFile("./resources/images/cam_icon.jpg"))
+            {
+                spdlog::error("Failed to load app icon");
+            }
+            else
+            {
+                m_window.setIcon(icon.getSize().x, icon.getSize().y,
+                                 icon.getPixelsPtr());
+            }
         }
 
         /**

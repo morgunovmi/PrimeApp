@@ -182,7 +182,8 @@ namespace prm
 
     void GUI::ShowViewport()
     {
-        if (ImGui::Begin("Viewport", &m_bShowViewport))
+        ImGuiWindowFlags windowFlags = ImGuiWindowFlags_HorizontalScrollbar;
+        if (ImGui::Begin("Viewport", &m_bShowViewport, windowFlags))
         {
             std::scoped_lock lock{m_textureMutex};
             ImGui::Image(m_currentTexture);
