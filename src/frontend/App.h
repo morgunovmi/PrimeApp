@@ -22,7 +22,7 @@ namespace prm
         App(int argc, char** argv, uint16_t width, uint16_t height,
             const sf::ContextSettings& settings, Log& log)
             : m_window(sf::VideoMode{width, height}, "Prime App",
-                       sf::Style::Close, settings),
+                       sf::Style::Default, settings),
               m_deltaClock(), m_dt(), m_currentTexture(), m_textureMutex(),
               m_renderer(m_window),
               m_backend(std::make_unique<OpencvBackend>(argc, argv, m_window,

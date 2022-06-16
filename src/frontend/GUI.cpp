@@ -131,6 +131,11 @@ namespace prm
         {
             if (ImGui::BeginMenu("Windows"))
             {
+                if (ImGui::MenuItem("Viewport", nullptr, &m_bShowViewport)) {}
+                if (ImGui::MenuItem("Camera Buttons", nullptr,
+                                    &m_bShowCameraButtons))
+                {
+                }
                 if (ImGui::MenuItem("Video Processor", "F1",
                                     &m_bShowVideoProcessor))
                 {
@@ -167,18 +172,17 @@ namespace prm
 
             if (ImGui::BeginMenu("Help"))
             {
-                if (ImGui::MenuItem("Show Help", nullptr,
-                                    &m_bShowHelp))
-                {
-                }
+                if (ImGui::MenuItem("Show Help", nullptr, &m_bShowHelp)) {}
                 ImGui::EndMenu();
             }
             ImGui::EndMainMenuBar();
         }
     }
 
-    void GUI::ShowViewport() {
-        if (ImGui::Begin("Viewport")) {
+    void GUI::ShowViewport()
+    {
+        if (ImGui::Begin("Viewport"))
+        {
             std::scoped_lock lock{m_textureMutex};
             ImGui::Image(m_currentTexture);
         }
@@ -295,11 +299,13 @@ namespace prm
             ImGui::InputInt("min mass", &minMass);
             ImGui::SameLine();
             HelpMarker("The minimum integrated brightness.\n"
-                       "This is a crucial parameter for eliminating spurious features.");
+                       "This is a crucial parameter for eliminating spurious "
+                       "features.");
 
             ImGui::InputInt("size", &size);
             ImGui::SameLine();
-            HelpMarker("Max radius of gyration of blob's Gaussian-like profile");
+            HelpMarker(
+                    "Max radius of gyration of blob's Gaussian-like profile");
 
             ImGui::InputInt("diameter", &diameter);
             ImGui::SameLine();
@@ -332,8 +338,10 @@ namespace prm
             ImGui::SameLine();
             ImGui::InputInt("memory", &memory);
             ImGui::SameLine();
-            HelpMarker("the maximum number of frames during which a feature can vanish,\n"
-                       "then reappear nearby, and be considered the same particle");
+            HelpMarker("the maximum number of frames during which a feature "
+                       "can vanish,\n"
+                       "then reappear nearby, and be considered the same "
+                       "particle");
 
             ImGui::InputInt("min traj. len", &minTrajLen);
             ImGui::SameLine();
@@ -403,24 +411,29 @@ namespace prm
 
     void GUI::ShowHelp()
     {
-        auto window_flags = ImGuiWindowFlags_AlwaysAutoResize |
-                            ImGuiWindowFlags_NoResize;
+        auto window_flags =
+                ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize;
         if (ImGui::Begin("Help", &m_bShowHelp, window_flags))
         {
-            ImGui::Text("1. Choose the backend in the Backend section:\n"
-                        "   - OpenCV: Captures images from device's webcam\n"
-                        "   - PVCam: Captures images from a connected Teledyne camera\n\n"
-                        "2. Use the Camera Buttons to capture images:\n"
-                        "   - First initialize the camera with the Init button\n"
-                        "   - Choose the file format\n"
-                        "   - Choose the image acquisition mode and specify number of frames if necessary\n"
-                        "       - For pvcam, Live Capture yields better fps \n"
-                        "   - Stop the ongoing image acquisition with Terminate Capture\n\n"
-                        "3. Use the Video Processor module from the Windows menu \n"
-                        "to analyze the captured image stacks with trackpy\n"
-                        "   (Make sure there is no cyrillic in the tif stack path)\n\n"
-                        "- To move the image around use the arrow keys\n"
-                        "- Zoom it with J and K keys\n");
+            ImGui::Text(
+                    "1. Choose the backend in the Backend section:\n"
+                    "   - OpenCV: Captures images from device's webcam\n"
+                    "   - PVCam: Captures images from a connected Teledyne "
+                    "camera\n\n"
+                    "2. Use the Camera Buttons to capture images:\n"
+                    "   - First initialize the camera with the Init button\n"
+                    "   - Choose the file format\n"
+                    "   - Choose the image acquisition mode and specify number "
+                    "of frames if necessary\n"
+                    "       - For pvcam, Live Capture yields better fps \n"
+                    "   - Stop the ongoing image acquisition with Terminate "
+                    "Capture\n\n"
+                    "3. Use the Video Processor module from the Windows menu \n"
+                    "to analyze the captured image stacks with trackpy\n"
+                    "   (Make sure there is no cyrillic in the tif stack "
+                    "path)\n\n"
+                    "- To move the image around use the arrow keys\n"
+                    "- Zoom it with J and K keys\n");
         }
         ImGui::End();
     }
