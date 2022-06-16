@@ -235,7 +235,8 @@ namespace prm
                     const auto vidPath = std::filesystem::path{dirPath};
                     if (!std::filesystem::exists(vidPath))
                     {
-                        spdlog::error("No such directory, please check the path");
+                        spdlog::error(
+                                "No such directory, please check the path");
                         return;
                     }
 
@@ -307,12 +308,40 @@ namespace prm
         if (ImGui::Begin("Video Processor", nullptr, window_flags))
         {
             static std::string videoPath{};
-            ImGui::InputTextWithHint("Video path", ".tif file path",
-                                     &videoPath);
+
+            if (ImGui::Button("Choose video file"))
+                ImGuiFileDialog::Instance()->OpenDialog(
+                        "ChooseFileDlgKey", "Choose File", ".tif", ".");
+
+            if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey"))
+            {
+                if (ImGuiFileDialog::Instance()->IsOk())
+                {
+                    videoPath = ImGuiFileDialog::Instance()->GetFilePathName();
+
+                    const auto vidPathStd = std::filesystem::path{videoPath};
+                    if (!std::filesystem::exists(vidPathStd))
+                    {
+                        spdlog::error("No such file, please check the path");
+                        return;
+                    }
+
+                    spdlog::info("Tif file selected: {}", videoPath);
+                }
+
+                ImGuiFileDialog::Instance()->Close();
+            }
 
             if (ImGui::Button("Load Video"))
             {
-                m_videoProcessor.LoadVideo(videoPath);
+                if (videoPath.empty())
+                {
+                    spdlog::warn("Please select the video file first");
+                }
+                else
+                {
+                    m_videoProcessor.LoadVideo(videoPath);
+                }
             }
 
             static int frameNum = 0;
