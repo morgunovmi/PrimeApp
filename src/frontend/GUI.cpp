@@ -12,6 +12,7 @@ namespace prm
         ImGui::SFML::Init(m_window);
 
         auto& io = ImGui::GetIO();
+        io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
         m_hubballiFont = io.Fonts->AddFontFromFileTTF(
                 "./resources/fonts/hubballi-regular.ttf", 20);
         ImGui::SFML::UpdateFontTexture();
@@ -436,7 +437,7 @@ namespace prm
                         "   - Choose the file format\n"
                         "   - Choose the image acquisition mode and specify number of frames if necessary\n"
                         "       - For pvcam, Live Capture yields better fps \n"
-                        "   - Stop the ongoing image acquisition with Terminate Capture\n"
+                        "   - Stop the ongoing image acquisition with Terminate Capture\n\n"
                         "3. Use the Video Processor module from the Windows menu \n"
                         "to analyze the captured image stacks with trackpy\n"
                         "   (Make sure there is no cyrillic in the tif stack path)\n\n"

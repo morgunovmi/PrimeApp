@@ -50,6 +50,7 @@ target_link_libraries(
         ${APP_NAME} PRIVATE
         ${SANITIZER_FLAGS}
         ${SFML_LIBS}
+        imgui::imgui
         ImGui-SFML::ImGui-SFML
         pvcam64
         ${OpenCV_LIBS}
