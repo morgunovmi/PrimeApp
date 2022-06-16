@@ -182,7 +182,7 @@ namespace prm
 
     void GUI::ShowViewport()
     {
-        if (ImGui::Begin("Viewport"))
+        if (ImGui::Begin("Viewport", &m_bShowViewport))
         {
             std::scoped_lock lock{m_textureMutex};
             ImGui::Image(m_currentTexture);
@@ -305,7 +305,7 @@ namespace prm
         window_flags |= ImGuiWindowFlags_AlwaysAutoResize;
         window_flags |= ImGuiWindowFlags_NoResize;
 
-        if (ImGui::Begin("Video Processor", nullptr, window_flags))
+        if (ImGui::Begin("Video Processor", &m_bShowVideoProcessor, window_flags))
         {
             static std::string videoPath{};
 
@@ -491,9 +491,7 @@ namespace prm
                     "3. Use the Video Processor module from the Windows menu \n"
                     "to analyze the captured image stacks with trackpy\n"
                     "   (Make sure there is no cyrillic in the tif stack "
-                    "path)\n\n"
-                    "- To move the image around use the arrow keys\n"
-                    "- Zoom it with J and K keys\n");
+                    "path)\n");
         }
         ImGui::End();
     }
