@@ -25,12 +25,13 @@ find_package(OpenCV CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 find_package(pybind11 CONFIG REQUIRED)
 find_package(OpenImageIO CONFIG REQUIRED)
+find_package(fmt)
 
 set(SFML_LIBS sfml-graphics sfml-system sfml-window)
 
 set(APP_NAME "App")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
-add_executable(${APP_NAME} "")
+add_executable(${APP_NAME} vendor/ImGuiFileDialog/ImGuiFileDialog.cpp)
 add_subdirectory(src)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -42,7 +43,8 @@ target_compile_options(${APP_NAME} PRIVATE ${SANITIZER_FLAGS} ${DEFAULT_COMPILER
 
 target_include_directories(
         ${APP_NAME} PRIVATE
-        "src"
+        vendor/ImGuiFileDialog/ImGuiFileDialog.h
+        src
         "C:\\Program Files\\Photometrics\\PVCamSDK\\Inc"
 )
 
@@ -54,7 +56,7 @@ target_link_libraries(
         ImGui-SFML::ImGui-SFML
         pvcam64
         ${OpenCV_LIBS}
-        spdlog::spdlog spdlog::spdlog_header_only
+        spdlog::spdlog_header_only
         pybind11::embed
         OpenImageIO::OpenImageIO
 )

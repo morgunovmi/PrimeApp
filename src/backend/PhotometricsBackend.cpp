@@ -874,7 +874,7 @@ namespace prm
                                                SAVE_FORMAT format, bool save)
     {
         const auto videoPath =
-                FileUtils::GenerateVideoPath(SEQ_CAPTURE_PREFIX, format);
+                FileUtils::GenerateVideoPath(m_saveDirPath, SEQ_CAPTURE_PREFIX, format);
         if (videoPath.empty())
         {
             spdlog::error("Couldn't generate videopath");
@@ -1079,7 +1079,7 @@ namespace prm
     void PhotometricsBackend::LiveCapture_(SAVE_FORMAT format, bool save)
     {
         const auto videoPath =
-                FileUtils::GenerateVideoPath(LIVE_CAPTURE_PREFIX, format);
+                FileUtils::GenerateVideoPath(m_saveDirPath, LIVE_CAPTURE_PREFIX, format);
         if (videoPath.empty())
         {
             spdlog::error("Couldn't generate videopath");

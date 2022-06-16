@@ -2,6 +2,7 @@
 #include <imgui.h>
 #include <imgui_stdlib.h>
 
+#include "../../vendor/ImGuiFileDialog/ImGuiFileDialog.h"
 #include "frontend/GUI.h"
 
 //TODO Disabled blocks
@@ -218,6 +219,37 @@ namespace prm
 
             static bool save = false;
             ImGui::Checkbox("Save to file", &save);
+            ImGui::SameLine();
+
+            if (ImGui::Button("Choose save directory"))
+                ImGuiFileDialog::Instance()->OpenDialog(
+                        "ChooseSaveDir", "Choose a Directory", nullptr, ".");
+
+            if (ImGuiFileDialog::Instance()->Display("ChooseSaveDir"))
+            {
+                if (ImGuiFileDialog::Instance()->IsOk())
+                {
+                    auto dirPath =
+                            ImGuiFileDialog::Instance()->GetCurrentPath();
+
+                    const auto vidPath = std::filesystem::path{dirPath};
+                    if (!std::filesystem::exists(vidPath))
+                    {
+                        spdlog::error("No such directory, please check the path");
+                        return;
+                    }
+
+                    m_backend->SetDirPath(dirPath);
+                    spdlog::info("Saving to: {}", dirPath);
+                }
+
+                ImGuiFileDialog::Instance()->Close();
+            }
+            ImGui::SameLine();
+            std::string helpString{"Right now saving to: "};
+            helpString.append(m_backend->GetDirPath());
+            HelpMarker(helpString.c_str());
+
             if (ImGui::Button("Live capture"))
             {
                 m_backend->LiveCapture(captureFormat, save);
@@ -232,7 +264,6 @@ namespace prm
             ImGui::PushItemWidth(m_inputFieldWidth);
             if (ImGui::SliderInt("Number of frames", &nFrames, 0, 1000)) {}
             ImGui::PopItemWidth();
-
 
             if (ImGui::Button("Terminate capture"))
             {

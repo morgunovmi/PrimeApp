@@ -12,9 +12,9 @@
 namespace prm
 {
     /// String prefix for live capture files
-    constexpr std::string_view LIVE_CAPTURE_PREFIX{"LiveCapture_"};
+    const std::string LIVE_CAPTURE_PREFIX{"LiveCapture_"};
     /// String prefix for sequence capture files
-    constexpr std::string_view SEQ_CAPTURE_PREFIX{"SequenceCapture_"};
+    const std::string SEQ_CAPTURE_PREFIX{"SequenceCapture_"};
 
     /**
      * Base camera backend class to group common functionality
@@ -67,6 +67,12 @@ namespace prm
         {
         }
 
+        [[nodiscard]] const std::string& GetDirPath() const { return m_saveDirPath; }
+        void SetDirPath(std::string_view dirPath)
+        {
+            m_saveDirPath = dirPath.data();
+        }
+
         /**
          * Stops the ongoing capture process
          */
@@ -80,6 +86,9 @@ namespace prm
 
         /// Command line argument array
         char** m_argv;
+
+        /// Directory in which to save the video
+        std::string m_saveDirPath = ".";
 
         /// Reference to the SFML render window
         sf::RenderWindow& m_window;

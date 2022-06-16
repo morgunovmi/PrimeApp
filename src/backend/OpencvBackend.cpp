@@ -98,11 +98,11 @@ void prm::OpencvBackend::Capture_(OpencvCameraCtx& ctx, SAVE_FORMAT format,
     std::string videoPath{};
     if (nFrames <= 0)
     {
-        videoPath = FileUtils::GenerateVideoPath(LIVE_CAPTURE_PREFIX, format);
+        videoPath = FileUtils::GenerateVideoPath(m_saveDirPath, LIVE_CAPTURE_PREFIX, format);
     }
     else
     {
-        videoPath = FileUtils::GenerateVideoPath(SEQ_CAPTURE_PREFIX, format);
+        videoPath = FileUtils::GenerateVideoPath(m_saveDirPath, SEQ_CAPTURE_PREFIX, format);
     }
 
     if (videoPath.empty()) {

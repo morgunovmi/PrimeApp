@@ -9,7 +9,7 @@ namespace prm
      */
     enum SAVE_FORMAT
     {
-        TIF = 0, ///< tiff stack
+        TIF = 0,///< tiff stack
         MP4 = 1 ///< mp4
     };
 
@@ -24,11 +24,14 @@ namespace prm
          *
          * @param prefix Prefix string to use in the path
          * @param format File save format from the SAVE_FORMAT enum
+         * @param dirPath Directory in which to save the video
          * @return std::string with the generated path
          */
-        static std::string GenerateVideoPath(std::string_view prefix,
-                                             SAVE_FORMAT format);
+        static std::string GenerateVideoPath(std::string_view dirPath,
+                                     std::string_view prefix,
+                                     SAVE_FORMAT format);
 
-        static bool WriteVideo(const void* data, std::string_view filePath);
+        static bool WriteVideo(const void* data,
+                               std::string_view filePath);
     };
-}// namespace slr
+}// namespace prm
