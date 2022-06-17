@@ -4,6 +4,9 @@
 
 GUI application for camera handling and NTA-related image processing. 
 
+<img width="699" alt="Screenshot_2" src="https://user-images.githubusercontent.com/48750724/174301986-2fadcfc4-c67a-493e-860d-7e2fbfec1c9f.png">
+
+
 ## Usage
 ### Prerequisites
 
