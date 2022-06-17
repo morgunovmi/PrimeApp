@@ -31,7 +31,7 @@ These build instructions are for a release build and assume you have Cmake insta
 and running x64-windows. Adjust accordingly.
 
 ```
-git clone https://github.com/morgunovmi/PrimeApp.git
+git clone --recurse-submodules -j8 https://github.com/morgunovmi/PrimeApp.git
 cd PrimeApp
 mkdir build
 cd build
