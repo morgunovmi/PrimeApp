@@ -538,6 +538,7 @@ namespace prm
                     "2. Use the Camera Buttons to capture images:\n"
                     "   - First initialize the camera with the Init button\n"
                     "   - Choose the file format\n"
+                    "   - Choose if and where to save the file\n"
                     "   - Choose the image acquisition mode and specify number "
                     "of frames if necessary\n"
                     "       - For pvcam, Live Capture yields better fps \n"
