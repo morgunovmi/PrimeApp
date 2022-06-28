@@ -113,6 +113,8 @@ namespace prm
          */
         rgn_type region{0, 0, 0, 0, 0, 0};
 
+        uint16_t exposureTime = 10;
+
         /// Vector of camera readout options, commonly referred to as 'speed table'
         std::vector<SpdtabPort> speedTable{};
 
@@ -197,6 +199,8 @@ namespace prm
          * Stops the ongoing capture process
          */
         void TerminateCapture() override;
+
+        CameraContext* GetCurrentCameraContext() { return m_cameraContexts[m_cameraIndex].get(); }
 
         ~PhotometricsBackend() override { CloseAllCamerasAndUninit(); }
 
@@ -373,6 +377,7 @@ namespace prm
         /// Vector of all camera contexts
         std::vector<std::unique_ptr<CameraContext>> m_cameraContexts;
 
+    public:
         /// Shows if PVCam environment is initialized
         bool m_isPvcamInitialized = false;
     };

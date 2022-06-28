@@ -38,8 +38,10 @@ namespace prm
         colors[ImGuiCol_MenuBarBg] = ImVec4(0.15f, 0.18f, 0.22f, 1.00f);
         colors[ImGuiCol_ScrollbarBg] = ImVec4(0.02f, 0.02f, 0.02f, 0.39f);
         colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.20f, 0.25f, 0.29f, 1.00f);
-        colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.18f, 0.22f, 0.25f, 1.00f);
-        colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.09f, 0.21f, 0.31f, 1.00f);
+        colors[ImGuiCol_ScrollbarGrabHovered] =
+                ImVec4(0.18f, 0.22f, 0.25f, 1.00f);
+        colors[ImGuiCol_ScrollbarGrabActive] =
+                ImVec4(0.09f, 0.21f, 0.31f, 1.00f);
         colors[ImGuiCol_CheckMark] = ImVec4(0.28f, 0.56f, 1.00f, 1.00f);
         colors[ImGuiCol_SliderGrab] = ImVec4(0.28f, 0.56f, 1.00f, 1.00f);
         colors[ImGuiCol_SliderGrabActive] = ImVec4(0.37f, 0.61f, 1.00f, 1.00f);
@@ -59,15 +61,18 @@ namespace prm
         colors[ImGuiCol_TabHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.80f);
         colors[ImGuiCol_TabActive] = ImVec4(0.20f, 0.25f, 0.29f, 1.00f);
         colors[ImGuiCol_TabUnfocused] = ImVec4(0.11f, 0.15f, 0.17f, 1.00f);
-        colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.11f, 0.15f, 0.17f, 1.00f);
+        colors[ImGuiCol_TabUnfocusedActive] =
+                ImVec4(0.11f, 0.15f, 0.17f, 1.00f);
         colors[ImGuiCol_PlotLines] = ImVec4(0.61f, 0.61f, 0.61f, 1.00f);
         colors[ImGuiCol_PlotLinesHovered] = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
         colors[ImGuiCol_PlotHistogram] = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
-        colors[ImGuiCol_PlotHistogramHovered] = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
+        colors[ImGuiCol_PlotHistogramHovered] =
+                ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
         colors[ImGuiCol_TextSelectedBg] = ImVec4(0.26f, 0.59f, 0.98f, 0.35f);
         colors[ImGuiCol_DragDropTarget] = ImVec4(1.00f, 1.00f, 0.00f, 0.90f);
         colors[ImGuiCol_NavHighlight] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-        colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
+        colors[ImGuiCol_NavWindowingHighlight] =
+                ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
         colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
         colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
     }
@@ -264,11 +269,51 @@ namespace prm
             if (ImGui::Button("Init")) { m_backend->Init(); }
 
             static auto captureFormat = TIF;
-            ImGui::RadioButton("tif", (int*) &captureFormat, 0);
             if (m_selectedBackend != PVCAM)
             {
+                ImGui::RadioButton("tif", (int*) &captureFormat, 0);
                 ImGui::SameLine();
                 ImGui::RadioButton("mp4", (int*) &captureFormat, 1);
+            }
+
+            if (m_selectedBackend == PVCAM)
+            {
+                static int exposureTime = 10;
+                ImGui::PushItemWidth(m_inputFieldWidth);
+                if (ImGui::SliderInt("Exposure time, ms", &exposureTime, 5,
+                                     100))
+                {
+                }
+                ImGui::PopItemWidth();
+
+                ImGui::SameLine();
+                const char* items[] = {"1x1", "2x2"};
+                static int item_current = 0;
+                ImGui::PushItemWidth(m_inputFieldWidth);
+                ImGui::Combo("Binning factor", &item_current, items,
+                             IM_ARRAYSIZE(items));
+                ImGui::PopItemWidth();
+
+                if (static_cast<PhotometricsBackend*>(m_backend.get())
+                            ->m_isPvcamInitialized)
+                {
+                    auto ctx =
+                            static_cast<PhotometricsBackend*>(m_backend.get())
+                                    ->GetCurrentCameraContext();
+                    ctx->exposureTime = exposureTime;
+                    switch (item_current)
+                    {
+                        case 0:
+                            ctx->region.pbin = 1;
+                            ctx->region.sbin = 1;
+                        case 1:
+                            ctx->region.pbin = 2;
+                            ctx->region.sbin = 2;
+                        default:
+                            spdlog::error(
+                                    "Undefined binning factor encountered");
+                    }
+                }
             }
 
             static bool save = false;

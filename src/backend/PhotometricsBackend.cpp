@@ -897,7 +897,6 @@ namespace prm
         //                     ctx->hcam);
 
         uns32 exposureBytes;
-        const uns32 exposureTime = 10;// milliseconds
         // Select the appropriate internal trigger mode for this camera.
         int16 expMode;
         if (!SelectCameraExpMode(ctx, expMode, TIMED_MODE, EXT_TRIG_INTERNAL))
@@ -912,7 +911,7 @@ namespace prm
     single frame only, size of one frame will be reported.
     */
         if (PV_OK != pl_exp_setup_seq(ctx->hcam, 1, 1, &ctx->region, expMode,
-                                      exposureTime, &exposureBytes))
+                                      ctx->exposureTime, &exposureBytes))
         {
             PrintError("pl_exp_setup_seq() error");
             CloseAllCamerasAndUninit();
@@ -1102,7 +1101,6 @@ namespace prm
                      ctx->hcam);
 
         uns32 exposureBytes;
-        const uns32 exposureTime = 10;// milliseconds
 
         const uns16 circBufferFrames = 20;
         int16 bufferMode = CIRC_OVERWRITE;
@@ -1120,7 +1118,7 @@ namespace prm
         the pl_exp_setup_seq() that returns a buffer size for the entire sequence).
         */
         if (PV_OK != pl_exp_setup_cont(ctx->hcam, 1, &ctx->region, expMode,
-                                       exposureTime, &exposureBytes,
+                                       ctx->exposureTime, &exposureBytes,
                                        bufferMode))
         {
             PrintError("pl_exp_setup_cont() error\n");
