@@ -920,6 +920,9 @@ namespace prm
         //        spdlog::info("Acquisition setup successful on camera {}\n", ctx->hcam);
         UpdateCtxImageFormat(ctx);
 
+        uint32_t actualImageWidth = ctx->sensorResX / ctx->region.sbin;
+        uint32_t actualImageHeight = ctx->sensorResY / ctx->region.pbin;
+
         const auto bitDepth = ctx->speedTable[0].speeds[0].gains[0].bitDepth;
         spdlog::info("Bit depth for camera: {}", bitDepth);
         // Allocate a buffer of the size reported by the pl_exp_setup_seq() function.
@@ -976,13 +979,13 @@ namespace prm
 
             sf::Image image{};
 
-            image.create(ctx->sensorResX, ctx->sensorResY);
-            for (std::size_t y = 0; y < ctx->sensorResY; ++y)
+            image.create(actualImageWidth, actualImageHeight);
+            for (std::size_t y = 0; y < actualImageHeight; ++y)
             {
-                for (std::size_t x = 0; x < ctx->sensorResX; ++x)
+                for (std::size_t x = 0; x < actualImageWidth; ++x)
                 {
                     uint16_t val = *((uint16_t*) ctx->eofFrame +
-                                     y * ctx->sensorResX + x);
+                                     y * actualImageWidth + x);
                     image.setPixel(
                             x, y,
                             sf::Color{
@@ -1044,7 +1047,7 @@ namespace prm
                     std::unique_ptr<ImageOutput> out =
                             ImageOutput::create(videoPath);
                     if (!out) return;
-                    ImageSpec spec(ctx->sensorResX, ctx->sensorResY, 1,
+                    ImageSpec spec(actualImageWidth, actualImageHeight, 1,
                                    TypeDesc::UINT16);
 
                     if (!out->supports("multiimage") ||
@@ -1128,6 +1131,9 @@ namespace prm
         spdlog::info("Acquisition setup successful on camera {}\n", ctx->hcam);
         UpdateCtxImageFormat(ctx);
 
+        uint32_t actualImageWidth = ctx->sensorResX / ctx->region.sbin;
+        uint32_t actualImageHeight = ctx->sensorResY / ctx->region.pbin;
+
         const uns32 circBufferBytes = circBufferFrames * exposureBytes;
         /**
         Now allocate the buffer memory. The application is in control of the
@@ -1185,13 +1191,13 @@ namespace prm
 
             sf::Image image{};
 
-            image.create(ctx->sensorResX, ctx->sensorResY);
-            for (std::size_t y = 0; y < ctx->sensorResY; ++y)
+            image.create(actualImageWidth, actualImageHeight);
+            for (std::size_t y = 0; y < actualImageHeight; ++y)
             {
-                for (std::size_t x = 0; x < ctx->sensorResX; ++x)
+                for (std::size_t x = 0; x < actualImageWidth; ++x)
                 {
                     uint16_t val = *((uint16_t*) ctx->eofFrame +
-                                     y * ctx->sensorResX + x);
+                                     y * actualImageWidth + x);
                     image.setPixel(
                             x, y,
                             sf::Color{
@@ -1236,7 +1242,7 @@ namespace prm
                     std::unique_ptr<ImageOutput> out =
                             ImageOutput::create(videoPath);
                     if (!out) return;
-                    ImageSpec spec(ctx->sensorResX, ctx->sensorResY, 1,
+                    ImageSpec spec(actualImageWidth, actualImageHeight, 1,
                                    TypeDesc::UINT16);
 
                     if (!out->supports("multiimage") ||
