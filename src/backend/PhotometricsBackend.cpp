@@ -1049,6 +1049,7 @@ namespace prm
                     if (!out) return;
                     ImageSpec spec(actualImageWidth, actualImageHeight, 1,
                                    TypeDesc::UINT16);
+                    spec.attribute("compression", "none");
 
                     if (!out->supports("multiimage") ||
                         !out->supports("appendsubimage"))
@@ -1244,6 +1245,7 @@ namespace prm
                     if (!out) return;
                     ImageSpec spec(actualImageWidth, actualImageHeight, 1,
                                    TypeDesc::UINT16);
+                    spec.attribute("compression", "none");
 
                     if (!out->supports("multiimage") ||
                         !out->supports("appendsubimage"))
