@@ -865,16 +865,18 @@ namespace prm
 
         return true;
     }
+
     void PhotometricsBackend::Init_()
     {
         spdlog::info("Starting init");
         InitAndOpenOneCamera();
     }
+
     void PhotometricsBackend::SequenceCapture_(uint32_t nFrames,
                                                SAVE_FORMAT format, bool save)
     {
-        const auto videoPath =
-                FileUtils::GenerateVideoPath(m_saveDirPath, SEQ_CAPTURE_PREFIX, format);
+        const auto videoPath = FileUtils::GenerateVideoPath(
+                m_saveDirPath, SEQ_CAPTURE_PREFIX, format);
         if (videoPath.empty())
         {
             spdlog::error("Couldn't generate videopath");
@@ -893,8 +895,6 @@ namespace prm
             CloseAllCamerasAndUninit();
             return;
         }
-        //        spdlog::info("EOF callback handler registered on camera {}\n",
-        //                     ctx->hcam);
 
         uns32 exposureBytes;
         // Select the appropriate internal trigger mode for this camera.
@@ -917,7 +917,6 @@ namespace prm
             CloseAllCamerasAndUninit();
             return;
         }
-        //        spdlog::info("Acquisition setup successful on camera {}\n", ctx->hcam);
         UpdateCtxImageFormat(ctx);
 
         uint32_t actualImageWidth = ctx->sensorResX / ctx->region.sbin;
@@ -954,7 +953,6 @@ namespace prm
                 errorOccurred = true;
                 break;
             }
-            //            spdlog::info("Acquisition started on camera {}\n", ctx->hcam);
 
             /**
         Here we need to wait for a frame readout notification signaled by the eofEvent
@@ -963,8 +961,6 @@ namespace prm
         with ctrl+c shortcut, the main 'while' loop is interrupted and the acquisition is
         aborted.
         */
-            //            spdlog::info("Waiting for EOF event to occur on camera {}\n",
-            //                         ctx->hcam);
             if (!WaitForEofEvent(ctx.get(), 5000, errorOccurred)) break;
 
             spdlog::info("Frame #{} has been delivered from camera {}\n",
@@ -977,24 +973,9 @@ namespace prm
                           std::back_inserter(bytes));
             }
 
-            sf::Image image{};
-
-            image.create(actualImageWidth, actualImageHeight);
-            for (std::size_t y = 0; y < actualImageHeight; ++y)
-            {
-                for (std::size_t x = 0; x < actualImageWidth; ++x)
-                {
-                    uint16_t val = *((uint16_t*) ctx->eofFrame +
-                                     y * actualImageWidth + x);
-                    image.setPixel(
-                            x, y,
-                            sf::Color{
-                                    static_cast<uint8_t>(val / 4096.f * 256.f),
-                                    static_cast<uint8_t>(val / 4096.f * 256.f),
-                                    static_cast<uint8_t>(val / 4096.f *
-                                                         256.f)});
-                }
-            }
+            sf::Image image =
+                    PVCamImageToSfImage((uint16_t*) ctx->eofFrame,
+                                        actualImageWidth, actualImageHeight);
 
             std::scoped_lock lock(m_textureMutex);
             m_currentTexture.loadFromImage(image);
@@ -1038,51 +1019,16 @@ namespace prm
 
         if (save)
         {
-            switch (format)
-            {
-                case TIF:
-                {
-                    using namespace OIIO;
-
-                    std::unique_ptr<ImageOutput> out =
-                            ImageOutput::create(videoPath);
-                    if (!out) return;
-                    ImageSpec spec(actualImageWidth, actualImageHeight, 1,
-                                   TypeDesc::UINT16);
-                    spec.attribute("compression", "none");
-
-                    if (!out->supports("multiimage") ||
-                        !out->supports("appendsubimage"))
-                    {
-                        spdlog::error(
-                                "Current plugin doesn't support tif subimages");
-                        return;
-                    }
-
-                    ImageOutput::OpenMode appendmode = ImageOutput::Create;
-
-                    for (int s = 0; s < imageCounter; ++s)
-                    {
-                        out->open(videoPath, spec, appendmode);
-                        out->write_image(TypeDesc::UINT16,
-                                         bytes.data() + exposureBytes * s);
-                        appendmode = ImageOutput::AppendSubimage;
-                    }
-                    break;
-                }
-
-                    //TODO mp4
-                default:
-                    spdlog::error("Undefined format");
-            }
-            spdlog::info("File written to {}", videoPath);
+            FileUtils::WritePvcamStack(bytes.data(), actualImageWidth,
+                                       actualImageHeight, exposureBytes,
+                                       videoPath, imageCounter);
         }
     }
 
     void PhotometricsBackend::LiveCapture_(SAVE_FORMAT format, bool save)
     {
-        const auto videoPath =
-                FileUtils::GenerateVideoPath(m_saveDirPath, LIVE_CAPTURE_PREFIX, format);
+        const auto videoPath = FileUtils::GenerateVideoPath(
+                m_saveDirPath, LIVE_CAPTURE_PREFIX, format);
         if (videoPath.empty())
         {
             spdlog::error("Couldn't generate videopath");
@@ -1190,24 +1136,9 @@ namespace prm
                           std::back_inserter(bytes));
             }
 
-            sf::Image image{};
-
-            image.create(actualImageWidth, actualImageHeight);
-            for (std::size_t y = 0; y < actualImageHeight; ++y)
-            {
-                for (std::size_t x = 0; x < actualImageWidth; ++x)
-                {
-                    uint16_t val = *((uint16_t*) ctx->eofFrame +
-                                     y * actualImageWidth + x);
-                    image.setPixel(
-                            x, y,
-                            sf::Color{
-                                    static_cast<uint8_t>(val / 4096.f * 256.f),
-                                    static_cast<uint8_t>(val / 4096.f * 256.f),
-                                    static_cast<uint8_t>(val / 4096.f *
-                                                         256.f)});
-                }
-            }
+            sf::Image image =
+                    PVCamImageToSfImage((uint16_t*) ctx->eofFrame,
+                                        actualImageWidth, actualImageHeight);
 
             std::scoped_lock lock(m_textureMutex);
             m_currentTexture.loadFromImage(image);
@@ -1234,44 +1165,29 @@ namespace prm
 
         if (save)
         {
-            switch (format)
+            FileUtils::WritePvcamStack(bytes.data(), actualImageWidth,
+                                       actualImageHeight, exposureBytes,
+                                       videoPath, imageCounter);
+        }
+    }
+
+    sf::Image PVCamImageToSfImage(uint16_t* imageData, uint16_t imageWidth,
+                                  uint16_t imageHeight)
+    {
+        sf::Image image{};
+
+        image.create(imageWidth, imageHeight);
+        for (std::size_t y = 0; y < imageHeight; ++y)
+        {
+            for (std::size_t x = 0; x < imageWidth; ++x)
             {
-                case TIF:
-                {
-                    using namespace OIIO;
-
-                    std::unique_ptr<ImageOutput> out =
-                            ImageOutput::create(videoPath);
-                    if (!out) return;
-                    ImageSpec spec(actualImageWidth, actualImageHeight, 1,
-                                   TypeDesc::UINT16);
-                    spec.attribute("compression", "none");
-
-                    if (!out->supports("multiimage") ||
-                        !out->supports("appendsubimage"))
-                    {
-                        spdlog::error(
-                                "Current plugin doesn't support tif subimages");
-                        return;
-                    }
-
-                    ImageOutput::OpenMode appendmode = ImageOutput::Create;
-
-                    for (int s = 0; s < imageCounter; ++s)
-                    {
-                        out->open(videoPath, spec, appendmode);
-                        out->write_image(TypeDesc::UINT16,
-                                         bytes.data() + exposureBytes * s);
-                        appendmode = ImageOutput::AppendSubimage;
-                    }
-                    break;
-                }
-
-                    //TODO mp4
-                default:
-                    spdlog::error("Undefined format");
+                uint16_t val = *(imageData + y * imageWidth + x);
+                image.setPixel(
+                        x, y,
+                        sf::Color{static_cast<uint8_t>(val / 4096.f * 256.f),
+                                  static_cast<uint8_t>(val / 4096.f * 256.f),
+                                  static_cast<uint8_t>(val / 4096.f * 256.f)});
             }
-            spdlog::info("File written to {}", videoPath);
         }
     }
 }// namespace prm

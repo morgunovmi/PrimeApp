@@ -200,7 +200,10 @@ namespace prm
          */
         void TerminateCapture() override;
 
-        CameraContext* GetCurrentCameraContext() { return m_cameraContexts[m_cameraIndex].get(); }
+        CameraContext* GetCurrentCameraContext()
+        {
+            return m_cameraContexts[m_cameraIndex].get();
+        }
 
         ~PhotometricsBackend() override { CloseAllCamerasAndUninit(); }
 
@@ -369,6 +372,10 @@ namespace prm
          */
         static bool WaitForEofEvent(CameraContext* ctx, uns32 timeoutMs,
                                     bool& errorOccurred);
+
+        static sf::Image PVCamImageToSfImage(uint16_t* imageData,
+                                             uint16_t imageWidth,
+                                             uint16_t imageHeight);
 
     private:
         /// Index of the current camera

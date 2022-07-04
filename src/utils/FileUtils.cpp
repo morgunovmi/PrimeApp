@@ -1,5 +1,7 @@
+#include <OpenImageIO/imageio.h>
 #include <ctime>
 #include <iomanip>
+#include <spdlog/spdlog.h>
 #include <sstream>
 
 #include "FileUtils.h"
@@ -34,10 +36,36 @@ namespace prm
         }
         return videoPath;
     }
-
-    bool FileUtils::WriteVideo(const void* data, std::string_view filePath)
+    bool FileUtils::WritePvcamStack(const void* data, uint16_t imageWidth,
+                                    uint16_t imageHeight, uint16_t imageSize,
+                                    const std::string& filePath,
+                                    uint16_t numImages)
     {
+        using namespace OIIO;
 
-        return true;
+        std::unique_ptr<ImageOutput> out = ImageOutput::create(filePath);
+        if (!out) return false;
+        ImageSpec spec(imageWidth, imageHeight, 1,
+                       TypeDesc::UINT16);
+        spec.attribute("compression", "none");
+
+        if (!out->supports("multiimage") || !out->supports("appendsubimage"))
+        {
+            spdlog::error("Current plugin doesn't support tif subimages");
+            return false;
+        }
+
+        ImageOutput::OpenMode appendmode = ImageOutput::Create;
+
+        for (std::size_t s = 0; s < numImages; ++s)
+        {
+            out->open(filePath, spec, appendmode);
+            out->write_image(TypeDesc::UINT16,
+                             (uint8_t *)data + imageSize * s);
+            appendmode = ImageOutput::AppendSubimage;
+        }
+        spdlog::info("File written to {}", filePath);
+        return false;
     }
+
 }// namespace prm

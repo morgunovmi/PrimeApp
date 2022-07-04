@@ -28,10 +28,23 @@ namespace prm
          * @return std::string with the generated path
          */
         static std::string GenerateVideoPath(std::string_view dirPath,
-                                     std::string_view prefix,
-                                     SAVE_FORMAT format);
+                                             std::string_view prefix,
+                                             SAVE_FORMAT format);
 
-        static bool WriteVideo(const void* data,
-                               std::string_view filePath);
+        /**
+         * Writes a tiff stack of 16 bit images captured by pvcam
+         *
+         * @param data Byte array containing captured images
+         * @param imageWidth Width of each image
+         * @param imageHeight Height of each image
+         * @param imageSize Size of each image in bytes
+         * @param filePath Path where to save the stack file
+         * @param numImages Number of images to save in the stack
+         * @return
+         */
+        static bool WritePvcamStack(const void* data, uint16_t imageWidth,
+                                    uint16_t imageHeight, uint16_t imageSize,
+                                    const std::string& filePath,
+                                    uint16_t numImages);
     };
 }// namespace prm
