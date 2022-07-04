@@ -306,15 +306,19 @@ namespace prm
                         case 0:
                             ctx->region.pbin = 1;
                             ctx->region.sbin = 1;
+                            break;
                         case 1:
                             ctx->region.pbin = 2;
                             ctx->region.sbin = 2;
+                            break;
                         default:
                             spdlog::error(
                                     "Undefined binning factor encountered");
                     }
+                    spdlog::info("Binning: {}x{}", ctx->region.pbin, ctx->region.sbin);
                 }
             }
+
 
             static bool save = false;
             ImGui::Checkbox("Save to file", &save);
