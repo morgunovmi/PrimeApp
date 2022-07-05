@@ -205,6 +205,10 @@ namespace prm
             return m_cameraContexts[m_cameraIndex].get();
         }
 
+        static sf::Image PVCamImageToSfImage(uint16_t* imageData,
+                                             uint16_t imageWidth,
+                                             uint16_t imageHeight);
+
         ~PhotometricsBackend() override { CloseAllCamerasAndUninit(); }
 
     private:
@@ -373,9 +377,6 @@ namespace prm
         static bool WaitForEofEvent(CameraContext* ctx, uns32 timeoutMs,
                                     bool& errorOccurred);
 
-        static sf::Image PVCamImageToSfImage(uint16_t* imageData,
-                                             uint16_t imageWidth,
-                                             uint16_t imageHeight);
 
     private:
         /// Index of the current camera

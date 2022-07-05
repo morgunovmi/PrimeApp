@@ -1,7 +1,6 @@
 #include <OpenImageIO/imageio.h>
 #include <ctime>
 #include <iomanip>
-#include <spdlog/spdlog.h>
 #include <sstream>
 
 #include "FileUtils.h"
@@ -51,7 +50,6 @@ namespace prm
 
         if (!out->supports("multiimage") || !out->supports("appendsubimage"))
         {
-            spdlog::error("Current plugin doesn't support tif subimages");
             return false;
         }
 
@@ -64,7 +62,6 @@ namespace prm
                              (uint8_t *)data + imageSize * s);
             appendmode = ImageOutput::AppendSubimage;
         }
-        spdlog::info("File written to {}", filePath);
         return false;
     }
 

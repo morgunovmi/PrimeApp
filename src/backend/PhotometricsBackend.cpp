@@ -2,10 +2,10 @@
 #include <iomanip>
 #include <spdlog/spdlog.h>
 
-#include <OpenImageIO/imageio.h>
 #include <opencv2/opencv.hpp>
 
 #include "backend/PhotometricsBackend.h"
+#include "utils/FileUtils.h"
 #include "utils/Timer.h"
 
 namespace prm
@@ -26,6 +26,28 @@ namespace prm
 
         auto str2 = fmt::format("------------------------\n");
         spdlog::error("{}{}{}", str, str1, str2);
+    }
+
+    sf::Image PhotometricsBackend::PVCamImageToSfImage(uint16_t* imageData,
+                                                       uint16_t imageWidth,
+                                                       uint16_t imageHeight)
+    {
+        sf::Image image{};
+
+        image.create(imageWidth, imageHeight);
+        for (std::size_t y = 0; y < imageHeight; ++y)
+        {
+            for (std::size_t x = 0; x < imageWidth; ++x)
+            {
+                uint16_t val = *(imageData + y * imageWidth + x);
+                image.setPixel(
+                        x, y,
+                        sf::Color{static_cast<uint8_t>(val / 4096.f * 256.f),
+                                  static_cast<uint8_t>(val / 4096.f * 256.f),
+                                  static_cast<uint8_t>(val / 4096.f * 256.f)});
+            }
+        }
+        return image;
     }
 
     bool PhotometricsBackend::ShowAppInfo(int argc, char* argv[])
@@ -1019,9 +1041,16 @@ namespace prm
 
         if (save)
         {
-            FileUtils::WritePvcamStack(bytes.data(), actualImageWidth,
-                                       actualImageHeight, exposureBytes,
-                                       videoPath, imageCounter);
+            if (!FileUtils::WritePvcamStack(bytes.data(), actualImageWidth,
+                                            actualImageHeight, exposureBytes,
+                                            videoPath, imageCounter))
+            {
+                spdlog::error("Failed writing stack to {}", videoPath);
+            }
+            else
+            {
+                spdlog::info("Stack written to {}", videoPath);
+            }
         }
     }
 
@@ -1165,28 +1194,15 @@ namespace prm
 
         if (save)
         {
-            FileUtils::WritePvcamStack(bytes.data(), actualImageWidth,
-                                       actualImageHeight, exposureBytes,
-                                       videoPath, imageCounter);
-        }
-    }
-
-    sf::Image PVCamImageToSfImage(uint16_t* imageData, uint16_t imageWidth,
-                                  uint16_t imageHeight)
-    {
-        sf::Image image{};
-
-        image.create(imageWidth, imageHeight);
-        for (std::size_t y = 0; y < imageHeight; ++y)
-        {
-            for (std::size_t x = 0; x < imageWidth; ++x)
+            if (!FileUtils::WritePvcamStack(bytes.data(), actualImageWidth,
+                                            actualImageHeight, exposureBytes,
+                                            videoPath, imageCounter))
             {
-                uint16_t val = *(imageData + y * imageWidth + x);
-                image.setPixel(
-                        x, y,
-                        sf::Color{static_cast<uint8_t>(val / 4096.f * 256.f),
-                                  static_cast<uint8_t>(val / 4096.f * 256.f),
-                                  static_cast<uint8_t>(val / 4096.f * 256.f)});
+                spdlog::error("Failed writing stack to {}", videoPath);
+            }
+            else
+            {
+                spdlog::info("Stack written to {}", videoPath);
             }
         }
     }
