@@ -1,7 +1,7 @@
 #include <OpenImageIO/imageio.h>
 #include <ctime>
+#include <fstream>
 #include <iomanip>
-#include <sstream>
 
 #include "FileUtils.h"
 
@@ -44,8 +44,7 @@ namespace prm
 
         std::unique_ptr<ImageOutput> out = ImageOutput::create(filePath);
         if (!out) return false;
-        ImageSpec spec(imageWidth, imageHeight, 1,
-                       TypeDesc::UINT16);
+        ImageSpec spec(imageWidth, imageHeight, 1, TypeDesc::UINT16);
         spec.attribute("compression", "none");
 
         if (!out->supports("multiimage") || !out->supports("appendsubimage"))
@@ -58,11 +57,33 @@ namespace prm
         for (std::size_t s = 0; s < numImages; ++s)
         {
             out->open(filePath, spec, appendmode);
-            out->write_image(TypeDesc::UINT16,
-                             (uint8_t *)data + imageSize * s);
+            out->write_image(TypeDesc::UINT16, (uint8_t*) data + imageSize * s);
             appendmode = ImageOutput::AppendSubimage;
         }
         return false;
     }
 
+    std::string FileUtils::ReadFileToString(const std::string_view file_path)
+    {
+        if (auto ifs = std::ifstream{file_path.data()})
+        {
+            return {std::istreambuf_iterator<char>{ifs}, {}};
+        }
+        throw std::runtime_error{"Failed to read file to string"};
+    }
+
+    std::vector<std::string>
+    FileUtils::Tokenize(const std::string& string)
+    {
+        const std::string delims{"\r\n\t"};
+        std::vector<std::string> parts{};
+        for (auto beg = string.find_first_not_of(delims);
+             beg != std::string::npos;)
+        {
+            auto end = string.find_first_of(delims, beg);
+            parts.emplace_back(string.substr(beg, end - beg));
+            beg = string.find_first_not_of(delims, end);
+        }
+        return parts;
+    }
 }// namespace prm

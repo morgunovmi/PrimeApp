@@ -70,6 +70,22 @@ namespace prm
         catch (const std::exception& e)
         {
         }
+
+        try
+        {
+            auto plot = py::globals()["plot"].cast<bool>();
+            if (plot)
+            {
+                std::scoped_lock lock{m_textureMutex};
+                if (!m_currentTexture.loadFromFile("plot.png"))
+                {
+                    spdlog::error("Couldn't load plot file");
+                }
+            }
+        }
+        catch (const std::exception& e)
+        {
+        }
     }
 
     void PythonWorker::HandleMessage(PythonWorkerQuit&& quit)

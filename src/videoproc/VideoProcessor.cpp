@@ -44,46 +44,23 @@ class Video:
         self.f = f[(f['ecc'] < ecc)&(f['mass'] > mass)&(f['size'] < size)]
 
         fig, ax = plt.subplots()
+        fig.set_figheight(10)
+        fig.set_figwidth(10)
         tp.annotate(self.f, self.frames_rescale[num], ax = ax, imshow_style = {'cmap':'viridis'})
-        plt.savefig('1_frame_res.png')
-        plt.show()
+        plt.savefig('plot.png')
 
     def locate_all(self, ecc, mass, size, diam = 15):
         f = tp.batch(self.frames_rescale, diam, processes="auto", minmass=self.minmass)
         self.f = f[(f['ecc'] < ecc)&(f['mass'] > mass)&(f['size'] < size)]
+
     def link(self,  ecc, mass, size,search_range = 10, memory = 3):
         self.raw_t = tp.link(self.f, search_range, memory=memory)
         self.t = self.raw_t[(self.raw_t['ecc'] < ecc)&(self.raw_t['mass'] > mass)&(self.raw_t['size'] < size)]
-    def get_drift(self):
-        self.d = tp.compute_drift(self.t)
-        self.d.plot()
-        plt.show()
+
     def filter_traj(self, min_len = 20):
         self.t = tp.filter_stubs(self.raw_t, min_len)
         print('Before:', self.raw_t['particle'].nunique())
         print('After:', self.t['particle'].nunique())
-    def vel_profile(self, ax):
-
-        N = len(self.t['particle'].unique())
-        y_array = np.zeros(N)
-        vel_array = np.zeros(N)
-
-        for i in range(N):
-            length = len(self.t[self.t['particle'] == i])
-            if length != 0:
-                y_array[i] = np.mean(self.t[self.t['particle'] == i]['y'])
-                xmax = max(self.t[self.t['particle'] == i]['x'])
-
-                xmin = min(self.t[self.t['particle'] == i]['x'])
-                vel_array[i] = (xmax - xmin)/length
-        y_array = y_array[y_array != 0]
-        vel_array = vel_array[vel_array != 0]
-        #plt.hist(vel_array, bins = 12)
-        ax.scatter(y_array, vel_array)
-        ax.set_xlabel('Положение на оси y')
-        ax.set_ylabel('Скорость')
-        pass
-        return y_array, vel_array
 
     def get_size(self,fps, scale, cutoff = 0):
         em = tp.emsd(self.t, scale, fps) #Микрон на пиксель
@@ -122,6 +99,7 @@ class Video:
         m_messageQueue.Send(PythonWorkerRunString{
                 .string = R"(
 vid = Video(path)
+plot = False
 )",
                 .strVariables{{"path", std::string{path}}}});
     }
@@ -136,7 +114,8 @@ vid.minmass = minm
 mass = minm
 #Эта функция для подбора параметров на одном кадре. Изменяем параметры (в основном, mass),
 #пока картинка не станет хорошей, и только тогда запускаем locate_all
-vid.locate_1_frame(10, ecc, mass, size, diam=diameter)
+vid.locate_1_frame(frameNum, ecc, mass, size, diam=diameter)
+plot = True
 )",
                                       .intVariables{{"frameNum", frameNum},
                                                     {"minm", minm},
@@ -153,7 +132,7 @@ import time
 starttime = time.time()
 vid.locate_all(ecc, mass, size, diam=diameter)
 print(time.time() - starttime)
-
+plot = False
 )"});
     }
 
@@ -170,6 +149,7 @@ vid.filter_traj(min_len = min_traj_len)
 
 d = tp.compute_drift(vid.t, smoothing = drift_smoothing)
 vid.t = tp.subtract_drift(vid.t, d)
+plot = False
 )",
                 .intVariables{{"search_range", searchRange},
                               {"mem", memory},
@@ -187,9 +167,11 @@ vid.t = tp.subtract_drift(vid.t, d)
 vid.t = vid.t.groupby('particle').filter(lambda x: tp.diagonal_size(x) > min_diag_size and tp.diagonal_size(x) < max_diag_size)
 
 fig, ax = plt.subplots()
+fig.set_figheight(10)
+fig.set_figwidth(10)
 tp.plot_traj(vid.t, ax=ax)
-plt.savefig('trajectory.png')
-plt.show()
+plt.savefig('plot.png')
+plot = True
 )"},
                 .intVariables{{"min_diag_size", minDiagSize},
                               {"max_diag_size", maxDiagSize}}});
@@ -217,16 +199,19 @@ sizes = np.array(sizes)
 sizes = sizes[~np.isnan(sizes)]
 # the histogram of the data
 fig, ax = plt.subplots()
+fig.set_figheight(10)
+fig.set_figwidth(10)
 n, bins, patches = ax.hist(sizes, num_bins, facecolor='blue', alpha=0.5)
-plt.savefig('size_hist.png')
 
 plt.xlim([0, 1000])
-plt.show()
+plt.savefig('plot.png')
+
 print(np.median(sizes))
 
 hist = pd.DataFrame({'n':np.append(n, 0), 'bins':bins})
 hist.to_csv(file_stem + "_hist.csv", index = False)
 pd.Series(sizes).to_csv(file_stem + '_raw_data.csv', index = False)
+plot = True
 )"},
                 .strVariables{{"file_stem", vidPath.stem().string()}},
                 .floatVariables = {{"scale", scale}, {"fps", fps}}});
@@ -239,6 +224,7 @@ pd.Series(sizes).to_csv(file_stem + '_raw_data.csv', index = False)
                 .string{R"(
 diam = vid.get_size(fps, scale)
 result = f"Final diameter is {diam}"
+plot = False
 )"},
                 .floatVariables = {{"scale", scale}, {"fps", fps}}});
     }

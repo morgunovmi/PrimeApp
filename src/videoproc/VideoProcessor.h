@@ -21,7 +21,8 @@ namespace prm
     {
     public:
         VideoProcessor(sf::Texture& texture, std::mutex& mutex)
-            : m_messageQueue(), m_pythonWorker(1, m_messageQueue)
+            : m_messageQueue(),
+              m_pythonWorker(1, m_messageQueue, texture, mutex)
         {
             m_pythonWorker.Run();
             Init();

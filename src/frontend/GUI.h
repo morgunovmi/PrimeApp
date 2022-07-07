@@ -149,5 +149,8 @@ namespace prm
 
         /// Width for input fields in the GUI
         const uint16_t m_inputFieldWidth = 150;
+
+        std::string m_videoSavePath{};
+        std::string m_videoLoadPath{};
     };
 }// namespace prm

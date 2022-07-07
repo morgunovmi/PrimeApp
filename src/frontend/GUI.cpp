@@ -4,6 +4,7 @@
 
 #include "../../vendor/ImGuiFileDialog/ImGuiFileDialog.h"
 #include "frontend/GUI.h"
+#include "utils/FileUtils.h"
 
 //TODO Disabled blocks
 namespace prm
@@ -75,6 +76,16 @@ namespace prm
                 ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
         colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
         colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
+
+        const auto setupPath = std::filesystem::path{"setup.txt"};
+        if (std::filesystem::exists(setupPath))
+        {
+            const auto strings = FileUtils::Tokenize(
+                    FileUtils::ReadFileToString("setup.txt"));
+
+            if (!strings.empty()) { m_videoSavePath = strings[0]; }
+            if (strings.size() == 2) { m_videoLoadPath = strings[1]; }
+        }
     }
 
     void GUI::PollEvents()
@@ -324,7 +335,8 @@ namespace prm
 
             if (ImGui::Button("Choose save directory"))
                 ImGuiFileDialog::Instance()->OpenDialog(
-                        "ChooseSaveDir", "Choose a Directory", nullptr, ".");
+                        "ChooseSaveDir", "Choose a Directory", nullptr,
+                        m_videoSavePath.empty() ? "." : m_videoSavePath);
 
             if (ImGuiFileDialog::Instance()->Display("ChooseSaveDir"))
             {
@@ -342,6 +354,7 @@ namespace prm
                     }
 
                     m_backend->SetDirPath(dirPath);
+                    m_videoSavePath = dirPath;
                     spdlog::info("Saving to: {}", dirPath);
                 }
 
@@ -397,7 +410,15 @@ namespace prm
         ImGui::SFML::Render(m_window);
     }
 
-    void GUI::Shutdown() { ImGui::SFML::Shutdown(); }
+    void GUI::Shutdown()
+    {
+        if (auto ofs = std::ofstream{"setup.txt", std::ios_base::trunc})
+        {
+            ofs << m_videoSavePath << '\n' << m_videoLoadPath;
+        }
+
+        ImGui::SFML::Shutdown();
+    }
 
     void GUI::ShowVideoProcessor()
     {
@@ -412,8 +433,11 @@ namespace prm
             static std::string videoPath{};
 
             if (ImGui::Button("Choose video file"))
+            {
                 ImGuiFileDialog::Instance()->OpenDialog(
-                        "ChooseFileDlgKey", "Choose File", ".tif", ".");
+                        "ChooseFileDlgKey", "Choose File", ".tif",
+                        m_videoLoadPath.empty() ? "." : m_videoLoadPath);
+            }
 
             if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey"))
             {
@@ -428,6 +452,8 @@ namespace prm
                         return;
                     }
 
+                    m_videoLoadPath =
+                            ImGuiFileDialog::Instance()->GetCurrentPath();
                     spdlog::info("Tif file selected: {}", videoPath);
                 }
 
@@ -537,15 +563,29 @@ namespace prm
 
             static double fps = 6.66;
             static double scale = 330.0 / 675.0;
+
             ImGui::PushItemWidth(m_inputFieldWidth);
             ImGui::InputDouble("fps", &fps, 0.0, 0.0, "%.3f");
             ImGui::SameLine();
             HelpMarker("Framerate of the image sequence capture");
 
-            ImGui::InputDouble("scale", &scale, 0.0, 0.0, "%.3f");
-            ImGui::SameLine();
-            HelpMarker("Microns per pixel");
+            const char* items[] = {"x10", "x20"};
+            static int item_current = 1;
+            ImGui::Combo("Lens", &item_current, items,
+                         IM_ARRAYSIZE(items));
             ImGui::PopItemWidth();
+            ImGui::SameLine();
+            HelpMarker("Lens type");
+
+            switch (item_current) {
+                case 0:
+                    scale = 330 / 306.6;
+                    break;
+                case 1:
+                    scale = 330.0 / 675.0;
+                    break;
+            }
+
             if (ImGui::Button("Plot size distribution"))
             {
                 m_videoProcessor.PlotSizeHist(fps, scale);

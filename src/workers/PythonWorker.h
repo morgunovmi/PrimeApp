@@ -18,8 +18,10 @@ namespace prm
     class PythonWorker : public Worker<PythonWorkerMessage>
     {
     public:
-        PythonWorker(int id, MessageQueue<PythonWorkerMessage>& queue)
-            : Worker(id, queue)
+        PythonWorker(int id, MessageQueue<PythonWorkerMessage>& queue,
+                     sf::Texture& texture, std::mutex& mutex)
+            : Worker(id, queue), m_currentTexture(texture),
+              m_textureMutex(mutex)
         {
         }
 
@@ -42,5 +44,10 @@ namespace prm
          * @param quit Empty quit struct
          */
         void HandleMessage(PythonWorkerQuit&& quit);
+
+        /// Reference to the SFML texture that is to be drawn this frame
+        sf::Texture& m_currentTexture;
+        /// Mutex for texture synchronisation
+        std::mutex& m_textureMutex;
     };
 }// namespace prm

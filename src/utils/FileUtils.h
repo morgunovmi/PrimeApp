@@ -44,5 +44,8 @@ namespace prm
                                     uint16_t imageHeight, uint16_t imageSize,
                                     const std::string& filePath,
                                     uint16_t numImages);
+
+        static std::string ReadFileToString(const std::string_view file_path);
+        static std::vector<std::string> Tokenize(const std::string& string);
     };
 }// namespace prm
