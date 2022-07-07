@@ -393,6 +393,9 @@ namespace prm
         int m_minDisplayValue = 0;
         int m_maxDisplayValue = 4096; // 12 bits
 
+        uint16_t m_minCurrentValue = 0;
+        uint16_t m_maxCurrentValue = 0;
+
         std::vector<float> m_brightnessCounts;
     };
 }// namespace prm

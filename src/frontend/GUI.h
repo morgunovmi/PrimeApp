@@ -29,7 +29,7 @@ namespace prm
               m_bShowMainMenuBar(true), m_bShowFrameInfoOverlay(false),
               m_bShowAppLog(true), m_bShowVideoProcessor(false),
               m_bShowHelp(true), m_bShowViewport(true),
-              m_bShowCameraButtons(true), m_bShowImageInfo(false),
+              m_bShowCameraButtons(true), m_bShowImageInfo(true),
               m_backend(backend), m_selectedBackend(curr),
               m_videoProcessor(videoproc), m_appLog(log), m_hubballiFont(),
               m_currentTexture(texture), m_textureMutex(mutex)

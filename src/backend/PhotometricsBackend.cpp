@@ -991,6 +991,16 @@ namespace prm
             spdlog::info("Frame #{} has been delivered from camera {}\n",
                          imageCounter + 1, ctx->hcam);
 
+            m_minCurrentValue = *std::min_element(
+                    (uint16_t*) ctx->eofFrame,
+                    (uint16_t*) ctx->eofFrame +
+                    actualImageHeight * actualImageWidth);
+
+            m_maxCurrentValue = *std::max_element(
+                    (uint16_t*) ctx->eofFrame,
+                    (uint16_t*) ctx->eofFrame +
+                    actualImageHeight * actualImageWidth);
+
             if (save)
             {
                 std::copy((uint8_t*) ctx->eofFrame,
@@ -1160,6 +1170,16 @@ namespace prm
             spdlog::info("Frame #{} acquired, timestamp = {}\n",
                          ctx->eofFrameInfo.FrameNr,
                          100 * ctx->eofFrameInfo.TimeStamp);
+
+            m_minCurrentValue = *std::min_element(
+                    (uint16_t*) ctx->eofFrame,
+                    (uint16_t*) ctx->eofFrame +
+                    actualImageHeight * actualImageWidth);
+
+            m_maxCurrentValue = *std::max_element(
+                    (uint16_t*) ctx->eofFrame,
+                    (uint16_t*) ctx->eofFrame +
+                    actualImageHeight * actualImageWidth);
 
             if (save)
             {

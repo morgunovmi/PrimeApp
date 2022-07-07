@@ -658,8 +658,7 @@ namespace prm
                         dynamic_cast<PhotometricsBackend*>(m_backend.get())
                                 ->m_brightnessCounts;
 
-                ImGui::PlotHistogram("Histogram", counts.data(), counts.size(),
-                                     0, nullptr, 0.0f, 1.0f, ImVec2(0, 80.0f));
+                ImGui::Text("Min: %hu Max: %hu", backend->m_minCurrentValue, backend->m_maxCurrentValue);
 
                 static int currentBitsIdx = 2;
                 int maxVal = 0;
@@ -691,7 +690,14 @@ namespace prm
                 if (ImGui::Button("Full Scale"))
                 {
                     backend->m_minDisplayValue = 0;
-                    backend->m_maxDisplayValue = maxVal;
+                    backend->m_maxDisplayValue = maxVal + 1;
+                }
+
+                ImGui::SameLine();
+                if (ImGui::Button("Auto stretch"))
+                {
+                    backend->m_minDisplayValue = backend->m_minCurrentValue;
+                    backend->m_maxDisplayValue = backend->m_maxCurrentValue + 1;
                 }
             }
         }
