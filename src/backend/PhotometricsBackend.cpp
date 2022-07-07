@@ -46,7 +46,7 @@ namespace prm
                 val = std::clamp(val, (uint16_t) minVal, (uint16_t) maxVal);
                 auto val8 =
                         static_cast<uint8_t>(static_cast<float>(val - minVal) /
-                                             (maxVal - minVal) * 256.f);
+                                             (maxVal - minVal + 1) * 256.f);
                 image.setPixel(x, y, sf::Color{val8, val8, val8});
             }
         }

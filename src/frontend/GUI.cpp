@@ -690,14 +690,14 @@ namespace prm
                 if (ImGui::Button("Full Scale"))
                 {
                     backend->m_minDisplayValue = 0;
-                    backend->m_maxDisplayValue = maxVal + 1;
+                    backend->m_maxDisplayValue = maxVal;
                 }
 
                 ImGui::SameLine();
                 if (ImGui::Button("Auto stretch"))
                 {
                     backend->m_minDisplayValue = backend->m_minCurrentValue;
-                    backend->m_maxDisplayValue = backend->m_maxCurrentValue + 1;
+                    backend->m_maxDisplayValue = backend->m_maxCurrentValue;
                 }
             }
         }
