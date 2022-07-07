@@ -157,7 +157,6 @@ namespace prm
             }
         }
 
-
         /**
          * Explicit "copy"  constructor from a unique_ptr
          *
@@ -207,7 +206,9 @@ namespace prm
 
         static sf::Image PVCamImageToSfImage(uint16_t* imageData,
                                              uint16_t imageWidth,
-                                             uint16_t imageHeight);
+                                             uint16_t imageHeight,
+                                             uint32_t minVal,
+                                             uint32_t maxVal);
 
         ~PhotometricsBackend() override { CloseAllCamerasAndUninit(); }
 
@@ -388,5 +389,10 @@ namespace prm
     public:
         /// Shows if PVCam environment is initialized
         bool m_isPvcamInitialized = false;
+
+        int m_minDisplayValue = 0;
+        int m_maxDisplayValue = 4096; // 12 bits
+
+        std::vector<float> m_brightnessCounts;
     };
 }// namespace prm

@@ -60,7 +60,7 @@ namespace prm
             out->write_image(TypeDesc::UINT16, (uint8_t*) data + imageSize * s);
             appendmode = ImageOutput::AppendSubimage;
         }
-        return false;
+        return true;
     }
 
     std::string FileUtils::ReadFileToString(const std::string_view file_path)

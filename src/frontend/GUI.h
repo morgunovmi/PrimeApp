@@ -29,10 +29,10 @@ namespace prm
               m_bShowMainMenuBar(true), m_bShowFrameInfoOverlay(false),
               m_bShowAppLog(true), m_bShowVideoProcessor(false),
               m_bShowHelp(true), m_bShowViewport(true),
-              m_bShowCameraButtons(true), m_backend(backend),
-              m_selectedBackend(curr), m_videoProcessor(videoproc),
-              m_appLog(log), m_hubballiFont(), m_currentTexture(texture),
-              m_textureMutex(mutex)
+              m_bShowCameraButtons(true), m_bShowImageInfo(false),
+              m_backend(backend), m_selectedBackend(curr),
+              m_videoProcessor(videoproc), m_appLog(log), m_hubballiFont(),
+              m_currentTexture(texture), m_textureMutex(mutex)
         {
         }
 
@@ -92,6 +92,8 @@ namespace prm
          */
         void ShowCameraButtons();
 
+        void ShowImageInfo();
+
         void ShowHelp();
 
     private:
@@ -140,6 +142,7 @@ namespace prm
         ImFont* m_hubballiFont;
 
         bool m_bShowCameraButtons;
+        bool m_bShowImageInfo;
         bool m_bShowMainMenuBar;
         bool m_bShowViewport;
         bool m_bShowFrameInfoOverlay;

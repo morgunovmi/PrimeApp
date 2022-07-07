@@ -1,3 +1,4 @@
+#include <execution>
 #include <fmt/format.h>
 #include <iomanip>
 #include <spdlog/spdlog.h>
@@ -30,7 +31,9 @@ namespace prm
 
     sf::Image PhotometricsBackend::PVCamImageToSfImage(uint16_t* imageData,
                                                        uint16_t imageWidth,
-                                                       uint16_t imageHeight)
+                                                       uint16_t imageHeight,
+                                                       uint32_t minVal,
+                                                       uint32_t maxVal)
     {
         sf::Image image{};
 
@@ -40,11 +43,11 @@ namespace prm
             for (std::size_t x = 0; x < imageWidth; ++x)
             {
                 uint16_t val = *(imageData + y * imageWidth + x);
-                image.setPixel(
-                        x, y,
-                        sf::Color{static_cast<uint8_t>(val / 4096.f * 256.f),
-                                  static_cast<uint8_t>(val / 4096.f * 256.f),
-                                  static_cast<uint8_t>(val / 4096.f * 256.f)});
+                val = std::clamp(val, (uint16_t) minVal, (uint16_t) maxVal);
+                auto val8 =
+                        static_cast<uint8_t>(static_cast<float>(val - minVal) /
+                                             (maxVal - minVal) * 256.f);
+                image.setPixel(x, y, sf::Color{val8, val8, val8});
             }
         }
         return image;
@@ -941,8 +944,8 @@ namespace prm
         }
         UpdateCtxImageFormat(ctx);
 
-        uint32_t actualImageWidth = ctx->sensorResX / ctx->region.sbin;
-        uint32_t actualImageHeight = ctx->sensorResY / ctx->region.pbin;
+        uint16_t actualImageWidth = ctx->sensorResX / ctx->region.sbin;
+        uint16_t actualImageHeight = ctx->sensorResY / ctx->region.pbin;
 
         const auto bitDepth = ctx->speedTable[0].speeds[0].gains[0].bitDepth;
         spdlog::info("Bit depth for camera: {}", bitDepth);
@@ -995,9 +998,9 @@ namespace prm
                           std::back_inserter(bytes));
             }
 
-            sf::Image image =
-                    PVCamImageToSfImage((uint16_t*) ctx->eofFrame,
-                                        actualImageWidth, actualImageHeight);
+            sf::Image image = PVCamImageToSfImage(
+                    (uint16_t*) ctx->eofFrame, actualImageWidth,
+                    actualImageHeight, m_minDisplayValue, m_maxDisplayValue);
 
             std::scoped_lock lock(m_textureMutex);
             m_currentTexture.loadFromImage(image);
@@ -1107,8 +1110,8 @@ namespace prm
         spdlog::info("Acquisition setup successful on camera {}\n", ctx->hcam);
         UpdateCtxImageFormat(ctx);
 
-        uint32_t actualImageWidth = ctx->sensorResX / ctx->region.sbin;
-        uint32_t actualImageHeight = ctx->sensorResY / ctx->region.pbin;
+        uint16_t actualImageWidth = ctx->sensorResX / ctx->region.sbin;
+        uint16_t actualImageHeight = ctx->sensorResY / ctx->region.pbin;
 
         const uns32 circBufferBytes = circBufferFrames * exposureBytes;
         /**
@@ -1165,9 +1168,9 @@ namespace prm
                           std::back_inserter(bytes));
             }
 
-            sf::Image image =
-                    PVCamImageToSfImage((uint16_t*) ctx->eofFrame,
-                                        actualImageWidth, actualImageHeight);
+            sf::Image image = PVCamImageToSfImage(
+                    (uint16_t*) ctx->eofFrame, actualImageWidth,
+                    actualImageHeight, m_minDisplayValue, m_maxDisplayValue);
 
             std::scoped_lock lock(m_textureMutex);
             m_currentTexture.loadFromImage(image);

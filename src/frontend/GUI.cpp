@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <imgui-SFML.h>
 #include <imgui.h>
 #include <imgui_stdlib.h>
@@ -206,6 +207,9 @@ namespace prm
                                     &m_bShowCameraButtons))
                 {
                 }
+                if (ImGui::MenuItem("Image Info", nullptr, &m_bShowImageInfo))
+                {
+                }
                 if (ImGui::MenuItem("Video Processor", "F1",
                                     &m_bShowVideoProcessor))
                 {
@@ -305,11 +309,11 @@ namespace prm
                              IM_ARRAYSIZE(items));
                 ImGui::PopItemWidth();
 
-                if (static_cast<PhotometricsBackend*>(m_backend.get())
+                if (dynamic_cast<PhotometricsBackend*>(m_backend.get())
                             ->m_isPvcamInitialized)
                 {
-                    auto ctx =
-                            static_cast<PhotometricsBackend*>(m_backend.get())
+                    auto* ctx =
+                            dynamic_cast<PhotometricsBackend*>(m_backend.get())
                                     ->GetCurrentCameraContext();
                     ctx->exposureTime = exposureTime;
                     switch (item_current)
@@ -395,6 +399,7 @@ namespace prm
         ImGui::DockSpaceOverViewport();
 
         if (m_bShowCameraButtons) ShowCameraButtons();
+        if (m_bShowImageInfo) ShowImageInfo();
         if (m_bShowMainMenuBar) ShowMainMenuBar();
         if (m_bShowViewport) ShowViewport();
         if (m_bShowFrameInfoOverlay) ShowFrameInfoOverlay();
@@ -571,13 +576,13 @@ namespace prm
 
             const char* items[] = {"x10", "x20"};
             static int item_current = 1;
-            ImGui::Combo("Lens", &item_current, items,
-                         IM_ARRAYSIZE(items));
+            ImGui::Combo("Lens", &item_current, items, IM_ARRAYSIZE(items));
             ImGui::PopItemWidth();
             ImGui::SameLine();
             HelpMarker("Lens type");
 
-            switch (item_current) {
+            switch (item_current)
+            {
                 case 0:
                     scale = 330 / 306.6;
                     break;
@@ -635,6 +640,60 @@ namespace prm
                     "to analyze the captured image stacks with trackpy\n"
                     "   (Make sure there is no cyrillic in the tif stack "
                     "path)\n");
+        }
+        ImGui::End();
+    }
+
+    void GUI::ShowImageInfo()
+    {
+        auto window_flags =
+                ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize;
+        if (ImGui::Begin("Image Info", &m_bShowImageInfo, window_flags))
+        {
+            if (m_selectedBackend == PVCAM)
+            {
+                auto* backend =
+                        dynamic_cast<PhotometricsBackend*>(m_backend.get());
+                const auto& counts =
+                        dynamic_cast<PhotometricsBackend*>(m_backend.get())
+                                ->m_brightnessCounts;
+
+                ImGui::PlotHistogram("Histogram", counts.data(), counts.size(),
+                                     0, nullptr, 0.0f, 1.0f, ImVec2(0, 80.0f));
+
+                static int currentBitsIdx = 2;
+                int maxVal = 0;
+                switch (currentBitsIdx)
+                {
+                    case 0:
+                        maxVal = UCHAR_MAX;
+                        break;
+                    case 1:
+                        maxVal = 4095;
+                        break;
+                    case 2:
+                        maxVal = USHRT_MAX;
+                        break;
+                }
+
+                ImGui::DragIntRange2("Brightness range",
+                                     &backend->m_minDisplayValue,
+                                     &backend->m_maxDisplayValue, 5, 0, maxVal,
+                                     "Min: %d", "Max: %d");
+
+                ImGui::SameLine();
+                ImGui::PushItemWidth(m_inputFieldWidth);
+                const char* items[] = {"8 bit", "12 bit", "16 bit"};
+                ImGui::Combo("Bit depth", &currentBitsIdx, items,
+                             IM_ARRAYSIZE(items));
+                ImGui::PopItemWidth();
+
+                if (ImGui::Button("Full Scale"))
+                {
+                    backend->m_minDisplayValue = 0;
+                    backend->m_maxDisplayValue = maxVal;
+                }
+            }
         }
         ImGui::End();
     }
