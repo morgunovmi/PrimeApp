@@ -303,9 +303,9 @@ namespace prm
 
                 ImGui::SameLine();
                 const char* items[] = {"1x1", "2x2"};
-                static int item_current = 0;
+                static int currentBinning = 0;
                 ImGui::PushItemWidth(m_inputFieldWidth);
-                ImGui::Combo("Binning factor", &item_current, items,
+                ImGui::Combo("Binning factor", &currentBinning, items,
                              IM_ARRAYSIZE(items));
                 ImGui::PopItemWidth();
 
@@ -316,7 +316,7 @@ namespace prm
                             dynamic_cast<PhotometricsBackend*>(m_backend.get())
                                     ->GetCurrentCameraContext();
                     ctx->exposureTime = exposureTime;
-                    switch (item_current)
+                    switch (currentBinning)
                     {
                         case 0:
                             ctx->region.pbin = 1;
@@ -437,6 +437,12 @@ namespace prm
         {
             static std::string videoPath{};
 
+            static int frameNum = 0;
+            static int minMass = 1000;
+            static double ecc = 0.5;
+            static int size = 5;
+            static int diameter = 19;
+
             if (ImGui::Button("Choose video file"))
             {
                 ImGuiFileDialog::Instance()->OpenDialog(
@@ -463,57 +469,58 @@ namespace prm
                 }
 
                 ImGuiFileDialog::Instance()->Close();
+
+                m_videoProcessor.LoadVideo(videoPath);
+                m_videoProcessor.LocateOneFrame(frameNum, minMass, ecc, size,
+                                                diameter);
             }
 
-            if (ImGui::Button("Load Video"))
-            {
-                if (videoPath.empty())
-                {
-                    spdlog::warn("Please select the video file first");
-                }
-                else
-                {
-                    m_videoProcessor.LoadVideo(videoPath);
-                }
-            }
-
-            static int frameNum = 0;
-            static int minMass = 1000;
-            static double ecc = 0.5;
-            static int size = 5;
-            static int diameter = 19;
-
+            static bool isUpdateNeeded = false;
             ImGui::PushItemWidth(m_inputFieldWidth);
 
-            ImGui::InputInt("frame num", &frameNum);
+            ImGui::InputInt("frame num", &frameNum, 0);
+            if (ImGui::IsItemDeactivatedAfterEdit()) isUpdateNeeded = true;
             ImGui::SameLine();
             HelpMarker("Number of the frame to analyze");
 
-            ImGui::InputInt("min mass", &minMass);
+            ImGui::InputInt("min mass", &minMass, 0);
+            if (ImGui::IsItemDeactivatedAfterEdit()) isUpdateNeeded = true;
+
             ImGui::SameLine();
             HelpMarker("The minimum integrated brightness.\n"
                        "This is a crucial parameter for eliminating spurious "
                        "features.");
 
-            ImGui::InputInt("size", &size);
+            ImGui::InputInt("size", &size, 0);
+            if (ImGui::IsItemDeactivatedAfterEdit()) isUpdateNeeded = true;
             ImGui::SameLine();
             HelpMarker(
                     "Max radius of gyration of blob's Gaussian-like profile");
 
-            ImGui::InputInt("diameter", &diameter);
+            ImGui::InputInt("diameter", &diameter, 0);
+            if (ImGui::IsItemDeactivatedAfterEdit()) isUpdateNeeded = true;
             ImGui::SameLine();
             HelpMarker("The feature’s extent in each dimension");
 
             ImGui::InputDouble("eccentricity", &ecc, 0.0, 0.0, "%.2f");
+            if (ImGui::IsItemDeactivatedAfterEdit()) isUpdateNeeded = true;
             ImGui::SameLine();
             HelpMarker("Max eccentricity");
             ImGui::PopItemWidth();
 
-            if (ImGui::Button("Locate on one frame"))
+            if (isUpdateNeeded)
             {
                 m_videoProcessor.LocateOneFrame(frameNum, minMass, ecc, size,
                                                 diameter);
+                isUpdateNeeded = false;
             }
+
+            if (ImGui::Button("Locate on all frames"))
+            {
+                m_videoProcessor.LocateAllFrames();
+            }
+            ImGui::SameLine();
+            HelpMarker("Use this after fine tuning all previous params");
 
             static int searchRange = 7;
             static int memory = 10;
@@ -524,47 +531,61 @@ namespace prm
             static int maxDiagSize = 30;
             ImGui::PushItemWidth(m_inputFieldWidth);
 
-            ImGui::InputInt("search range", &searchRange);
+            ImGui::InputInt("search range", &searchRange, 0);
             ImGui::SameLine();
             HelpMarker("The maximum distance features can move between frames");
 
             ImGui::SameLine();
-            ImGui::InputInt("memory", &memory);
+            ImGui::InputInt("memory", &memory, 0);
             ImGui::SameLine();
             HelpMarker("the maximum number of frames during which a feature "
                        "can vanish,\n"
                        "then reappear nearby, and be considered the same "
                        "particle");
 
-            ImGui::InputInt("min traj. len", &minTrajLen);
+            ImGui::InputInt("min traj. len", &minTrajLen, 0);
             ImGui::SameLine();
             HelpMarker("minimum number of points (video frames) to survive");
 
             ImGui::SameLine();
-            ImGui::InputInt("drift smooth.", &driftSmoothing);
+            ImGui::InputInt("drift smooth.", &driftSmoothing, 0);
             ImGui::SameLine();
             HelpMarker("Smooth the drift using a forward-looking\n"
                        "rolling mean over this many frames.");
 
-            ImGui::InputInt("min diag. size", &minDiagSize);
+            ImGui::InputInt("min diag. size", &minDiagSize, 0);
             ImGui::SameLine();
             HelpMarker("Min particle diagonal size to survive");
 
             ImGui::SameLine();
-            ImGui::InputInt("max diag. size", &maxDiagSize);
+            ImGui::InputInt("max diag. size", &maxDiagSize, 0);
             ImGui::SameLine();
             HelpMarker("Max particle diagonal size to survive");
 
             ImGui::PopItemWidth();
 
+
+            static bool ifNumFrames = false;
+            static int numFrames = 30;
             if (ImGui::Button("Find trajectories"))
             {
-                m_videoProcessor.LocateAllFrames();
                 m_videoProcessor.LinkAndFilter(searchRange, memory, minTrajLen,
                                                driftSmoothing);
                 m_videoProcessor.GroupAndPlotTrajectory(minDiagSize,
                                                         maxDiagSize);
             }
+
+            /*
+            ImGui::SameLine();
+            ImGui::Checkbox("Specify number of frames", &ifNumFrames);
+            if (ifNumFrames)
+            {
+                ImGui::SameLine();
+                ImGui::PushItemWidth(m_inputFieldWidth);
+                ImGui::SliderInt("##", &numFrames, 0, 1000);
+                ImGui::PopItemWidth();
+            }
+             */
 
             static double fps = 6.66;
             static double scale = 330.0 / 675.0;
@@ -575,13 +596,23 @@ namespace prm
             HelpMarker("Framerate of the image sequence capture");
 
             const char* items[] = {"x10", "x20"};
-            static int item_current = 1;
-            ImGui::Combo("Lens", &item_current, items, IM_ARRAYSIZE(items));
+            static int currentLens = 1;
+            ImGui::Combo("Lens", &currentLens, items, IM_ARRAYSIZE(items));
             ImGui::PopItemWidth();
             ImGui::SameLine();
             HelpMarker("Lens type");
 
-            switch (item_current)
+            ImGui::SameLine();
+            const char* itemsBinning[] = {"1x1", "2x2"};
+            static int currentBinning = 0;
+            ImGui::PushItemWidth(m_inputFieldWidth);
+            ImGui::Combo("Binning factor", &currentBinning, itemsBinning,
+                         IM_ARRAYSIZE(itemsBinning));
+            ImGui::PopItemWidth();
+            ImGui::SameLine();
+            HelpMarker("Binning used during capture");
+
+            switch (currentLens)
             {
                 case 0:
                     scale = 330 / 306.6;
@@ -590,15 +621,11 @@ namespace prm
                     scale = 330.0 / 675.0;
                     break;
             }
+            scale *= currentBinning == 1 ? 2 : 1;
 
             if (ImGui::Button("Plot size distribution"))
             {
                 m_videoProcessor.PlotSizeHist(fps, scale);
-            }
-
-            if (ImGui::Button("Get particle size"))
-            {
-                m_videoProcessor.GetSize(fps, scale);
             }
 
             static std::string pythonQuery{};
@@ -658,7 +685,8 @@ namespace prm
                         dynamic_cast<PhotometricsBackend*>(m_backend.get())
                                 ->m_brightnessCounts;
 
-                ImGui::Text("Min: %hu Max: %hu", backend->m_minCurrentValue, backend->m_maxCurrentValue);
+                ImGui::Text("Min: %hu Max: %hu", backend->m_minCurrentValue,
+                            backend->m_maxCurrentValue);
 
                 static int currentBitsIdx = 2;
                 int maxVal = 0;

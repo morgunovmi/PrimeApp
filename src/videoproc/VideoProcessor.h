@@ -84,14 +84,6 @@ namespace prm
         void PlotSizeHist(double fps, double scale);
 
         /**
-         * Computes the mean particle size in nanometers, prints the result to log
-         *
-         * @param fps Framerate of the image sequence capture
-         * @param scale Microns per pixel
-         */
-        void GetSize(double fps, double scale);
-
-        /**
          * Runs an arbitrary python query in the embedded interpreter
          *
          * @param query query string to run

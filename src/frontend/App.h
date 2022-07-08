@@ -25,10 +25,10 @@ namespace prm
                        sf::Style::Default, settings),
               m_deltaClock(), m_dt(), m_currentTexture(), m_textureMutex(),
               m_renderer(m_window),
-              m_backend(std::make_unique<OpencvBackend>(argc, argv, m_window,
-                                                        m_currentTexture, m_dt,
-                                                        m_textureMutex)),
-              m_selectedBackend(OPENCV),
+              m_backend(std::make_unique<PhotometricsBackend>(
+                      argc, argv, m_window, m_currentTexture, m_dt,
+                      m_textureMutex)),
+              m_selectedBackend(PVCAM),
               m_gui(m_window, m_dt, m_backend, m_selectedBackend,
                     m_videoProcessor, log, m_currentTexture, m_textureMutex),
               m_videoProcessor(m_currentTexture, m_textureMutex)

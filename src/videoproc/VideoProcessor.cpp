@@ -45,9 +45,9 @@ class Video:
 
         fig, ax = plt.subplots()
         fig.set_figheight(10)
-        fig.set_figwidth(10)
+        fig.set_figwidth(20)
         tp.annotate(self.f, self.frames_rescale[num], ax = ax, imshow_style = {'cmap':'viridis'})
-        plt.savefig('plot.png')
+        plt.savefig('plot.png', bbox_inches='tight')
 
     def locate_all(self, ecc, mass, size, diam = 15):
         f = tp.batch(self.frames_rescale, diam, processes="auto", minmass=self.minmass)
@@ -61,27 +61,6 @@ class Video:
         self.t = tp.filter_stubs(self.raw_t, min_len)
         print('Before:', self.raw_t['particle'].nunique())
         print('After:', self.t['particle'].nunique())
-
-    def get_size(self,fps, scale, cutoff = 0):
-        em = tp.emsd(self.t, scale, fps) #Микрон на пиксель
-
-        #Для 10x - 1400 мкм на 621 пиксель
-        #Для 20x - 600 мкм на 594 пиксель
-        #plt.ylabel(r'$\langle \Delta r^2 \rangle$ [$\mu$m$^2$]')
-        #plt.xlabel('lag time $t$');
-        res = tp.utils.fit_powerlaw(em[cutoff:], plot=False)  # performs linear best fit in log space, plots]
-
-        A = float(res['A'])
-        print(res)
-
-        eta = 0.89e-3
-        k = 1.380649e-23
-        T = 273 + 25
-        D = 1e-12*A/4 # -12 степень - потому что мкм**2
-        R = k*T/(6*np.pi*D*eta)
-        diam = 2*R*1e9
-        print('diameter = ', diam, ' nm')
-        return diam
 )"});
     }
 
@@ -168,9 +147,9 @@ vid.t = vid.t.groupby('particle').filter(lambda x: tp.diagonal_size(x) > min_dia
 
 fig, ax = plt.subplots()
 fig.set_figheight(10)
-fig.set_figwidth(10)
+fig.set_figwidth(20)
 tp.plot_traj(vid.t, ax=ax)
-plt.savefig('plot.png')
+plt.savefig('plot.png', bbox_inches='tight')
 plot = True
 )"},
                 .intVariables{{"min_diag_size", minDiagSize},
@@ -200,11 +179,11 @@ sizes = sizes[~np.isnan(sizes)]
 # the histogram of the data
 fig, ax = plt.subplots()
 fig.set_figheight(10)
-fig.set_figwidth(10)
+fig.set_figwidth(20)
 n, bins, patches = ax.hist(sizes, num_bins, facecolor='blue', alpha=0.5)
 
 plt.xlim([0, 1000])
-plt.savefig('plot.png')
+plt.savefig('plot.png', bbox_inches='tight')
 
 print(np.median(sizes))
 
@@ -214,18 +193,6 @@ pd.Series(sizes).to_csv(file_stem + '_raw_data.csv', index = False)
 plot = True
 )"},
                 .strVariables{{"file_stem", vidPath.stem().string()}},
-                .floatVariables = {{"scale", scale}, {"fps", fps}}});
-    }
-
-    void VideoProcessor::GetSize(double fps, double scale)
-    {
-        spdlog::info("Fitting linear approximation, getting size of particle");
-        m_messageQueue.Send(PythonWorkerRunString{
-                .string{R"(
-diam = vid.get_size(fps, scale)
-result = f"Final diameter is {diam}"
-plot = False
-)"},
                 .floatVariables = {{"scale", scale}, {"fps", fps}}});
     }
 
