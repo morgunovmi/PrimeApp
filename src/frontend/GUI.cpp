@@ -283,7 +283,7 @@ namespace prm
         {
             if (ImGui::Button("Init")) { m_backend->Init(); }
 
-            static auto captureFormat = TIF;
+            static auto captureFormat = DIR;
             if (m_selectedBackend != PVCAM)
             {
                 ImGui::RadioButton("tif", (int*) &captureFormat, 0);

@@ -1,4 +1,4 @@
-#include <execution>
+#include <filesystem>
 #include <fmt/format.h>
 #include <iomanip>
 #include <spdlog/spdlog.h>
@@ -1056,6 +1056,12 @@ namespace prm
 
         if (save)
         {
+            if (!std::filesystem::create_directory(
+                        std::filesystem::path{videoPath}))
+            {
+                spdlog::error("Couldn't create a directory");
+            }
+
             const auto meta =
                     TifStackMeta{.numFrames = imageCounter,
                                  .exposure = ctx->exposureTime,
@@ -1063,10 +1069,10 @@ namespace prm
                                  .binning = ctx->region.pbin == 1 ? ONE : TWO,
                                  .lens = ctx->lens};
 
-            if (!FileUtils::WritePvcamStack(bytes.data(), actualImageWidth,
+            if (!FileUtils::WriteTifMetadata(videoPath, meta) ||
+                !FileUtils::WritePvcamStack(bytes.data(), actualImageWidth,
                                             actualImageHeight, exposureBytes,
-                                            videoPath, imageCounter) ||
-                !FileUtils::WriteTifMetadata(videoPath, meta))
+                                            videoPath, imageCounter))
             {
                 spdlog::error("Failed writing stack to {}", videoPath);
             }
@@ -1228,6 +1234,12 @@ namespace prm
 
         if (save)
         {
+            if (!std::filesystem::create_directory(
+                        std::filesystem::path{videoPath}))
+            {
+                spdlog::error("Couldn't create a directory");
+            }
+
             const auto meta =
                     TifStackMeta{.numFrames = imageCounter,
                                  .exposure = ctx->exposureTime,
@@ -1235,10 +1247,10 @@ namespace prm
                                  .binning = ctx->region.pbin == 1 ? ONE : TWO,
                                  .lens = ctx->lens};
 
-            if (!FileUtils::WritePvcamStack(bytes.data(), actualImageWidth,
+            if (!FileUtils::WriteTifMetadata(videoPath, meta) ||
+                !FileUtils::WritePvcamStack(bytes.data(), actualImageWidth,
                                             actualImageHeight, exposureBytes,
-                                            videoPath, imageCounter) ||
-                !FileUtils::WriteTifMetadata(videoPath, meta))
+                                            videoPath, imageCounter))
             {
                 spdlog::error("Failed writing stack to {}", videoPath);
             }

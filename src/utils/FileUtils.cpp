@@ -31,6 +31,8 @@ namespace prm
             case MP4:
                 videoPath.append(".mp4");
                 break;
+            case DIR:
+                break;
             default:
                 return std::string{};
         }
@@ -43,8 +45,9 @@ namespace prm
                                     uint16_t numImages)
     {
         using namespace OIIO;
+        const auto tifPath = std::string{filePath + "\\stack.tif"};
 
-        std::unique_ptr<ImageOutput> out = ImageOutput::create(filePath);
+        std::unique_ptr<ImageOutput> out = ImageOutput::create(tifPath);
         if (!out) return false;
         ImageSpec spec(imageWidth, imageHeight, 1, TypeDesc::UINT16);
         spec.attribute("compression", "none");
@@ -58,7 +61,7 @@ namespace prm
 
         for (std::size_t s = 0; s < numImages; ++s)
         {
-            out->open(filePath, spec, appendmode);
+            out->open(tifPath, spec, appendmode);
             out->write_image(TypeDesc::UINT16, (uint8_t*) data + imageSize * s);
             appendmode = ImageOutput::AppendSubimage;
         }
@@ -68,7 +71,7 @@ namespace prm
     bool FileUtils::WriteTifMetadata(const std::string& filePath,
                                      const TifStackMeta& meta)
     {
-        if (auto ofs = std::ofstream{filePath + "_meta.json"})
+        if (auto ofs = std::ofstream{filePath + "\\meta.json"})
         {
             ofs << nlohmann::json{meta}.dump(4) << '\n';
         }

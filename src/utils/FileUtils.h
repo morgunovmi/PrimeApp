@@ -10,7 +10,8 @@ namespace prm
     enum SAVE_FORMAT
     {
         TIF = 0,///< tiff stack
-        MP4 = 1 ///< mp4
+        MP4 = 1, ///< mp4
+        DIR = 2
     };
 
     /**

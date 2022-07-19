@@ -24,7 +24,7 @@ struct TifStackMeta
     Lens lens;
 };
 
-NLOHMANN_JSON_SERIALIZE_ENUM(Binning, {{ONE, "ONE"}, {TWO, "TWO"}})
+NLOHMANN_JSON_SERIALIZE_ENUM(Binning, {{ONE, "1x1"}, {TWO, "2x2"}})
 NLOHMANN_JSON_SERIALIZE_ENUM(Lens, {{X10, "x10"}, {X20, "x20"}})
 
 inline void to_json(json& j, const TifStackMeta& meta)
