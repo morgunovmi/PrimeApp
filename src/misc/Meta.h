@@ -1,5 +1,8 @@
 #pragma once
 
+#include <nlohmann/json.hpp>
+using nlohmann::json;
+
 enum Binning
 {
     ONE,
@@ -20,3 +23,15 @@ struct TifStackMeta
     Binning binning;
     Lens lens;
 };
+
+NLOHMANN_JSON_SERIALIZE_ENUM(Binning, {{ONE, "ONE"}, {TWO, "TWO"}})
+NLOHMANN_JSON_SERIALIZE_ENUM(Lens, {{X10, "x10"}, {X20, "x20"}})
+
+inline void to_json(json& j, const TifStackMeta& meta)
+{
+    j = json{{"nFrames", meta.numFrames},
+             {"exposure", meta.exposure},
+             {"fps", meta.fps},
+             {"binning", meta.binning},
+             {"lens", meta.lens}};
+}

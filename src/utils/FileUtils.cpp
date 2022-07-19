@@ -2,6 +2,7 @@
 #include <ctime>
 #include <fstream>
 #include <iomanip>
+#include <nlohmann/json.hpp>
 
 #include "FileUtils.h"
 
@@ -67,33 +68,11 @@ namespace prm
     bool FileUtils::WriteTifMetadata(const std::string& filePath,
                                      const TifStackMeta& meta)
     {
-        if (auto ofs = std::ofstream{filePath + "meta.txt"})
+        if (auto ofs = std::ofstream{filePath + "_meta.json"})
         {
-            ofs << "Lens type: ";
-            switch (meta.lens)
-            {
-                case X10:
-                    ofs << "x10";
-                    break;
-                case X20:
-                    ofs << "x20";
-            }
-            ofs << '\n';
-            ofs << "Binning: ";
-            switch (meta.binning)
-            {
-                case ONE:
-                    ofs << "1x1";
-                    break;
-                case TWO:
-                    ofs << "2x2";
-                    break;
-            }
-            ofs << '\n';
-            ofs << "Number of frames: " << meta.numFrames << '\n';
-            ofs << "Exposure in ms: " << meta.exposure << '\n';
-            ofs << "Framerate: " << meta.fps << '\n';
+            ofs << nlohmann::json{meta}.dump(4) << '\n';
         }
+
         return true;
     }
 

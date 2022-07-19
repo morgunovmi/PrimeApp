@@ -18,14 +18,15 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE})
 link_directories("C:\\Program Files\\Photometrics\\PVCamSDK\\Lib\\amd64")
 
 # Find necessary libs
-find_package(imgui CONFIG REQUIRED)
-find_package(SFML COMPONENTS system window graphics CONFIG REQUIRED)
-find_package(ImGui-SFML CONFIG REQUIRED)
-find_package(OpenCV CONFIG REQUIRED)
-find_package(spdlog CONFIG REQUIRED)
-find_package(pybind11 CONFIG REQUIRED)
-find_package(OpenImageIO CONFIG REQUIRED)
+find_package(imgui REQUIRED)
+find_package(SFML COMPONENTS system window graphics REQUIRED)
+find_package(ImGui-SFML REQUIRED)
+find_package(OpenCV REQUIRED)
+find_package(spdlog REQUIRED)
+find_package(pybind11 REQUIRED)
+find_package(OpenImageIO REQUIRED)
 find_package(fmt)
+find_package(nlohmann_json REQUIRED)
 
 set(SFML_LIBS sfml-graphics sfml-system sfml-window)
 
@@ -59,6 +60,7 @@ target_link_libraries(
         spdlog::spdlog_header_only
         pybind11::embed
         OpenImageIO::OpenImageIO
+        nlohmann_json::nlohmann_json
 )
 
 file(COPY ${CMAKE_SOURCE_DIR}/resources DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
