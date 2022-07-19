@@ -35,6 +35,7 @@ namespace prm
         }
         return videoPath;
     }
+
     bool FileUtils::WritePvcamStack(const void* data, uint16_t imageWidth,
                                     uint16_t imageHeight, uint16_t imageSize,
                                     const std::string& filePath,
@@ -63,6 +64,39 @@ namespace prm
         return true;
     }
 
+    bool FileUtils::WriteTifMetadata(const std::string& filePath,
+                                     const TifStackMeta& meta)
+    {
+        if (auto ofs = std::ofstream{filePath + "meta.txt"})
+        {
+            ofs << "Lens type: ";
+            switch (meta.lens)
+            {
+                case X10:
+                    ofs << "x10";
+                    break;
+                case X20:
+                    ofs << "x20";
+            }
+            ofs << '\n';
+            ofs << "Binning: ";
+            switch (meta.binning)
+            {
+                case ONE:
+                    ofs << "1x1";
+                    break;
+                case TWO:
+                    ofs << "2x2";
+                    break;
+            }
+            ofs << '\n';
+            ofs << "Number of frames: " << meta.numFrames << '\n';
+            ofs << "Exposure in ms: " << meta.exposure << '\n';
+            ofs << "Framerate: " << meta.fps << '\n';
+        }
+        return true;
+    }
+
     std::string FileUtils::ReadFileToString(const std::string_view file_path)
     {
         if (auto ifs = std::ifstream{file_path.data()})
@@ -72,8 +106,7 @@ namespace prm
         throw std::runtime_error{"Failed to read file to string"};
     }
 
-    std::vector<std::string>
-    FileUtils::Tokenize(const std::string& string)
+    std::vector<std::string> FileUtils::Tokenize(const std::string& string)
     {
         const std::string delims{"\r\n\t"};
         std::vector<std::string> parts{};

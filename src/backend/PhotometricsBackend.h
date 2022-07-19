@@ -11,6 +11,7 @@
 
 #include "Backend.h"
 #include "misc/Log.h"
+#include "misc/Meta.h"
 
 namespace prm
 {
@@ -137,6 +138,8 @@ namespace prm
         std::unique_ptr<std::jthread> thread{nullptr};
         /// Flag to be set to abort thread (used, for example, in multi-camera code samples)
         bool threadAbortFlag{false};
+
+        Lens lens = X20;
     };
 
     /**
@@ -209,8 +212,7 @@ namespace prm
         static sf::Image PVCamImageToSfImage(uint16_t* imageData,
                                              uint16_t imageWidth,
                                              uint16_t imageHeight,
-                                             uint32_t minVal,
-                                             uint32_t maxVal);
+                                             uint32_t minVal, uint32_t maxVal);
 
         ~PhotometricsBackend() override { CloseAllCamerasAndUninit(); }
 

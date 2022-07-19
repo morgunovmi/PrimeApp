@@ -6,6 +6,7 @@
 #include <opencv2/opencv.hpp>
 
 #include "backend/PhotometricsBackend.h"
+#include "misc/Meta.h"
 #include "utils/FileUtils.h"
 #include "utils/Timer.h"
 
@@ -994,12 +995,12 @@ namespace prm
             m_minCurrentValue = *std::min_element(
                     (uint16_t*) ctx->eofFrame,
                     (uint16_t*) ctx->eofFrame +
-                    actualImageHeight * actualImageWidth);
+                            actualImageHeight * actualImageWidth);
 
             m_maxCurrentValue = *std::max_element(
                     (uint16_t*) ctx->eofFrame,
                     (uint16_t*) ctx->eofFrame +
-                    actualImageHeight * actualImageWidth);
+                            actualImageHeight * actualImageWidth);
 
             if (save)
             {
@@ -1036,9 +1037,10 @@ namespace prm
         }
         ctx->isCapturing = false;
 
-        auto captureTime = timer.stop();
+        const auto captureTime = timer.stop();
+        const auto fps = imageCounter / captureTime;
         spdlog::info("Captured {} frames in {} seconds\nAvg fps: {}",
-                     imageCounter, captureTime, imageCounter / captureTime);
+                     imageCounter, captureTime, fps);
         /**
     Here the pl_exp_abort() is not strictly required as correctly acquired sequence does not
     need to be aborted. However, it is kept here for situations where the acquisition
@@ -1054,9 +1056,17 @@ namespace prm
 
         if (save)
         {
+            const auto meta =
+                    TifStackMeta{.numFrames = imageCounter,
+                                 .exposure = ctx->exposureTime,
+                                 .fps = fps,
+                                 .binning = ctx->region.pbin == 1 ? ONE : TWO,
+                                 .lens = ctx->lens};
+
             if (!FileUtils::WritePvcamStack(bytes.data(), actualImageWidth,
                                             actualImageHeight, exposureBytes,
-                                            videoPath, imageCounter))
+                                            videoPath, imageCounter) ||
+                !FileUtils::WriteTifMetadata(videoPath, meta))
             {
                 spdlog::error("Failed writing stack to {}", videoPath);
             }
@@ -1174,12 +1184,12 @@ namespace prm
             m_minCurrentValue = *std::min_element(
                     (uint16_t*) ctx->eofFrame,
                     (uint16_t*) ctx->eofFrame +
-                    actualImageHeight * actualImageWidth);
+                            actualImageHeight * actualImageWidth);
 
             m_maxCurrentValue = *std::max_element(
                     (uint16_t*) ctx->eofFrame,
                     (uint16_t*) ctx->eofFrame +
-                    actualImageHeight * actualImageWidth);
+                            actualImageHeight * actualImageWidth);
 
             if (save)
             {
@@ -1200,9 +1210,10 @@ namespace prm
         }
         ctx->isCapturing = false;
 
-        auto captureTime = timer.stop();
+        const auto captureTime = timer.stop();
+        const auto fps = imageCounter / captureTime;
         spdlog::info("Captured {} frames in {} seconds\nAvg fps: {}",
-                     imageCounter, captureTime, imageCounter / captureTime);
+                     imageCounter, captureTime, fps);
 
         if (PV_OK != pl_exp_abort(ctx->hcam, CCS_HALT))
         {
@@ -1217,9 +1228,17 @@ namespace prm
 
         if (save)
         {
+            const auto meta =
+                    TifStackMeta{.numFrames = imageCounter,
+                                 .exposure = ctx->exposureTime,
+                                 .fps = fps,
+                                 .binning = ctx->region.pbin == 1 ? ONE : TWO,
+                                 .lens = ctx->lens};
+
             if (!FileUtils::WritePvcamStack(bytes.data(), actualImageWidth,
                                             actualImageHeight, exposureBytes,
-                                            videoPath, imageCounter))
+                                            videoPath, imageCounter) ||
+                !FileUtils::WriteTifMetadata(videoPath, meta))
             {
                 spdlog::error("Failed writing stack to {}", videoPath);
             }

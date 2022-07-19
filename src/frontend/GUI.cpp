@@ -307,6 +307,14 @@ namespace prm
                 ImGui::PushItemWidth(m_inputFieldWidth);
                 ImGui::Combo("Binning factor", &currentBinning, items,
                              IM_ARRAYSIZE(items));
+
+                const char* items_lens[] = {"x10", "x20"};
+                static int currentLens = X20;
+                ImGui::Combo("Lens", &currentLens, items_lens,
+                             IM_ARRAYSIZE(items));
+                ImGui::PopItemWidth();
+                ImGui::SameLine();
+                HelpMarker("Lens type");
                 ImGui::PopItemWidth();
 
                 if (dynamic_cast<PhotometricsBackend*>(m_backend.get())
@@ -316,6 +324,7 @@ namespace prm
                             dynamic_cast<PhotometricsBackend*>(m_backend.get())
                                     ->GetCurrentCameraContext();
                     ctx->exposureTime = exposureTime;
+                    ctx->lens = static_cast<Lens>(currentLens);
                     switch (currentBinning)
                     {
                         case 0:

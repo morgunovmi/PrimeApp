@@ -1,5 +1,7 @@
 #pragma once
 
+#include "misc/Meta.h"
+
 namespace prm
 {
     /**
@@ -44,6 +46,8 @@ namespace prm
                                     uint16_t imageHeight, uint16_t imageSize,
                                     const std::string& filePath,
                                     uint16_t numImages);
+
+        static bool WriteTifMetadata(const std::string& filePath, const TifStackMeta& meta);
 
         static std::string ReadFileToString(const std::string_view file_path);
         static std::vector<std::string> Tokenize(const std::string& string);
