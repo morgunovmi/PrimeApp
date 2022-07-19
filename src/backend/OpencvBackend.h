@@ -42,6 +42,7 @@ namespace prm
               m_context(OpencvCameraCtx{nullptr, CV_DEFAULT_FPS,
                                         false})
         {
+            Init();
         }
 
         /**
@@ -53,6 +54,7 @@ namespace prm
             : Backend(other), m_context(OpencvCameraCtx{nullptr, CV_DEFAULT_FPS,
                                                         false})
         {
+            Init();
         }
 
         /**

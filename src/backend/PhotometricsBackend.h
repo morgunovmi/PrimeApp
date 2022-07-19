@@ -155,6 +155,7 @@ namespace prm
             {
                 PrintError("Couldn't show app info");
             }
+            Init();
         }
 
         /**
@@ -169,6 +170,7 @@ namespace prm
             {
                 PrintError("Couldn't show app info");
             }
+            Init();
         }
 
         /**
