@@ -36,7 +36,7 @@ double Timer::stop()
     if (is_counting) inter_duration += (clock_t::now() - last_resume);
 
     auto duration = std::chrono::duration<double>(inter_duration).count();
-    spdlog::info("Timer stopped\nTotal time: {} seconds", duration);
+    //spdlog::info("Timer stopped\nTotal time: {} seconds", duration);
 
     return duration;
 }

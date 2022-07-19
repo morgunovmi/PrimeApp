@@ -964,10 +964,11 @@ namespace prm
         uns32 imageCounter = 0;
         ctx->isCapturing = true;
 
-        Timer timer{};
         spdlog::info("Starting sequence capture loop on cam {}\n", ctx->hcam);
+        std::vector<double> captureTimes{};
         while (imageCounter < nFrames)
         {
+            Timer timer{};
             /**
         Start the acquisition. Since the pl_exp_setup_seq() was configured to use
         the internal camera trigger, the acquisition is started immediately.
@@ -1034,13 +1035,17 @@ namespace prm
             }
 
             imageCounter++;
+            captureTimes.push_back(timer.stop());
         }
         ctx->isCapturing = false;
 
-        const auto captureTime = timer.stop();
-        const auto fps = imageCounter / captureTime;
+        const auto totalCaptureTime =
+                std::accumulate(captureTimes.begin(), captureTimes.end(), 0.0);
+        const auto fps = captureTimes.size() / totalCaptureTime;
+
+        const auto frametimeAvg = 1 / fps;
         spdlog::info("Captured {} frames in {} seconds\nAvg fps: {}",
-                     imageCounter, captureTime, fps);
+                     imageCounter, totalCaptureTime, fps);
         /**
     Here the pl_exp_abort() is not strictly required as correctly acquired sequence does not
     need to be aborted. However, it is kept here for situations where the acquisition
@@ -1062,12 +1067,26 @@ namespace prm
                 spdlog::error("Couldn't create a directory");
             }
 
-            const auto meta =
-                    TifStackMeta{.numFrames = imageCounter,
-                                 .exposure = ctx->exposureTime,
-                                 .fps = fps,
-                                 .binning = ctx->region.pbin == 1 ? ONE : TWO,
-                                 .lens = ctx->lens};
+            auto meta = TifStackMeta{
+                    .numFrames = imageCounter,
+                    .exposure = ctx->exposureTime,
+                    .fps = fps,
+                    .frametimeAvg = frametimeAvg,
+                    .frametimeMin =
+                            *std::min_element(captureTimes.begin(), captureTimes.end()),
+                    .frametimeMax =
+                            *std::max_element(captureTimes.begin(), captureTimes.end()),
+                    .binning = ctx->region.pbin == 1 ? ONE : TWO,
+                    .lens = ctx->lens};
+
+            meta.frametimeStd = std::sqrt(
+                    std::accumulate(
+                            captureTimes.begin(), captureTimes.end(), 0.0,
+                            [&meta](double a, double b) {
+                              return a + (b - meta.frametimeAvg) *
+                                         (b - meta.frametimeAvg);
+                            }) /
+                    captureTimes.size());
 
             if (!FileUtils::WriteTifMetadata(videoPath, meta) ||
                 !FileUtils::WritePvcamStack(bytes.data(), actualImageWidth,
@@ -1168,9 +1187,11 @@ namespace prm
         uns32 imageCounter = 0;
         bool errorOccurred = false;
         ctx->isCapturing = true;
-        Timer timer{};
+
+        std::vector<double> captureTimes{};
         while (true)
         {
+            Timer timer{};
             /**
         Here we need to wait for a frame readout notification signaled by the eofEvent
         in the CameraContext which is raised in the callback handler we registered.
@@ -1213,13 +1234,17 @@ namespace prm
             //TODO sleep from framerate
 
             imageCounter++;
+            captureTimes.push_back(timer.stop());
         }
         ctx->isCapturing = false;
 
-        const auto captureTime = timer.stop();
-        const auto fps = imageCounter / captureTime;
+        const auto totalCaptureTime =
+                std::accumulate(captureTimes.begin(), captureTimes.end(), 0.0);
+        const auto fps = captureTimes.size() / totalCaptureTime;
+
+        const auto frametimeAvg = 1 / fps;
         spdlog::info("Captured {} frames in {} seconds\nAvg fps: {}",
-                     imageCounter, captureTime, fps);
+                     imageCounter, totalCaptureTime, fps);
 
         if (PV_OK != pl_exp_abort(ctx->hcam, CCS_HALT))
         {
@@ -1240,12 +1265,26 @@ namespace prm
                 spdlog::error("Couldn't create a directory");
             }
 
-            const auto meta =
-                    TifStackMeta{.numFrames = imageCounter,
-                                 .exposure = ctx->exposureTime,
-                                 .fps = fps,
-                                 .binning = ctx->region.pbin == 1 ? ONE : TWO,
-                                 .lens = ctx->lens};
+            auto meta = TifStackMeta{
+                    .numFrames = imageCounter,
+                    .exposure = ctx->exposureTime,
+                    .fps = fps,
+                    .frametimeAvg = frametimeAvg,
+                    .frametimeMin =
+                            *std::min_element(captureTimes.begin(), captureTimes.end()),
+                    .frametimeMax =
+                            *std::max_element(captureTimes.begin(), captureTimes.end()),
+                    .binning = ctx->region.pbin == 1 ? ONE : TWO,
+                    .lens = ctx->lens};
+
+            meta.frametimeStd = std::sqrt(
+                    std::accumulate(
+                            captureTimes.begin(), captureTimes.end(), 0.0,
+                            [&meta](double a, double b) {
+                                return a + (b - meta.frametimeAvg) *
+                                                   (b - meta.frametimeAvg);
+                            }) /
+                    captureTimes.size());
 
             if (!FileUtils::WriteTifMetadata(videoPath, meta) ||
                 !FileUtils::WritePvcamStack(bytes.data(), actualImageWidth,

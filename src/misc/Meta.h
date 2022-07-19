@@ -20,6 +20,10 @@ struct TifStackMeta
     std::uint32_t numFrames;
     std::uint16_t exposure;
     double fps;
+    double frametimeAvg;
+    double frametimeMin;
+    double frametimeMax;
+    double frametimeStd;
     Binning binning;
     Lens lens;
 };
@@ -32,6 +36,10 @@ inline void to_json(json& j, const TifStackMeta& meta)
     j = json{{"nFrames", meta.numFrames},
              {"exposure", meta.exposure},
              {"fps", meta.fps},
+             {"frametimeAvg", meta.frametimeAvg},
+             {"frametimeMin", meta.frametimeMin},
+             {"frametimeMax", meta.frametimeMax},
+             {"frametimeStd", meta.frametimeStd},
              {"binning", meta.binning},
              {"lens", meta.lens}};
 }
