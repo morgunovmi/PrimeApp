@@ -188,11 +188,12 @@ plt.savefig('plot.png', bbox_inches='tight')
 print(np.median(sizes))
 
 hist = pd.DataFrame({'n':np.append(n, 0), 'bins':bins})
-hist.to_csv(file_stem + "_hist.csv", index = False)
-pd.Series(sizes).to_csv(file_stem + '_raw_data.csv', index = False)
+hist.to_csv(dir_path + "\\" + file_stem + "_hist.csv", index = False)
+pd.Series(sizes).to_csv(dir_path + "\\" + file_stem + '_raw_data.csv', index = False)
 plot = True
 )"},
-                .strVariables{{"file_stem", vidPath.stem().string()}},
+                .strVariables{{"dir_path", vidPath.parent_path().string()},
+                              {"file_stem", vidPath.stem().string()}},
                 .floatVariables = {{"scale", scale}, {"fps", fps}}});
     }
 

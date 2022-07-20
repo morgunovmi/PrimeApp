@@ -605,13 +605,19 @@ namespace prm
 
             static bool ifNumFrames = false;
             static int numFrames = 30;
-            if (ImGui::Button("Find trajectories"))
+            static bool plotTrajectories = true;
+            if (ImGui::Button("Link"))
             {
                 m_videoProcessor.LinkAndFilter(searchRange, memory, minTrajLen,
                                                driftSmoothing);
-                m_videoProcessor.GroupAndPlotTrajectory(minDiagSize,
-                                                        maxDiagSize);
+                if (plotTrajectories)
+                {
+                    m_videoProcessor.GroupAndPlotTrajectory(minDiagSize,
+                                                            maxDiagSize);
+                }
             }
+            ImGui::SameLine();
+            ImGui::Checkbox("Plot trajectories", &plotTrajectories);
 
             /*
             ImGui::SameLine();
