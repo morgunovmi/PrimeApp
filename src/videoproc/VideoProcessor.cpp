@@ -182,10 +182,15 @@ fig.set_figheight(10)
 fig.set_figwidth(20)
 n, bins, patches = ax.hist(sizes, num_bins, facecolor='blue', alpha=0.5)
 
-plt.xlim([0, 1000])
-plt.savefig('plot.png', bbox_inches='tight')
+mean = np.mean(sizes)
+median = np.median(sizes)
+std = np.std(sizes)
 
-print(np.median(sizes))
+plt.xlim([0, 1000])
+plt.text(0.85, 0.85, 'average: {} \n median: {} \n std: {}'.format(mean, median, std), transform=plt.gca().transAxes)
+plt.savefig('plot.png', bbox_inches='tight')
+plt.savefig(dir_path + "\\" + 'hist.png', bbox_inches='tight')
+
 
 hist = pd.DataFrame({'n':np.append(n, 0), 'bins':bins})
 hist.to_csv(dir_path + "\\" + file_stem + "_hist.csv", index = False)
