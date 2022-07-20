@@ -1072,10 +1072,10 @@ namespace prm
                     .exposure = ctx->exposureTime,
                     .fps = fps,
                     .frametimeAvg = frametimeAvg,
-                    .frametimeMin =
-                            *std::min_element(captureTimes.begin(), captureTimes.end()),
-                    .frametimeMax =
-                            *std::max_element(captureTimes.begin(), captureTimes.end()),
+                    .frametimeMin = *std::min_element(captureTimes.begin(),
+                                                      captureTimes.end()),
+                    .frametimeMax = *std::max_element(captureTimes.begin(),
+                                                      captureTimes.end()),
                     .binning = ctx->region.pbin == 1 ? ONE : TWO,
                     .lens = ctx->lens};
 
@@ -1083,8 +1083,8 @@ namespace prm
                     std::accumulate(
                             captureTimes.begin(), captureTimes.end(), 0.0,
                             [&meta](double a, double b) {
-                              return a + (b - meta.frametimeAvg) *
-                                         (b - meta.frametimeAvg);
+                                return a + (b - meta.frametimeAvg) *
+                                                   (b - meta.frametimeAvg);
                             }) /
                     captureTimes.size());
 
@@ -1270,10 +1270,10 @@ namespace prm
                     .exposure = ctx->exposureTime,
                     .fps = fps,
                     .frametimeAvg = frametimeAvg,
-                    .frametimeMin =
-                            *std::min_element(captureTimes.begin(), captureTimes.end()),
-                    .frametimeMax =
-                            *std::max_element(captureTimes.begin(), captureTimes.end()),
+                    .frametimeMin = *std::min_element(captureTimes.begin(),
+                                                      captureTimes.end()),
+                    .frametimeMax = *std::max_element(captureTimes.begin(),
+                                                      captureTimes.end()),
                     .binning = ctx->region.pbin == 1 ? ONE : TWO,
                     .lens = ctx->lens};
 

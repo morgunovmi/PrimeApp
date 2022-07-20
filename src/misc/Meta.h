@@ -43,3 +43,16 @@ inline void to_json(json& j, const TifStackMeta& meta)
              {"binning", meta.binning},
              {"lens", meta.lens}};
 }
+
+inline void from_json(const json& j, TifStackMeta& m)
+{
+    j.at("nFrames").get_to(m.numFrames);
+    j.at("exposure").get_to(m.exposure);
+    j.at("fps").get_to(m.fps);
+    j.at("frametimeAvg").get_to(m.frametimeAvg);
+    j.at("frametimeMin").get_to(m.frametimeMin);
+    j.at("frametimeMax").get_to(m.frametimeMax);
+    j.at("frametimeStd").get_to(m.frametimeStd);
+    j.at("binning").get_to(m.binning);
+    j.at("lens").get_to(m.lens);
+}
