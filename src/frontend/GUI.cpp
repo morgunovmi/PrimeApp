@@ -461,7 +461,8 @@ namespace prm
                         m_videoLoadPath.empty() ? "." : m_videoLoadPath);
             }
 
-            static bool metaFound = true;
+            static bool metaFound = false;
+            static bool isFileLoaded = false;
             TifStackMeta meta{};
             if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey"))
             {
@@ -478,6 +479,7 @@ namespace prm
 
                     m_videoLoadPath =
                             ImGuiFileDialog::Instance()->GetCurrentPath();
+                    isFileLoaded = true;
                     spdlog::info("Tif file selected: {}", videoPath);
 
                     const auto metaPath =
@@ -673,6 +675,36 @@ namespace prm
             if (ImGui::Button("Run python query"))
             {
                 m_videoProcessor.RunPythonQuery(pythonQuery);
+            }
+
+            if (isFileLoaded &&
+                std::chrono::duration<double, std::milli>{
+                        std::chrono::high_resolution_clock::now() -
+                        m_lastMetaSave}
+                                .count() > 10000)
+            {
+                const auto vpMeta = VideoProcessorMeta{
+                        .minMass = minMass,
+                        .ecc = ecc,
+                        .size = size,
+                        .diameter = diameter,
+                        .searchRange = searchRange,
+                        .memory = memory,
+                        .minTrajLen = minTrajLen,
+                        .driftSmoothing = driftSmoothing,
+                        .minDiagSize = minDiagSize,
+                        .maxDiagSize = maxDiagSize,
+                        .lens = static_cast<Lens>(currentLens),
+                        .binning = static_cast<Binning>(currentBinning),
+                        .scale = scale,
+                        .fps = fps};
+
+                if (auto ofs = std::ofstream{m_videoLoadPath +
+                                             "\\video_processor_meta.json"})
+                {
+                    ofs << json{vpMeta}.dump(4);
+                    m_lastMetaSave = std::chrono::high_resolution_clock::now();
+                }
             }
         }
 

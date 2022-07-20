@@ -56,3 +56,50 @@ inline void from_json(const json& j, TifStackMeta& m)
     j.at("binning").get_to(m.binning);
     j.at("lens").get_to(m.lens);
 }
+
+struct VideoProcessorMeta
+{
+    int minMass;
+    double ecc;
+    int size;
+    int diameter;
+    int searchRange;
+    int memory;
+    int minTrajLen;
+    int driftSmoothing;
+    int minDiagSize;
+    int maxDiagSize;
+    Lens lens;
+    Binning binning;
+    double scale;
+    double fps;
+
+    bool operator==(const VideoProcessorMeta& o) const
+    {
+        return minMass == o.minMass && ecc == o.ecc && size == o.size &&
+               diameter == o.diameter && searchRange == o.searchRange &&
+               memory == o.memory && minTrajLen == o.minTrajLen &&
+               driftSmoothing == o.driftSmoothing &&
+               minDiagSize == o.minDiagSize && maxDiagSize == o.maxDiagSize &&
+               lens == o.lens && binning == o.binning && scale == o.scale &&
+               fps == o.fps;
+    }
+};
+
+inline void to_json(json& j, const VideoProcessorMeta& meta)
+{
+    j = json{{"Min mass", meta.minMass},
+             {"Eccentricity", meta.ecc},
+             {"Size", meta.size},
+             {"Diameter", meta.diameter},
+             {"Search range", meta.searchRange},
+             {"Memory", meta.memory},
+             {"Min traj. len", meta.minTrajLen},
+             {"Drift smoothing", meta.driftSmoothing},
+             {"Min diag. size", meta.minDiagSize},
+             {"Max diag size", meta.maxDiagSize},
+             {"Lens", meta.lens},
+             {"Binning", meta.binning},
+             {"Scale", meta.scale},
+             {"FPS", meta.fps}};
+}

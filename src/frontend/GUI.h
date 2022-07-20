@@ -153,6 +153,8 @@ namespace prm
         /// Width for input fields in the GUI
         const uint16_t m_inputFieldWidth = 150;
 
+        std::chrono::high_resolution_clock::time_point m_lastMetaSave;
+
         std::string m_videoSavePath{};
         std::string m_videoLoadPath{};
     };
