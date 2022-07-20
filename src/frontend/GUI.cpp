@@ -461,9 +461,11 @@ namespace prm
                         m_videoLoadPath.empty() ? "." : m_videoLoadPath);
             }
 
-            static bool metaFound = false;
             static bool isFileLoaded = false;
-            TifStackMeta meta{};
+
+            static double fps = 6.66;
+            static int currentLens = X10;
+            static int currentBinning = ONE;
             if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey"))
             {
                 if (ImGuiFileDialog::Instance()->IsOk())
@@ -488,7 +490,6 @@ namespace prm
                                 std::filesystem::path{metaPath}))
                     {
                         spdlog::info("No metadata found");
-                        metaFound = false;
                     }
                     else
                     {
@@ -496,13 +497,15 @@ namespace prm
                         spdlog::info("Found video capture metadata");
                         if (auto ifs = std::ifstream{metaPath})
                         {
+                            TifStackMeta meta{};
                             meta = json::parse(ifs).get<TifStackMeta>();
-                            metaFound = true;
+                            fps = meta.fps;
+                            currentBinning = meta.binning;
+                            currentLens = meta.lens;
                         }
                         else
                         {
                             spdlog::error("But couldn't parse it");
-                            metaFound = false;
                         }
                     }
                 }
@@ -631,7 +634,6 @@ namespace prm
             }
              */
 
-            static double fps = metaFound ? meta.fps : 6.66;
             static double scale = 330.0 / 675.0;
 
             ImGui::PushItemWidth(m_inputFieldWidth);
@@ -640,7 +642,6 @@ namespace prm
             HelpMarker("Framerate of the image sequence capture");
 
             const char* items[] = {"x10", "x20"};
-            static int currentLens = metaFound ? meta.lens : X10;
             ImGui::Combo("Lens", &currentLens, items, IM_ARRAYSIZE(items));
             ImGui::PopItemWidth();
             ImGui::SameLine();
@@ -648,7 +649,6 @@ namespace prm
 
             ImGui::SameLine();
             const char* itemsBinning[] = {"1x1", "2x2"};
-            static int currentBinning = metaFound ? meta.binning : ONE;
             ImGui::PushItemWidth(m_inputFieldWidth);
             ImGui::Combo("Binning factor", &currentBinning, itemsBinning,
                          IM_ARRAYSIZE(itemsBinning));

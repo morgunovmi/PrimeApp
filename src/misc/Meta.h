@@ -46,15 +46,15 @@ inline void to_json(json& j, const TifStackMeta& meta)
 
 inline void from_json(const json& j, TifStackMeta& m)
 {
-    j.at("nFrames").get_to(m.numFrames);
-    j.at("exposure").get_to(m.exposure);
-    j.at("fps").get_to(m.fps);
-    j.at("frametimeAvg").get_to(m.frametimeAvg);
-    j.at("frametimeMin").get_to(m.frametimeMin);
-    j.at("frametimeMax").get_to(m.frametimeMax);
-    j.at("frametimeStd").get_to(m.frametimeStd);
-    j.at("binning").get_to(m.binning);
-    j.at("lens").get_to(m.lens);
+    j[0].at("nFrames").get_to(m.numFrames);
+    j[0].at("exposure").get_to(m.exposure);
+    j[0].at("fps").get_to(m.fps);
+    j[0].at("frametimeAvg").get_to(m.frametimeAvg);
+    j[0].at("frametimeMin").get_to(m.frametimeMin);
+    j[0].at("frametimeMax").get_to(m.frametimeMax);
+    j[0].at("frametimeStd").get_to(m.frametimeStd);
+    j[0].at("binning").get_to(m.binning);
+    j[0].at("lens").get_to(m.lens);
 }
 
 struct VideoProcessorMeta
