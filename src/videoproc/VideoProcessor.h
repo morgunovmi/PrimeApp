@@ -81,7 +81,7 @@ namespace prm
          * @param fps Framerate of the image sequence capture
          * @param scale Microns per pixel
          */
-        void PlotSizeHist(double fps, double scale);
+        void PlotSizeHist(double fps, double scale, int bins);
 
         /**
          * Runs an arbitrary python query in the embedded interpreter

@@ -13,6 +13,9 @@ import trackpy as tp
 
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
+sns.set()
+
 from skimage import data, img_as_float
 from skimage import exposure
 from PIL import Image
@@ -156,7 +159,7 @@ plot = True
                               {"max_diag_size", maxDiagSize}}});
     }
 
-    void VideoProcessor::PlotSizeHist(double fps, double scale)
+    void VideoProcessor::PlotSizeHist(double fps, double scale, int bins)
     {
         spdlog::info("Plotting the size distribution");
         m_messageQueue.Send(PythonWorkerRunString{
@@ -173,7 +176,6 @@ for i in im.columns:
     R = k*T/(6*np.pi*D*eta)
     diam = 2*R*1e9
     sizes.append(diam)
-num_bins = 700
 sizes = np.array(sizes)
 sizes = sizes[~np.isnan(sizes)]
 # the histogram of the data
@@ -191,7 +193,6 @@ plt.text(0.85, 0.85, 'average: {} \n median: {} \n std: {}'.format(mean, median,
 plt.savefig('plot.png', bbox_inches='tight')
 plt.savefig(dir_path + "\\" + 'hist.png', bbox_inches='tight')
 
-
 hist = pd.DataFrame({'n':np.append(n, 0), 'bins':bins})
 hist.to_csv(dir_path + "\\" + file_stem + "_hist.csv", index = False)
 pd.Series(sizes).to_csv(dir_path + "\\" + file_stem + '_raw_data.csv', index = False)
@@ -199,6 +200,7 @@ plot = True
 )"},
                 .strVariables{{"dir_path", vidPath.parent_path().string()},
                               {"file_stem", vidPath.stem().string()}},
+                .intVariables{{"num_bins", bins}},
                 .floatVariables = {{"scale", scale}, {"fps", fps}}});
     }
 

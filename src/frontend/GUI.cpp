@@ -667,10 +667,15 @@ namespace prm
             }
             scale *= currentBinning == 1 ? 2 : 1;
 
+            static int num_bins = 700;
             if (ImGui::Button("Plot size distribution"))
             {
-                m_videoProcessor.PlotSizeHist(fps, scale);
+                m_videoProcessor.PlotSizeHist(fps, scale, num_bins);
             }
+            ImGui::SameLine();
+            ImGui::PushItemWidth(m_inputFieldWidth);
+            ImGui::SliderInt("Num bins", &num_bins, 0, 1000);
+            ImGui::PopItemWidth();
 
             static std::string pythonQuery{};
             ImGui::PushItemWidth(m_inputFieldWidth);
