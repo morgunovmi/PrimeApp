@@ -321,7 +321,8 @@ namespace prm
                 static bool showRoi = false;
                 ImGui::SameLine();
                 ImGui::Checkbox("Select ROI", &showRoi);
-                if (showRoi) { ShowROISelector(); }
+                static float minX = 0.0, minY = 0.0, maxX = 1.0, maxY = 1.0;
+                if (showRoi) { ShowROISelector(minX, minY, maxX, maxY); }
 
                 if (dynamic_cast<PhotometricsBackend*>(m_backend.get())
                             ->m_isPvcamInitialized)
@@ -329,6 +330,18 @@ namespace prm
                     auto* ctx =
                             dynamic_cast<PhotometricsBackend*>(m_backend.get())
                                     ->GetCurrentCameraContext();
+
+                    const auto sizeX = static_cast<double>(ctx->sensorResX) /
+                                       (currentBinning == ONE ? 1 : 2);
+                    const auto sizeY = static_cast<double>(ctx->sensorResY) /
+                                       (currentBinning == ONE ? 1 : 2);
+
+                    // TODO fix size in backend
+                    ctx->region.s1 = minX * sizeX;
+                    ctx->region.s2 = maxX * sizeX;
+                    ctx->region.p1 = minY * sizeY - 1;
+                    ctx->region.p2 = maxY * sizeY - 1;
+
                     ctx->exposureTime = exposureTime;
                     ctx->lens = static_cast<Lens>(currentLens);
                     switch (currentBinning)
@@ -726,15 +739,14 @@ namespace prm
         ImGui::End();
     }
 
-    void GUI::ShowROISelector()
+    void GUI::ShowROISelector(float& minX, float& minY, float& maxX,
+                              float& maxY)
     {
 
         ImGui::SetNextWindowSize(ImVec2{350, 400});
-        if (ImGui::Begin("ROI", nullptr,
-                         ImGuiWindowFlags_AlwaysAutoResize))
+        if (ImGui::Begin("ROI", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
         {
             ImGui::Text("Select Region of interest for capture");
-            static float minX = 0.0, minY = 0.0, maxX = 1.0, maxY = 1.0;
             ImGui::DragFloatRange2("X range", &minX, &maxX, 0.02f, 0.0f, 1.0f,
                                    "%.2f");
             ImGui::DragFloatRange2("Y range", &minY, &maxY, 0.02f, 0.0f, 1.0f,

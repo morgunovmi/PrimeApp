@@ -96,7 +96,7 @@ namespace prm
 
         void ShowHelp();
 
-        void ShowROISelector();
+        void ShowROISelector(float& minX, float& minY, float& maxX, float& maxY);
 
     private:
         /**
