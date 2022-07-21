@@ -314,10 +314,14 @@ namespace prm
                 static int currentLens = X20;
                 ImGui::Combo("Lens", &currentLens, items_lens,
                              IM_ARRAYSIZE(items));
-                ImGui::PopItemWidth();
                 ImGui::SameLine();
                 HelpMarker("Lens type");
                 ImGui::PopItemWidth();
+
+                static bool showRoi = false;
+                ImGui::SameLine();
+                ImGui::Checkbox("Select ROI", &showRoi);
+                if (showRoi) { ShowROISelector(); }
 
                 if (dynamic_cast<PhotometricsBackend*>(m_backend.get())
                             ->m_isPvcamInitialized)
@@ -720,6 +724,48 @@ namespace prm
         }
 
         ImGui::End();
+    }
+
+    void GUI::ShowROISelector()
+    {
+
+        ImGui::SetNextWindowSize(ImVec2{350, 400});
+        if (ImGui::Begin("ROI", nullptr,
+                         ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::Text("Select Region of interest for capture");
+            static float minX = 0.0, minY = 0.0, maxX = 1.0, maxY = 1.0;
+            ImGui::DragFloatRange2("X range", &minX, &maxX, 0.02f, 0.0f, 1.0f,
+                                   "%.2f");
+            ImGui::DragFloatRange2("Y range", &minY, &maxY, 0.02f, 0.0f, 1.0f,
+                                   "%.2f");
+            ImGui::Separator();
+
+            ImVec2 canvas_p0 = ImGui::
+                    GetCursorScreenPos();// ImDrawList API uses screen coordinates!
+            ImVec2 canvas_sz = ImGui::
+                    GetContentRegionAvail();// Resize canvas to what's available
+            canvas_sz.x = canvas_sz.y;
+            ImVec2 canvas_p1 = ImVec2(canvas_p0.x + canvas_sz.x,
+                                      canvas_p0.y + canvas_sz.y);
+
+            // Draw border and background color
+            ImGuiIO& io = ImGui::GetIO();
+            ImDrawList* draw_list = ImGui::GetWindowDrawList();
+            draw_list->AddRectFilled(canvas_p0, canvas_p1,
+                                     IM_COL32(50, 50, 50, 255));
+            draw_list->AddRect(canvas_p0, canvas_p1,
+                               IM_COL32(255, 255, 255, 255));
+
+            ImVec2 roiP0{canvas_p0.x + minX * (canvas_p1.x - canvas_p0.x),
+                         canvas_p0.y + minY * (canvas_p1.y - canvas_p0.y)};
+
+            ImVec2 roiP1{canvas_p0.x + maxX * (canvas_p1.x - canvas_p0.x),
+                         canvas_p0.y + maxY * (canvas_p1.y - canvas_p0.y)};
+            draw_list->AddRect(roiP0, roiP1, IM_COL32(0, 255, 0, 255));
+
+            ImGui::End();
+        }
     }
 
     void GUI::ShowHelp()

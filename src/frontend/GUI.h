@@ -96,6 +96,8 @@ namespace prm
 
         void ShowHelp();
 
+        void ShowROISelector();
+
     private:
         /**
          * Helper to display a little (?) mark which shows a tooltip when hovered.
