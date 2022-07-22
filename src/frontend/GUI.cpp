@@ -80,14 +80,23 @@ namespace prm
         colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
         colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
 
-        const auto setupPath = std::filesystem::path{"setup.txt"};
+        const auto setupPath = std::filesystem::path{"setup.json"};
         if (std::filesystem::exists(setupPath))
         {
-            const auto strings = FileUtils::Tokenize(
-                    FileUtils::ReadFileToString("setup.txt"));
+            if (auto ifs = std::ifstream{setupPath})
+            {
+                const auto j = nlohmann::json::parse(ifs);
 
-            if (!strings.empty()) { m_videoSavePath = strings[0]; }
-            if (strings.size() == 2) { m_videoLoadPath = strings[1]; }
+                if (j.contains("savePath"))
+                {
+                    j.at("savePath").get_to(m_videoSavePath);
+                    m_backend->SetDirPath(m_videoSavePath);
+                }
+                if (j.contains("loadPath"))
+                {
+                    j.at("loadPath").get_to(m_videoLoadPath);
+                }
+            }
         }
     }
 
@@ -331,16 +340,10 @@ namespace prm
                             dynamic_cast<PhotometricsBackend*>(m_backend.get())
                                     ->GetCurrentCameraContext();
 
-                    const auto sizeX = static_cast<double>(ctx->sensorResX) /
-                                       (currentBinning == ONE ? 1 : 2);
-                    const auto sizeY = static_cast<double>(ctx->sensorResY) /
-                                       (currentBinning == ONE ? 1 : 2);
-
-                    // TODO fix size in backend
-                    ctx->region.s1 = minX * sizeX;
-                    ctx->region.s2 = maxX * sizeX;
-                    ctx->region.p1 = minY * sizeY - 1;
-                    ctx->region.p2 = maxY * sizeY - 1;
+                    ctx->region.s1 = minX * ctx->sensorResX;
+                    ctx->region.s2 = maxX * (ctx->sensorResX - 1);
+                    ctx->region.p1 = minY * ctx->sensorResY;
+                    ctx->region.p2 = maxY * (ctx->sensorResY - 1);
 
                     ctx->exposureTime = exposureTime;
                     ctx->lens = static_cast<Lens>(currentLens);
@@ -445,9 +448,11 @@ namespace prm
 
     void GUI::Shutdown()
     {
-        if (auto ofs = std::ofstream{"setup.txt", std::ios_base::trunc})
+        if (auto ofs = std::ofstream{"setup.json", std::ios_base::trunc})
         {
-            ofs << m_videoSavePath << '\n' << m_videoLoadPath;
+            ofs << nlohmann::json{{"savePath", m_videoSavePath},
+                                  {"loadPath", m_videoLoadPath}}
+                            .dump(4);
         }
 
         ImGui::SFML::Shutdown();

@@ -945,8 +945,10 @@ namespace prm
         }
         UpdateCtxImageFormat(ctx);
 
-        uint16_t actualImageWidth = ctx->sensorResX / ctx->region.sbin;
-        uint16_t actualImageHeight = ctx->sensorResY / ctx->region.pbin;
+        uint16_t actualImageWidth =
+                (ctx->region.s2 - ctx->region.s1 + 1) / ctx->region.sbin;
+        uint16_t actualImageHeight =
+                (ctx->region.p2 - ctx->region.p1 + 1) / ctx->region.pbin;
 
         const auto bitDepth = ctx->speedTable[0].speeds[0].gains[0].bitDepth;
         spdlog::info("Bit depth for camera: {}", bitDepth);
@@ -1155,8 +1157,10 @@ namespace prm
         spdlog::info("Acquisition setup successful on camera {}\n", ctx->hcam);
         UpdateCtxImageFormat(ctx);
 
-        uint16_t actualImageWidth = ctx->sensorResX / ctx->region.sbin;
-        uint16_t actualImageHeight = ctx->sensorResY / ctx->region.pbin;
+        uint16_t actualImageWidth =
+                (ctx->region.s2 - ctx->region.s1 + 1) / ctx->region.sbin;
+        uint16_t actualImageHeight =
+                (ctx->region.p2 - ctx->region.p1 + 1) / ctx->region.pbin;
 
         const uns32 circBufferBytes = circBufferFrames * exposureBytes;
         /**
