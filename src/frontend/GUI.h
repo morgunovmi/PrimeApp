@@ -28,7 +28,7 @@ namespace prm
             : m_window(window), m_dt(dt), m_frameTimeQueue(),
               m_bShowMainMenuBar(true), m_bShowFrameInfoOverlay(false),
               m_bShowAppLog(true), m_bShowVideoProcessor(false),
-              m_bShowHelp(true), m_bShowViewport(true),
+              m_bShowHelp(false), m_bShowViewport(true),
               m_bShowCameraButtons(true), m_bShowImageInfo(true),
               m_backend(backend), m_selectedBackend(curr),
               m_videoProcessor(videoproc), m_appLog(log), m_hubballiFont(),

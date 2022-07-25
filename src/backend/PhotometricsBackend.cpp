@@ -537,7 +537,22 @@ namespace prm
             ctx->isSmartStreaming = true;
         }
 
-        spdlog::info("");
+        if (!IsParamAvailable(ctx->hcam, PARAM_ROI_COUNT, "PARAM_ROI_COUNT"))
+        {
+            CloseAllCamerasAndUninit();
+            return false;
+        }
+        uns16 roiCount;
+        // ATTR_COUNT or ATTR_MAX can be checked here, both give the same value
+        if (PV_OK != pl_get_param(ctx->hcam, PARAM_ROI_COUNT, ATTR_MAX,
+                                  (void*)&roiCount))
+        {
+            PrintError("pl_get_param(PARAM_ROI_COUNT) error");
+            CloseAllCamerasAndUninit();
+            return false;
+        }
+        spdlog::info("ROI count: {}", roiCount);
+
         return true;
     }
 
@@ -992,18 +1007,25 @@ namespace prm
         */
             if (!WaitForEofEvent(ctx.get(), 5000, errorOccurred)) break;
 
-            spdlog::info("Frame #{} has been delivered from camera {}\n",
-                         imageCounter + 1, ctx->hcam);
+            void * frame;
+            if (pl_exp_get_latest_frame(ctx->hcam, &frame) != PV_OK)
+            {
+                spdlog::error("Jeff");
+                PrintError("Couldn't get latest frame");
+                continue;
+            }
 
-            m_minCurrentValue = *std::min_element(
+            spdlog::info("Frame #{} acquired, timestamp = {}\n",
+                         imageCounter,
+                         100 * ctx->eofFrameInfo.TimeStamp);
+
+            const auto [itMin, itMax] = std::minmax_element(
                     (uint16_t*) ctx->eofFrame,
                     (uint16_t*) ctx->eofFrame +
                             actualImageHeight * actualImageWidth);
 
-            m_maxCurrentValue = *std::max_element(
-                    (uint16_t*) ctx->eofFrame,
-                    (uint16_t*) ctx->eofFrame +
-                            actualImageHeight * actualImageWidth);
+            m_minCurrentValue = *itMin;
+            m_maxCurrentValue = *itMax;
 
             if (save)
             {
@@ -1207,30 +1229,35 @@ namespace prm
                          ctx->hcam);
             if (!WaitForEofEvent(ctx.get(), 5000, errorOccurred)) break;
 
+            void * frame;
+            if (pl_exp_get_latest_frame(ctx->hcam, &frame) != PV_OK)
+            {
+                PrintError("Couldn't get latest frame");
+                continue;
+            }
+
             // Timestamp is in hundreds of microseconds
             spdlog::info("Frame #{} acquired, timestamp = {}\n",
                          ctx->eofFrameInfo.FrameNr,
                          100 * ctx->eofFrameInfo.TimeStamp);
 
-            m_minCurrentValue = *std::min_element(
-                    (uint16_t*) ctx->eofFrame,
-                    (uint16_t*) ctx->eofFrame +
+            const auto [itMin, itMax] = std::minmax_element(
+                    (uint16_t*) frame,
+                    (uint16_t*) frame +
                             actualImageHeight * actualImageWidth);
 
-            m_maxCurrentValue = *std::max_element(
-                    (uint16_t*) ctx->eofFrame,
-                    (uint16_t*) ctx->eofFrame +
-                            actualImageHeight * actualImageWidth);
+            m_minCurrentValue = *itMin;
+            m_maxCurrentValue = *itMax;
 
             if (save)
             {
-                std::copy((uint8_t*) ctx->eofFrame,
-                          (uint8_t*) ctx->eofFrame + exposureBytes,
+                std::copy((uint8_t*) frame,
+                          (uint8_t*) frame + exposureBytes,
                           std::back_inserter(bytes));
             }
 
             sf::Image image = PVCamImageToSfImage(
-                    (uint16_t*) ctx->eofFrame, actualImageWidth,
+                    (uint16_t*) frame, actualImageWidth,
                     actualImageHeight, m_minDisplayValue, m_maxDisplayValue);
 
             std::scoped_lock lock(m_textureMutex);

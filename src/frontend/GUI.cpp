@@ -797,8 +797,7 @@ namespace prm
                     "   - PVCam: Captures images from a connected Teledyne "
                     "camera\n\n"
                     "2. Use the Camera Buttons to capture images:\n"
-                    "   - First initialize the camera with the Init button\n"
-                    "   - Choose the file format\n"
+                    "   - First initialize the camera with the Init button if autoinit failed\n"
                     "   - Choose if and where to save the file\n"
                     "   - Choose the image acquisition mode and specify number "
                     "of frames if necessary\n"
@@ -806,9 +805,7 @@ namespace prm
                     "   - Stop the ongoing image acquisition with Terminate "
                     "Capture\n\n"
                     "3. Use the Video Processor module from the Windows menu \n"
-                    "to analyze the captured image stacks with trackpy\n"
-                    "   (Make sure there is no cyrillic in the tif stack "
-                    "path)\n");
+                    "to analyze the captured image stacks with trackpy\n");
         }
         ImGui::End();
     }
