@@ -382,6 +382,10 @@ namespace prm
         static bool WaitForEofEvent(CameraContext* ctx, uns32 timeoutMs,
                                     bool& errorOccurred);
 
+        static bool SubtractBackground(std::vector<uint8_t>& bytes,
+                                       uint16_t width, uint16_t height,
+                                       uint32_t nFrames);
+
 
     private:
         /// Index of the current camera
@@ -395,11 +399,13 @@ namespace prm
         bool m_isPvcamInitialized = false;
 
         int m_minDisplayValue = 0;
-        int m_maxDisplayValue = 4096; // 12 bits
+        int m_maxDisplayValue = 4096;// 12 bits
 
         uint16_t m_minCurrentValue = 0;
         uint16_t m_maxCurrentValue = 0;
 
         std::vector<float> m_brightnessCounts;
+
+        bool m_bSubtractBackground = false;
     };
 }// namespace prm

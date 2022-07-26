@@ -545,7 +545,7 @@ namespace prm
         uns16 roiCount;
         // ATTR_COUNT or ATTR_MAX can be checked here, both give the same value
         if (PV_OK != pl_get_param(ctx->hcam, PARAM_ROI_COUNT, ATTR_MAX,
-                                  (void*)&roiCount))
+                                  (void*) &roiCount))
         {
             PrintError("pl_get_param(PARAM_ROI_COUNT) error");
             CloseAllCamerasAndUninit();
@@ -1007,7 +1007,7 @@ namespace prm
         */
             if (!WaitForEofEvent(ctx.get(), 5000, errorOccurred)) break;
 
-            void * frame;
+            void* frame;
             if (pl_exp_get_latest_frame(ctx->hcam, &frame) != PV_OK)
             {
                 spdlog::error("Jeff");
@@ -1015,8 +1015,7 @@ namespace prm
                 continue;
             }
 
-            spdlog::info("Frame #{} acquired, timestamp = {}\n",
-                         imageCounter,
+            spdlog::info("Frame #{} acquired, timestamp = {}\n", imageCounter,
                          100 * ctx->eofFrameInfo.TimeStamp);
 
             const auto [itMin, itMax] = std::minmax_element(
@@ -1083,8 +1082,15 @@ namespace prm
         // Cleanup before exiting the application.
         delete[] frameInMemory;
 
+
         if (save)
         {
+            if (m_bSubtractBackground)
+            {
+                SubtractBackground(bytes, actualImageWidth, actualImageHeight,
+                                   imageCounter);
+            }
+
             if (!std::filesystem::create_directory(
                         std::filesystem::path{videoPath}))
             {
@@ -1229,7 +1235,7 @@ namespace prm
                          ctx->hcam);
             if (!WaitForEofEvent(ctx.get(), 5000, errorOccurred)) break;
 
-            void * frame;
+            void* frame;
             if (pl_exp_get_latest_frame(ctx->hcam, &frame) != PV_OK)
             {
                 PrintError("Couldn't get latest frame");
@@ -1243,22 +1249,20 @@ namespace prm
 
             const auto [itMin, itMax] = std::minmax_element(
                     (uint16_t*) frame,
-                    (uint16_t*) frame +
-                            actualImageHeight * actualImageWidth);
+                    (uint16_t*) frame + actualImageHeight * actualImageWidth);
 
             m_minCurrentValue = *itMin;
             m_maxCurrentValue = *itMax;
 
             if (save)
             {
-                std::copy((uint8_t*) frame,
-                          (uint8_t*) frame + exposureBytes,
+                std::copy((uint8_t*) frame, (uint8_t*) frame + exposureBytes,
                           std::back_inserter(bytes));
             }
 
             sf::Image image = PVCamImageToSfImage(
-                    (uint16_t*) frame, actualImageWidth,
-                    actualImageHeight, m_minDisplayValue, m_maxDisplayValue);
+                    (uint16_t*) frame, actualImageWidth, actualImageHeight,
+                    m_minDisplayValue, m_maxDisplayValue);
 
             std::scoped_lock lock(m_textureMutex);
             m_currentTexture.loadFromImage(image);
@@ -1288,8 +1292,15 @@ namespace prm
 
         delete[] circBufferInMemory;
 
+
         if (save)
         {
+            if (m_bSubtractBackground)
+            {
+                SubtractBackground(bytes, actualImageWidth, actualImageHeight,
+                                   imageCounter);
+            }
+
             if (!std::filesystem::create_directory(
                         std::filesystem::path{videoPath}))
             {
@@ -1329,5 +1340,27 @@ namespace prm
                 spdlog::info("Stack written to {}", videoPath);
             }
         }
+    }
+
+    bool PhotometricsBackend::SubtractBackground(std::vector<uint8_t>& bytes,
+                                                 uint16_t width,
+                                                 uint16_t height,
+                                                 uint32_t nFrames)
+    {
+        const auto frameSizeU16 = width * height;
+        for (std::size_t i = 0; i < nFrames; ++i)
+        {
+            cv::Mat mat{height, width, CV_16U,
+                        (uint16_t*) bytes.data() + i * frameSizeU16};
+            cv::Mat element = cv::getStructuringElement(cv::MORPH_ELLIPSE,
+                                                        cv::Size{15, 15});
+            cv::morphologyEx(mat, mat, cv::MORPH_TOPHAT, element,
+                             cv::Point{-1, -1});
+
+            std::copy(mat.data, mat.data + 2 * frameSizeU16,
+                      bytes.data() + i * frameSizeU16);
+        }
+
+        return true;
     }
 }// namespace prm

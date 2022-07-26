@@ -302,6 +302,7 @@ namespace prm
                 ImGui::RadioButton("mp4", (int*) &captureFormat, 1);
             }
 
+            static bool save = false;
             if (m_selectedBackend == PVCAM)
             {
                 static int exposureTime = 10;
@@ -332,6 +333,15 @@ namespace prm
                 ImGui::Checkbox("Select ROI", &showRoi);
                 static float minX = 0.0, minY = 0.0, maxX = 1.0, maxY = 1.0;
                 if (showRoi) { ShowROISelector(minX, minY, maxX, maxY); }
+
+                auto backend =
+                        dynamic_cast<PhotometricsBackend*>(m_backend.get());
+
+                if (!save) ImGui::BeginDisabled();
+                ImGui::SameLine();
+                ImGui::Checkbox("Subtract background",
+                                &backend->m_bSubtractBackground);
+                if (!save) ImGui::EndDisabled();
 
                 if (dynamic_cast<PhotometricsBackend*>(m_backend.get())
                             ->m_isPvcamInitialized)
@@ -364,7 +374,6 @@ namespace prm
                 }
             }
 
-            static bool save = false;
             ImGui::Checkbox("Save to file", &save);
             ImGui::SameLine();
 
@@ -797,7 +806,8 @@ namespace prm
                     "   - PVCam: Captures images from a connected Teledyne "
                     "camera\n\n"
                     "2. Use the Camera Buttons to capture images:\n"
-                    "   - First initialize the camera with the Init button if autoinit failed\n"
+                    "   - First initialize the camera with the Init button if "
+                    "autoinit failed\n"
                     "   - Choose if and where to save the file\n"
                     "   - Choose the image acquisition mode and specify number "
                     "of frames if necessary\n"
