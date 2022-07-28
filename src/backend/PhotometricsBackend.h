@@ -139,6 +139,7 @@ namespace prm
         /// Flag to be set to abort thread (used, for example, in multi-camera code samples)
         bool threadAbortFlag{false};
 
+        /// Lens used on the camera during capture
         Lens lens = X20;
     };
 
@@ -204,11 +205,26 @@ namespace prm
          */
         void TerminateCapture() override;
 
+        /**
+         * Returns a pointer to the current camera context
+         *
+         * @return Raw pointer to the camera context
+         */
         CameraContext* GetCurrentCameraContext()
         {
             return m_cameraContexts[m_cameraIndex].get();
         }
 
+        /**
+         * Converts byte array captured by PVCAM to SFML Image
+         *
+         * @param imageData Byte array
+         * @param imageWidth Image width
+         * @param imageHeight Image height
+         * @param minVal Minimum brightness value to display
+         * @param maxVal Maximum brightness value to display
+         * @return Resulting SFML Image
+         */
         static sf::Image PVCamImageToSfImage(uint16_t* imageData,
                                              uint16_t imageWidth,
                                              uint16_t imageHeight,
@@ -382,6 +398,15 @@ namespace prm
         static bool WaitForEofEvent(CameraContext* ctx, uns32 timeoutMs,
                                     bool& errorOccurred);
 
+        /**
+         * Subtracts image background by calculating morphological opening
+         *
+         * @param bytes Image byte array
+         * @param width Image width
+         * @param height Image height
+         * @param nFrames Number of images in the array
+         * @return true on success
+         */
         static bool SubtractBackground(uint8_t* bytes,
                                        uint16_t width, uint16_t height,
                                        uint32_t nFrames);
@@ -397,13 +422,15 @@ namespace prm
         /// Shows if PVCam environment is initialized
         bool m_isPvcamInitialized = false;
 
+        /// Minimum brightness value to display in the GUI
         int m_minDisplayValue = 0;
+        /// Maximum brightness value to display in the GUI
         int m_maxDisplayValue = 4096;// 12 bits
 
+        /// Minimum brightness value in the current frame
         uint16_t m_minCurrentValue = 0;
+        /// Maximum brightness value in the current frame
         uint16_t m_maxCurrentValue = 0;
-
-        std::vector<float> m_brightnessCounts;
 
         bool m_bSubtractBackground = false;
     };

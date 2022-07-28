@@ -92,10 +92,24 @@ namespace prm
          */
         void ShowCameraButtons();
 
+        /**
+         * Draws window with image brightness control
+         */
         void ShowImageInfo();
 
+        /**
+         * Draws window with help text
+         */
         void ShowHelp();
 
+        /**
+         * Draws window with Region Of Interes selection sliders
+         *
+         * @param minX Min x coordinate of ROI
+         * @param minY Min y coordinate of ROI
+         * @param maxX Max x coordinate of ROI
+         * @param maxY Max y coordinate of ROI
+         */
         void ShowROISelector(float& minX, float& minY, float& maxX,
                              float& maxY);
 
@@ -156,9 +170,12 @@ namespace prm
         /// Width for input fields in the GUI
         const uint16_t m_inputFieldWidth = 150;
 
+        /// Timepoint for last video processor metadata save
         std::chrono::high_resolution_clock::time_point m_lastMetaSave;
 
+        /// Last save path folder used for video capture
         std::string m_videoSavePath{};
+        /// Last load path folder used in video processor
         std::string m_videoLoadPath{};
     };
 }// namespace prm

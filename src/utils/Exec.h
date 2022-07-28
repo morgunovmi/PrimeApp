@@ -7,6 +7,12 @@
 
 namespace prm
 {
+    /**
+     * Executes command in the windows command line
+     *
+     * @param cmd Command string
+     * @return Command line output
+     */
     inline std::string Exec(const char* cmd) {
         std::array<char, 128> buffer;
         std::string result;

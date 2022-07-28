@@ -10,7 +10,7 @@ namespace prm
     enum SAVE_FORMAT
     {
         TIF = 0,///< tiff stack
-        MP4 = 1, ///< mp4
+        MP4 = 1,///< mp4
         DIR = 2
     };
 
@@ -48,7 +48,15 @@ namespace prm
                                     const std::string& filePath,
                                     uint16_t numImages);
 
-        static bool WriteTifMetadata(const std::string& filePath, const TifStackMeta& meta);
+        /**
+         * Writes tif stack capture metadata in json file
+         *
+         * @param filePath Folder in which to save the metadata
+         * @param meta Metadata struct
+         * @return true on success
+         */
+        static bool WriteTifMetadata(const std::string& filePath,
+                                     const TifStackMeta& meta);
 
         static std::string ReadFileToString(const std::string_view file_path);
         static std::vector<std::string> Tokenize(const std::string& string);
