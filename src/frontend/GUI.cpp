@@ -830,9 +830,6 @@ namespace prm
             {
                 auto* backend =
                         dynamic_cast<PhotometricsBackend*>(m_backend.get());
-                const auto& counts =
-                        dynamic_cast<PhotometricsBackend*>(m_backend.get())
-                                ->m_brightnessCounts;
 
                 ImGui::Text("Min: %hu Max: %hu", backend->m_minCurrentValue,
                             backend->m_maxCurrentValue);

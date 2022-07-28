@@ -11,7 +11,7 @@ namespace prm
     {
         TIF = 0,///< tiff stack
         MP4 = 1,///< mp4
-        DIR = 2
+        DIR = 2///< separate directory with tif stack and metadata
     };
 
     /**
@@ -45,7 +45,7 @@ namespace prm
          */
         static bool WritePvcamStack(const void* data, uint16_t imageWidth,
                                     uint16_t imageHeight, uint16_t imageSize,
-                                    const std::string& filePath,
+                                    std::string_view filePath,
                                     uint16_t numImages);
 
         /**
@@ -55,7 +55,7 @@ namespace prm
          * @param meta Metadata struct
          * @return true on success
          */
-        static bool WriteTifMetadata(const std::string& filePath,
+        static bool WriteTifMetadata(std::string_view filePath,
                                      const TifStackMeta& meta);
 
         static std::string ReadFileToString(const std::string_view file_path);

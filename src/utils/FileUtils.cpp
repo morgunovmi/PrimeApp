@@ -1,5 +1,6 @@
 #include <OpenImageIO/imageio.h>
 #include <ctime>
+#include <fmt/format.h>
 #include <fstream>
 #include <iomanip>
 #include <nlohmann/json.hpp>
@@ -19,9 +20,7 @@ namespace prm
         oss << std::put_time(&tm, "%H-%M-%S");
         const auto curTime = oss.str();
 
-        auto videoPath = prefix.data() + curTime;
-        videoPath = "\\" + videoPath;
-        videoPath = dirPath.data() + videoPath;
+        auto videoPath = fmt::format("{}\\{}{}", dirPath, prefix, curTime);
 
         switch (format)
         {
@@ -41,11 +40,11 @@ namespace prm
 
     bool FileUtils::WritePvcamStack(const void* data, uint16_t imageWidth,
                                     uint16_t imageHeight, uint16_t imageSize,
-                                    const std::string& filePath,
+                                    std::string_view filePath,
                                     uint16_t numImages)
     {
         using namespace OIIO;
-        const auto tifPath = std::string{filePath + "\\stack.tif"};
+        const auto tifPath = fmt::format("{}{}", filePath, "\\stack.tif");
 
         std::unique_ptr<ImageOutput> out = ImageOutput::create(tifPath);
         if (!out) return false;
@@ -68,10 +67,11 @@ namespace prm
         return true;
     }
 
-    bool FileUtils::WriteTifMetadata(const std::string& filePath,
+    bool FileUtils::WriteTifMetadata(std::string_view filePath,
                                      const TifStackMeta& meta)
     {
-        if (auto ofs = std::ofstream{filePath + "\\meta.json"})
+        if (auto ofs =
+                    std::ofstream{fmt::format("{}{}", filePath, "\\meta.json")})
         {
             ofs << nlohmann::json{meta}.dump(4) << '\n';
         }

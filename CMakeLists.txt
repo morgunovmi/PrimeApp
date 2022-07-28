@@ -57,6 +57,7 @@ target_link_libraries(
         ImGui-SFML::ImGui-SFML
         pvcam64
         ${OpenCV_LIBS}
+        fmt::fmt-header-only
         spdlog::spdlog_header_only
         pybind11::embed
         OpenImageIO::OpenImageIO
