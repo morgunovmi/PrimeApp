@@ -225,6 +225,10 @@ namespace prm
                                     &m_bShowVideoProcessor))
                 {
                 }
+                if (ImGui::MenuItem("Image Viewer", nullptr,
+                                    &m_bShowImageViewer))
+                {
+                }
                 if (ImGui::MenuItem("Frame Info", "F2",
                                     &m_bShowFrameInfoOverlay))
                 {
@@ -444,6 +448,7 @@ namespace prm
         if (m_bShowViewport) ShowViewport();
         if (m_bShowFrameInfoOverlay) ShowFrameInfoOverlay();
         if (m_bShowVideoProcessor) ShowVideoProcessor();
+        if (m_bShowImageViewer) ShowImageViewer();
         if (m_bShowAppLog) ShowAppLog();
         if (m_bShowHelp) ShowHelp();
 
@@ -874,6 +879,63 @@ namespace prm
                     backend->m_maxDisplayValue = backend->m_maxCurrentValue;
                 }
             }
+        }
+        ImGui::End();
+    }
+
+    void GUI::ShowImageViewer()
+    {
+        auto window_flags = 0;
+        window_flags |= ImGuiWindowFlags_NoCollapse;
+        window_flags |= ImGuiWindowFlags_AlwaysAutoResize;
+        window_flags |= ImGuiWindowFlags_NoResize;
+
+        if (ImGui::Begin("Image Viewer", &m_bShowImageViewer, window_flags))
+        {
+            std::string videoPath{};
+            if (ImGui::Button("Choose video file"))
+            {
+                ImGuiFileDialog::Instance()->OpenDialog(
+                        "ChooseFileDlgKey", "Choose File", ".tif",
+                        m_videoLoadPath.empty() ? "." : m_videoLoadPath);
+            }
+
+            if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey"))
+            {
+                if (ImGuiFileDialog::Instance()->IsOk())
+                {
+                    videoPath = ImGuiFileDialog::Instance()->GetFilePathName();
+
+                    const auto vidPathStd = std::filesystem::path{videoPath};
+                    if (!std::filesystem::exists(vidPathStd))
+                    {
+                        spdlog::error("No such file, please check the path");
+                        return;
+                    }
+
+                    spdlog::info("Tif file selected: {}", videoPath);
+                }
+
+                ImGuiFileDialog::Instance()->Close();
+
+                m_imageViewer.LoadImageStack(videoPath);
+            }
+
+            if (ImGui::Button("Update Image")) { m_imageViewer.UpdateImage(); }
+
+            if (ImGui::Button("Subtract Background"))
+            {
+                m_imageViewer.SubtractBackground();
+            }
+
+            /*
+            static int frameNum = 0;
+            ImGui::DragInt("Frane number", &frameNum, 1.0f, 0, 100);
+            if (ImGui::IsItemDeactivatedAfterEdit())
+            {
+                m_imageViewer.SelectImage(frameNum);
+            }
+             */
         }
         ImGui::End();
     }

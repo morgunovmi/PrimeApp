@@ -5,6 +5,7 @@
 #include "Renderer.h"
 #include "backend/Backend.h"
 #include "backend/BackendOption.h"
+#include "backend/ImageViewer.h"
 #include "backend/OpencvBackend.h"
 #include "backend/PhotometricsBackend.h"
 #include "frontend/GUI.h"
@@ -30,8 +31,10 @@ namespace prm
                       m_textureMutex)),
               m_selectedBackend(PVCAM),
               m_gui(m_window, m_dt, m_backend, m_selectedBackend,
-                    m_videoProcessor, log, m_currentTexture, m_textureMutex),
-              m_videoProcessor(m_currentTexture, m_textureMutex)
+                    m_videoProcessor, m_imageViewer, log, m_currentTexture,
+                    m_textureMutex),
+              m_videoProcessor(m_currentTexture, m_textureMutex),
+              m_imageViewer(m_backend, m_currentTexture, m_textureMutex)
         {
             sf::Image icon{};
             if (!icon.loadFromFile("./resources/images/cam_icon.png"))
@@ -70,6 +73,8 @@ namespace prm
         GUI m_gui;
         /// Video Processor that handles NTA related image analysis
         VideoProcessor m_videoProcessor;
+
+        ImageViewer m_imageViewer;
 
         /// SFML Texture to draw on screen this frame
         sf::Texture m_currentTexture;

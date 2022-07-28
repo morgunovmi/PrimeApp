@@ -5,6 +5,7 @@
 #include <SFML/Graphics.hpp>
 
 #include "backend/BackendOption.h"
+#include "backend/ImageViewer.h"
 #include "backend/PhotometricsBackend.h"
 #include "misc/Log.h"
 #include "videoproc/VideoProcessor.h"
@@ -23,14 +24,15 @@ namespace prm
     public:
         GUI(sf::RenderWindow& window, sf::Time& dt,
             std::unique_ptr<Backend>& backend, BackendOption& curr,
-            VideoProcessor& videoproc, Log& log, sf::Texture& texture,
-            std::mutex& mutex)
+            VideoProcessor& videoproc, ImageViewer& imageViewer, Log& log,
+            sf::Texture& texture, std::mutex& mutex)
             : m_window(window), m_dt(dt), m_frameTimeQueue(),
               m_bShowMainMenuBar(true), m_bShowFrameInfoOverlay(false),
               m_bShowAppLog(true), m_bShowVideoProcessor(false),
-              m_bShowHelp(false), m_bShowViewport(true),
-              m_bShowCameraButtons(true), m_bShowImageInfo(true),
-              m_backend(backend), m_selectedBackend(curr),
+              m_bShowImageViewer(false), m_bShowHelp(false),
+              m_bShowViewport(true), m_bShowCameraButtons(true),
+              m_bShowImageInfo(true), m_backend(backend),
+              m_selectedBackend(curr), m_imageViewer(imageViewer),
               m_videoProcessor(videoproc), m_appLog(log), m_hubballiFont(),
               m_currentTexture(texture), m_textureMutex(mutex)
         {
@@ -97,6 +99,8 @@ namespace prm
          */
         void ShowImageInfo();
 
+        void ShowImageViewer();
+
         /**
          * Draws window with help text
          */
@@ -152,6 +156,8 @@ namespace prm
 
         /// Reference to the VideoProcessor instance
         VideoProcessor& m_videoProcessor;
+
+        ImageViewer& m_imageViewer;
         /// Reference to the app log
         Log& m_appLog;
 
@@ -165,6 +171,7 @@ namespace prm
         bool m_bShowFrameInfoOverlay;
         bool m_bShowAppLog;
         bool m_bShowVideoProcessor;
+        bool m_bShowImageViewer;
         bool m_bShowHelp;
 
         /// Width for input fields in the GUI

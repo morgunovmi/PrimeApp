@@ -3,4 +3,5 @@ target_sources(
         Backend.h
         OpencvBackend.cpp
         PhotometricsBackend.cpp
+        ImageViewer.cpp
 )
