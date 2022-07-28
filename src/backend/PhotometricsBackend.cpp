@@ -1084,6 +1084,12 @@ namespace prm
 
         if (save)
         {
+            if (m_bSubtractBackground)
+            {
+                SubtractBackground(bytes.data(), actualImageWidth,
+                                   actualImageHeight, imageCounter);
+            }
+
             if (!std::filesystem::create_directory(
                         std::filesystem::path{videoPath}))
             {
@@ -1288,6 +1294,12 @@ namespace prm
 
         if (save)
         {
+            if (m_bSubtractBackground)
+            {
+                SubtractBackground(bytes.data(), actualImageWidth,
+                                   actualImageHeight, imageCounter);
+            }
+
             if (!std::filesystem::create_directory(
                         std::filesystem::path{videoPath}))
             {
