@@ -6,7 +6,8 @@ namespace prm
     void VideoProcessor::Init()
     {
         spdlog::info("Initializing video processor module");
-        m_messageQueue.Send(PythonWorkerRunString{.string = R"(
+        m_messageQueue.Send(PythonWorkerRunString{
+                .string = R"(
 import pims
 import numpy as np
 import trackpy as tp
@@ -21,7 +22,8 @@ from skimage import exposure
 from PIL import Image
 
 import multiprocessing
-multiprocessing.set_executable('./python/python.exe')
+pythonPath = pythonPath.strip()
+multiprocessing.set_executable(pythonPath)
 
 from tifffile import imsave
 import os
@@ -30,6 +32,8 @@ class Video:
     def __init__(self, path):
         self.path = path
         self.frames = np.array(pims.as_grey(pims.TiffStack(self.path)))
+        #self.frames, _ = subtract_background_rolling_ball(self.frames, 30, light_background=False,
+        #                 use_paraboloid=False, do_presmooth=True)
 
         self.frames_rescale = self.frames
         self.minmass = 1e5
@@ -64,7 +68,8 @@ class Video:
         self.t = tp.filter_stubs(self.raw_t, min_len)
         print('Before:', self.raw_t['particle'].nunique())
         print('After:', self.t['particle'].nunique())
-)"});
+)",
+                .strVariables{{"pythonPath", m_pythonExePath}}});
     }
 
     void VideoProcessor::LoadVideo(std::string_view path)

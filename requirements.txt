@@ -7,3 +7,5 @@ scikit-image
 pillow
 tifffile
 seaborn
+opencv-contrib-python
+opencv-rolling-ball

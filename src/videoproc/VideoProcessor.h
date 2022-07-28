@@ -5,6 +5,7 @@
 #include <pybind11/embed.h>
 #include <spdlog/spdlog.h>
 
+#include "utils/Exec.h"
 #include "workers/PythonWorker.h"
 
 namespace py = pybind11;
@@ -24,6 +25,14 @@ namespace prm
             : m_messageQueue(),
               m_pythonWorker(1, m_messageQueue, texture, mutex)
         {
+            m_pythonExePath = Exec("where python");
+            if (m_pythonExePath.empty())
+            {
+                spdlog::error("Couldn't not find python executable. Please "
+                              "check that you have python installed with all "
+                              "the dependencies");
+                return;
+            }
             m_pythonWorker.Run();
             Init();
         }
@@ -110,5 +119,7 @@ namespace prm
 
         /// Current vide file path
         std::filesystem::path vidPath;
+
+        std::string m_pythonExePath;
     };
 }// namespace prm

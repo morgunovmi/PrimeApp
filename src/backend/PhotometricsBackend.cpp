@@ -1082,15 +1082,8 @@ namespace prm
         // Cleanup before exiting the application.
         delete[] frameInMemory;
 
-
         if (save)
         {
-            if (m_bSubtractBackground)
-            {
-                SubtractBackground(bytes, actualImageWidth, actualImageHeight,
-                                   imageCounter);
-            }
-
             if (!std::filesystem::create_directory(
                         std::filesystem::path{videoPath}))
             {
@@ -1295,12 +1288,6 @@ namespace prm
 
         if (save)
         {
-            if (m_bSubtractBackground)
-            {
-                SubtractBackground(bytes, actualImageWidth, actualImageHeight,
-                                   imageCounter);
-            }
-
             if (!std::filesystem::create_directory(
                         std::filesystem::path{videoPath}))
             {
@@ -1342,8 +1329,7 @@ namespace prm
         }
     }
 
-    bool PhotometricsBackend::SubtractBackground(std::vector<uint8_t>& bytes,
-                                                 uint16_t width,
+    bool PhotometricsBackend::SubtractBackground(uint8_t* bytes, uint16_t width,
                                                  uint16_t height,
                                                  uint32_t nFrames)
     {
@@ -1351,14 +1337,14 @@ namespace prm
         for (std::size_t i = 0; i < nFrames; ++i)
         {
             cv::Mat mat{height, width, CV_16U,
-                        (uint16_t*) bytes.data() + i * frameSizeU16};
+                        (uint16_t*) bytes + i * frameSizeU16};
             cv::Mat element = cv::getStructuringElement(cv::MORPH_ELLIPSE,
                                                         cv::Size{15, 15});
             cv::morphologyEx(mat, mat, cv::MORPH_TOPHAT, element,
                              cv::Point{-1, -1});
 
             std::copy(mat.data, mat.data + 2 * frameSizeU16,
-                      bytes.data() + i * frameSizeU16);
+                      bytes + i * 2 * frameSizeU16);
         }
 
         return true;

@@ -382,10 +382,9 @@ namespace prm
         static bool WaitForEofEvent(CameraContext* ctx, uns32 timeoutMs,
                                     bool& errorOccurred);
 
-        static bool SubtractBackground(std::vector<uint8_t>& bytes,
+        static bool SubtractBackground(uint8_t* bytes,
                                        uint16_t width, uint16_t height,
                                        uint32_t nFrames);
-
 
     private:
         /// Index of the current camera
