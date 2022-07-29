@@ -896,11 +896,11 @@ namespace prm
             if (ImGui::Button("Choose video file"))
             {
                 ImGuiFileDialog::Instance()->OpenDialog(
-                        "ChooseFileDlgKey", "Choose File", ".tif",
+                        "ChooseFileDlgKeyViewer", "Choose File", ".tif",
                         m_videoLoadPath.empty() ? "." : m_videoLoadPath);
             }
 
-            if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey"))
+            if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKeyViewer"))
             {
                 if (ImGuiFileDialog::Instance()->IsOk())
                 {
@@ -923,19 +923,41 @@ namespace prm
 
             if (ImGui::Button("Update Image")) { m_imageViewer.UpdateImage(); }
 
-            if (ImGui::Button("Subtract Background"))
-            {
-                m_imageViewer.SubtractBackground();
-            }
+            static bool processAllFrames = false;
+            ImGui::Checkbox("Process all frames", &processAllFrames);
+            ImGui::SameLine();
+            HelpMarker("By default processes only frame 0");
 
-            /*
-            static int frameNum = 0;
-            ImGui::DragInt("Frane number", &frameNum, 1.0f, 0, 100);
-            if (ImGui::IsItemDeactivatedAfterEdit())
+            static int topHatSize = 15;
+            if (ImGui::Button("Top hat filter"))
             {
-                m_imageViewer.SelectImage(frameNum);
+                m_imageViewer.TopHatFilter(topHatSize, processAllFrames);
             }
-             */
+            ImGui::SameLine();
+            ImGui::PushItemWidth(m_inputFieldWidth);
+            ImGui::DragInt("Filter size top hat", &topHatSize, 1.0f, 1, 50);
+
+            static int medianSize = 5;
+            if (ImGui::Button("Median filter"))
+            {
+                m_imageViewer.MedianFilter(medianSize, processAllFrames);
+            }
+            ImGui::SameLine();
+            ImGui::DragInt("Filter size median", &medianSize, 2.0f, 1, 5);
+
+            if (ImGui::Button("Reset Image")) { m_imageViewer.ResetImage(); }
+
+            static int frameNum = 0;
+            if (m_imageViewer.m_isImageLoaded)
+            {
+                ImGui::DragInt("Frane number", &frameNum, 1.0f, 0,
+                               m_imageViewer.GetNumImages() - 1);
+                if (ImGui::IsItemDeactivatedAfterEdit())
+                {
+                    m_imageViewer.SelectImage(frameNum);
+                }
+            }
+            ImGui::PopItemWidth();
         }
         ImGui::End();
     }
