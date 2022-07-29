@@ -341,11 +341,13 @@ namespace prm
                 auto backend =
                         dynamic_cast<PhotometricsBackend*>(m_backend.get());
 
+                /*
                 if (!save) ImGui::BeginDisabled();
                 ImGui::SameLine();
                 ImGui::Checkbox("Subtract background",
                                 &backend->m_bSubtractBackground);
                 if (!save) ImGui::EndDisabled();
+                 */
 
                 if (dynamic_cast<PhotometricsBackend*>(m_backend.get())
                             ->m_isPvcamInitialized)
