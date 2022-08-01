@@ -26,6 +26,7 @@ find_package(spdlog REQUIRED)
 find_package(pybind11 REQUIRED)
 find_package(OpenImageIO REQUIRED)
 find_package(fmt)
+find_package(range-v3)
 find_package(nlohmann_json REQUIRED)
 
 set(SFML_LIBS sfml-graphics sfml-system sfml-window)
@@ -56,6 +57,7 @@ target_link_libraries(
         imgui::imgui
         ImGui-SFML::ImGui-SFML
         pvcam64
+        range-v3::range-v3
         ${OpenCV_LIBS}
         fmt::fmt-header-only
         spdlog::spdlog_header_only

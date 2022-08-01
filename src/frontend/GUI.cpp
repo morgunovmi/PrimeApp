@@ -128,6 +128,9 @@ namespace prm
                         case sf::Keyboard::F2:
                             m_bShowFrameInfoOverlay = !m_bShowFrameInfoOverlay;
                             break;
+                        case sf::Keyboard::F3:
+                            m_bShowImageViewer = !m_bShowImageViewer;
+                            break;
                         default:
                             break;
                     }
@@ -225,12 +228,11 @@ namespace prm
                                     &m_bShowVideoProcessor))
                 {
                 }
-                if (ImGui::MenuItem("Image Viewer", nullptr,
-                                    &m_bShowImageViewer))
-                {
-                }
                 if (ImGui::MenuItem("Frame Info", "F2",
                                     &m_bShowFrameInfoOverlay))
+                {
+                }
+                if (ImGui::MenuItem("Image Viewer", "F3", &m_bShowImageViewer))
                 {
                 }
                 if (ImGui::MenuItem("App Log", nullptr, &m_bShowAppLog)) {}
@@ -892,9 +894,10 @@ namespace prm
         window_flags |= ImGuiWindowFlags_AlwaysAutoResize;
         window_flags |= ImGuiWindowFlags_NoResize;
 
+        static int maxImages = 100;
         if (ImGui::Begin("Image Viewer", &m_bShowImageViewer, window_flags))
         {
-            std::string videoPath{};
+            static std::string videoPath{};
             if (ImGui::Button("Choose video file"))
             {
                 ImGuiFileDialog::Instance()->OpenDialog(
@@ -920,8 +923,11 @@ namespace prm
 
                 ImGuiFileDialog::Instance()->Close();
 
-                m_imageViewer.LoadImageStack(videoPath);
+                m_imageViewer.LoadImageStack(videoPath, maxImages);
             }
+            ImGui::SameLine();
+            ImGui::PushItemWidth(m_inputFieldWidth);
+            ImGui::DragInt("Max loaded images", &maxImages, 1.0f, 1, 1000);
 
             if (ImGui::Button("Update Image")) { m_imageViewer.UpdateImage(); }
 
@@ -936,9 +942,9 @@ namespace prm
                 m_imageViewer.TopHatFilter(topHatSize, processAllFrames);
             }
             ImGui::SameLine();
-            ImGui::PushItemWidth(m_inputFieldWidth);
             ImGui::DragInt("Filter size top hat", &topHatSize, 1.0f, 1, 50);
 
+            /*
             static int medianSize = 5;
             if (ImGui::Button("Median filter"))
             {
@@ -946,6 +952,12 @@ namespace prm
             }
             ImGui::SameLine();
             ImGui::DragInt("Filter size median", &medianSize, 2.0f, 1, 5);
+             */
+
+            if (ImGui::Button("Median filter"))
+            {
+                m_imageViewer.ScuffedMedianFilter(processAllFrames);
+            }
 
             if (ImGui::Button("Reset Image")) { m_imageViewer.ResetImage(); }
 
@@ -960,6 +972,17 @@ namespace prm
                 }
             }
             ImGui::PopItemWidth();
+
+            if (ImGui::Button("Save"))
+            {
+                const auto pathStd = std::filesystem::path{videoPath};
+
+                const auto savePath = fmt::format(
+                        "{}\\{}_mod{}", pathStd.parent_path().string(),
+                        pathStd.stem().string(), pathStd.extension().string());
+
+                m_imageViewer.SaveImage(savePath);
+            }
         }
         ImGui::End();
     }

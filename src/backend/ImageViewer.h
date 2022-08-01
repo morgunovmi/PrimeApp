@@ -20,7 +20,7 @@ namespace prm
         {
         }
 
-        bool LoadImageStack(const std::string& filePath);
+        bool LoadImageStack(const std::string& filePath, std::size_t maxImages);
 
         void SelectImage(std::size_t index);
 
@@ -52,6 +52,18 @@ namespace prm
             return true;
         }
 
+        bool ScuffedMedianFilter(bool allFrames)
+        {
+            m_workerThread = std::jthread(
+                    [&, allFrames]()
+                    {
+                        ScuffedMedianFilter_(m_modifiedPixels, m_imageWidth,
+                                             m_imageHeight, allFrames);
+                        UpdateImage();
+                    });
+            return true;
+        }
+
         void ResetImage()
         {
             m_workerThread = std::jthread(
@@ -64,7 +76,9 @@ namespace prm
                     });
         }
 
-        std::size_t GetNumImages() const { return m_numFrames; }
+        [[nodiscard]] std::size_t GetNumImages() const { return m_numFrames; }
+
+        void SaveImage(const std::string& path) { SaveImage_(path); }
 
         bool m_isImageLoaded;
 
@@ -82,6 +96,11 @@ namespace prm
         bool MedianFilter_(std::vector<uint16_t>& bytes, uint16_t width,
                            uint16_t height, uint32_t nFrames,
                            uint16_t filterSize);
+
+        bool ScuffedMedianFilter_(std::vector<uint16_t>& bytes, uint16_t width,
+                                  uint16_t height, bool allFrames);
+
+        void SaveImage_(const std::string& path);
 
         std::vector<uint16_t> m_pixels;
         std::vector<uint16_t> m_modifiedPixels;
