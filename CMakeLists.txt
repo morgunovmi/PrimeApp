@@ -33,7 +33,10 @@ set(SFML_LIBS sfml-graphics sfml-system sfml-window)
 
 set(APP_NAME "App")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
-add_executable(${APP_NAME} vendor/ImGuiFileDialog/ImGuiFileDialog.cpp)
+add_executable(${APP_NAME}
+        vendor/ImGuiFileDialog/ImGuiFileDialog.cpp
+        vendor/simple_serial_port/simple-serial-port/simple-serial-port/SimpleSerial.cpp
+        )
 add_subdirectory(src)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -45,7 +48,8 @@ target_compile_options(${APP_NAME} PRIVATE ${SANITIZER_FLAGS} ${DEFAULT_COMPILER
 
 target_include_directories(
         ${APP_NAME} PRIVATE
-        vendor/ImGuiFileDialog/ImGuiFileDialog.h
+        vendor/ImGuiFileDialog
+        vendor/simple_serial_port/simple-serial-port/simple-serial-port
         src
         "C:\\Program Files\\Photometrics\\PVCamSDK\\Inc"
 )

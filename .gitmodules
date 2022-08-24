@@ -2,3 +2,6 @@
 	path = vendor/ImGuiFileDialog
 	url = https://github.com/aiekick/ImGuiFileDialog.git
 	branch = Lib_Only
+[submodule "vendor/simple_serial_port"]
+	path = vendor/simple_serial_port
+	url = https://github.com/dmicha16/simple_serial_port.git
