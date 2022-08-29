@@ -1,8 +1,8 @@
-#include <algorithm>
 #include <imgui-SFML.h>
 #include <imgui.h>
 #include <imgui_stdlib.h>
 #include <nlohmann/json.hpp>
+#include <range/v3/all.hpp>
 
 #include "../../vendor/ImGuiFileDialog/ImGuiFileDialog.h"
 #include "frontend/GUI.h"
@@ -235,6 +235,10 @@ namespace prm
                 if (ImGui::MenuItem("Image Viewer", "F3", &m_bShowImageViewer))
                 {
                 }
+                if (ImGui::MenuItem("Serial Controller", nullptr,
+                                    &m_bShowSerial))
+                {
+                }
                 if (ImGui::MenuItem("App Log", nullptr, &m_bShowAppLog)) {}
                 ImGui::EndMenu();
             }
@@ -455,6 +459,7 @@ namespace prm
         if (m_bShowImageViewer) ShowImageViewer();
         if (m_bShowAppLog) ShowAppLog();
         if (m_bShowHelp) ShowHelp();
+        if (m_bShowSerial) ShowSerialPort();
 
 #ifndef NDEBUG
         ImGui::ShowDemoWindow();
@@ -983,6 +988,74 @@ namespace prm
 
                 m_imageViewer.SaveImage(savePath);
             }
+        }
+        ImGui::End();
+    }
+
+    void GUI::ShowSerialPort()
+    {
+        if (ImGui::Begin("Serial Controller", &m_bShowImageViewer))
+        {
+            ULONG size = 10;
+            std::vector<ULONG> coms(size);
+            ULONG found = 0;
+
+            GetCommPorts(coms.data(), size, &found);
+            ::ranges::sort(coms.begin(), coms.end());
+            auto portStrs = coms |
+                            ::ranges::views::filter([](auto comNum)
+                                                    { return comNum != 0; }) |
+                            ::ranges::views::transform(
+                                    [](auto comNum)
+                                    { return fmt::format("COM{}", comNum); }) |
+                            ::ranges::to<std::vector<std::string>>();
+
+            static SimpleSerial serial(
+                    (char*) fmt::format("\\\\.\\{}",
+                                        portStrs[portStrs.size() - 1])
+                            .c_str(),
+                    CBR_9600);
+
+            static int currentPort = portStrs.size() - 1;
+            ImGui::PushItemWidth(m_inputFieldWidth);
+            Combo("Port", &currentPort, portStrs, portStrs.size());
+
+            ImGui::SameLine();
+            if (ImGui::Button("Connect"))
+            {
+                serial.CloseSerialPort();
+                serial = SimpleSerial(
+                        (char*) fmt::format("\\\\.\\{}", portStrs[currentPort])
+                                .c_str(),
+                        CBR_9600);
+
+                if (serial.connected_)
+                {
+                    spdlog::info("Connected to {} successfully",
+                                 portStrs[currentPort]);
+                }
+                else
+                {
+                    spdlog::error("Couldn't connect to {}",
+                                  portStrs[currentPort]);
+                }
+            }
+
+            static std::string toSend{};
+            ImGui::InputTextWithHint("Send to serial port", nullptr, &toSend);
+            if (ImGui::IsItemDeactivatedAfterEdit() && !toSend.empty())
+            {
+                spdlog::info("{}", serial.connected_);
+                if (serial.WriteSerialPort((char*) &toSend[0]))
+                {
+                    spdlog::info("Sent \"{}\"", toSend);
+                }
+                else
+                {
+                    spdlog::error("Couldn't send string");
+                }
+            }
+            ImGui::PopItemWidth();
         }
         ImGui::End();
     }

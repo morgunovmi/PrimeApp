@@ -156,7 +156,7 @@ vid.t = vid.t.groupby('particle').filter(lambda x: tp.diagonal_size(x) > min_dia
 fig, ax = plt.subplots()
 fig.set_figheight(10)
 fig.set_figwidth(20)
-tp.plot_traj(vid.t, ax=ax)
+tp.plot_traj(vid.t, ax=ax, superimpose=vid.frames[0])
 plt.savefig('plot.png', bbox_inches='tight')
 plot = True
 )"},

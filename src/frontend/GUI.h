@@ -3,6 +3,7 @@
 #include <queue>
 
 #include <SFML/Graphics.hpp>
+#include <SimpleSerial.h>
 
 #include "backend/BackendOption.h"
 #include "backend/ImageViewer.h"
@@ -34,7 +35,8 @@ namespace prm
               m_bShowImageInfo(true), m_backend(backend),
               m_selectedBackend(curr), m_imageViewer(imageViewer),
               m_videoProcessor(videoproc), m_appLog(log), m_hubballiFont(),
-              m_currentTexture(texture), m_textureMutex(mutex)
+              m_currentTexture(texture), m_textureMutex(mutex),
+              m_bShowSerial(false)
         {
         }
 
@@ -107,6 +109,11 @@ namespace prm
         void ShowHelp();
 
         /**
+         * Draws serial port control window
+         */
+        void ShowSerialPort();
+
+        /**
          * Draws window with Region Of Interes selection sliders
          *
          * @param minX Min x coordinate of ROI
@@ -134,6 +141,22 @@ namespace prm
                 ImGui::PopTextWrapPos();
                 ImGui::EndTooltip();
             }
+        }
+
+        bool Combo(const char* label, int* current_item,
+                   const std::vector<std::string>& items, int items_count,
+                   int height_in_items = -1)
+        {
+            return ImGui::Combo(
+                    label, current_item,
+                    [](void* data, int idx, const char** out_text)
+                    {
+                        *out_text =
+                                (*(const std::vector<std::string>*) data)[idx]
+                                        .c_str();
+                        return true;
+                    },
+                    (void*) &items, items_count, height_in_items);
         }
 
         /// Reference to the SFML render window
@@ -173,6 +196,7 @@ namespace prm
         bool m_bShowVideoProcessor;
         bool m_bShowImageViewer;
         bool m_bShowHelp;
+        bool m_bShowSerial;
 
         /// Width for input fields in the GUI
         const uint16_t m_inputFieldWidth = 150;

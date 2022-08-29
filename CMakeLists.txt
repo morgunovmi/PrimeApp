@@ -68,6 +68,7 @@ target_link_libraries(
         pybind11::embed
         OpenImageIO::OpenImageIO
         nlohmann_json::nlohmann_json
+        OneCore
 )
 
 file(COPY ${CMAKE_SOURCE_DIR}/resources DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})

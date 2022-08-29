@@ -9,8 +9,6 @@
 #include "misc/Log.h"
 #include "misc/LogSink.h"
 
-#include <SimpleSerial.h>
-
 int main(int argc, char** argv)
 {
     try
