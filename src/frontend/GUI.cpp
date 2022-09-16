@@ -8,6 +8,7 @@
 #include "frontend/GUI.h"
 #include "misc/Meta.h"
 #include "utils/FileUtils.h"
+#include "utils/MySerial.h"
 
 //TODO Disabled blocks
 namespace prm
@@ -1010,10 +1011,15 @@ namespace prm
                                     { return fmt::format("COM{}", comNum); }) |
                             ::ranges::to<std::vector<std::string>>();
 
+            /*
             static SimpleSerial serial(
                     (char*) fmt::format("\\\\.\\{}",
                                         portStrs[portStrs.size() - 1])
                             .c_str(),
+                    CBR_9600);
+                    */
+            static MySerial serial(
+                    fmt::format("\\\\.\\{}", portStrs[portStrs.size() - 1]),
                     CBR_9600);
 
             static int currentPort = portStrs.size() - 1;
@@ -1023,13 +1029,11 @@ namespace prm
             ImGui::SameLine();
             if (ImGui::Button("Connect"))
             {
-                serial.CloseSerialPort();
-                serial = SimpleSerial(
-                        (char*) fmt::format("\\\\.\\{}", portStrs[currentPort])
-                                .c_str(),
+                serial.Connect(
+                        fmt::format("\\\\.\\{}", portStrs[portStrs.size() - 1]),
                         CBR_9600);
 
-                if (serial.connected_)
+                if (serial.IsConnected())
                 {
                     spdlog::info("Connected to {} successfully",
                                  portStrs[currentPort]);
@@ -1045,8 +1049,8 @@ namespace prm
             ImGui::InputTextWithHint("Send to serial port", nullptr, &toSend);
             if (ImGui::IsItemDeactivatedAfterEdit() && !toSend.empty())
             {
-                spdlog::info("{}", serial.connected_);
-                if (serial.WriteSerialPort((char*) &toSend[0]))
+                spdlog::info("{}", serial.IsConnected());
+                if (serial.WriteSerialPort(toSend))
                 {
                     spdlog::info("Sent \"{}\"", toSend);
                 }

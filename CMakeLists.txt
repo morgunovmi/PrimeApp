@@ -35,7 +35,6 @@ set(APP_NAME "App")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
 add_executable(${APP_NAME}
         vendor/ImGuiFileDialog/ImGuiFileDialog.cpp
-        vendor/simple_serial_port/simple-serial-port/simple-serial-port/SimpleSerial.cpp
         )
 add_subdirectory(src)
 

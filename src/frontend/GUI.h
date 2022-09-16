@@ -3,7 +3,6 @@
 #include <queue>
 
 #include <SFML/Graphics.hpp>
-#include <SimpleSerial.h>
 
 #include "backend/BackendOption.h"
 #include "backend/ImageViewer.h"
