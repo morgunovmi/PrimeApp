@@ -1038,7 +1038,11 @@ namespace prm
                     actualImageHeight, m_minDisplayValue, m_maxDisplayValue);
 
             std::scoped_lock lock(m_textureMutex);
-            m_currentTexture.loadFromImage(image);
+            if (m_currentTexture.getSize() == sf::Vector2u{0, 0}) {
+                m_currentTexture.loadFromImage(image);
+            } else {
+                m_currentTexture.update(image);
+            }
             //TODO sleep from framerate
             /**
         When acquiring sequences, call the pl_exp_finish_seq() after the entire sequence
@@ -1264,8 +1268,12 @@ namespace prm
                     m_minDisplayValue, m_maxDisplayValue);
 
             std::scoped_lock lock(m_textureMutex);
-            m_currentTexture.loadFromImage(image);
-            //TODO sleep from framerate
+
+            if (m_currentTexture.getSize() == sf::Vector2u{0, 0}) {
+                m_currentTexture.loadFromImage(image);
+            } else {
+                m_currentTexture.update(image);
+            }
 
             imageCounter++;
             captureTimes.push_back(timer.stop());
