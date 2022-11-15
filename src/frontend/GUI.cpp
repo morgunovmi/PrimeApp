@@ -864,9 +864,8 @@ namespace prm
                 auto* backend =
                         dynamic_cast<PhotometricsBackend*>(m_backend.get());
 
-                ImGui::Text("Min: %hu Max: %hu", backend->m_minCurrentValue,
-                            backend->m_maxCurrentValue);
-
+                ImGui::Text("Brightness range control");
+                ImGui::Separator();
                 static int currentBitsIdx = 2;
                 int maxVal = 0;
                 switch (currentBitsIdx)
@@ -906,6 +905,12 @@ namespace prm
                     backend->m_minDisplayValue = backend->m_minCurrentValue;
                     backend->m_maxDisplayValue = backend->m_maxCurrentValue;
                 }
+
+                ImGui::Dummy({0.f, 5.f});
+                ImGui::Text("Current frame values");
+                ImGui::Separator();
+                ImGui::Text("Min: %hu Max: %hu", backend->m_minCurrentValue,
+                            backend->m_maxCurrentValue);
             }
         }
         ImGui::End();
