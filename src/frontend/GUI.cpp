@@ -20,11 +20,21 @@ namespace prm
         auto& io = ImGui::GetIO();
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
         m_hubballiFont = io.Fonts->AddFontFromFileTTF(
-                "./resources/fonts/hubballi-regular.ttf", 20);
+                "./resources/fonts/Montserrat-Light.ttf", 23);
         ImGui::SFML::UpdateFontTexture();
 
-        ImGui::GetStyle().FrameRounding = 4.0f;
-        ImGui::GetStyle().GrabRounding = 4.0f;
+        auto& style = ImGui::GetStyle();
+        style.WindowPadding = {10.f, 10.f};
+        style.FrameRounding = 6.0f;
+        style.GrabRounding = 12.0f;
+        style.FramePadding = ImVec2(12, 5);
+        style.ItemSpacing = ImVec2(10, 6);
+        style.ItemInnerSpacing = ImVec2(6, 4);
+        style.ScrollbarSize = 20.f;
+        style.GrabMinSize = 18.f;
+
+        style.WindowRounding = 12.f;
+        style.ScrollbarRounding = 0.f;
 
         ImVec4* colors = ImGui::GetStyle().Colors;
         colors[ImGuiCol_Text] = ImVec4(0.95f, 0.96f, 0.98f, 1.00f);
@@ -303,7 +313,12 @@ namespace prm
     {
         if (ImGui::Begin("Camera Buttons", &m_bShowCameraButtons))
         {
-            if (ImGui::Button("Init")) { m_backend->Init(); }
+            if (ImGui::Button("Init Camera")) { m_backend->Init(); }
+
+            ImGui::Dummy({0.f, 10.f});
+
+            ImGui::Text("Capture parameters");
+            ImGui::Separator();
 
             static auto captureFormat = DIR;
             if (m_selectedBackend != PVCAM)
@@ -316,15 +331,8 @@ namespace prm
             static bool save = false;
             if (m_selectedBackend == PVCAM)
             {
-                static int exposureTime = 10;
-                ImGui::PushItemWidth(m_inputFieldWidth);
-                if (ImGui::SliderInt("Exposure time, ms", &exposureTime, 5,
-                                     100))
-                {
-                }
-                ImGui::PopItemWidth();
+                ImGui::BeginGroup();
 
-                ImGui::SameLine();
                 const char* items[] = {"1x1", "2x2"};
                 static int currentBinning = 0;
                 ImGui::PushItemWidth(m_inputFieldWidth);
@@ -335,26 +343,28 @@ namespace prm
                 static int currentLens = X20;
                 ImGui::Combo("Lens", &currentLens, items_lens,
                              IM_ARRAYSIZE(items));
+                ImGui::EndGroup();
                 ImGui::SameLine();
-                HelpMarker("Lens type");
+                ImGui::PopItemWidth();
+
+                ImGui::BeginGroup();
+                static int exposureTime = 10;
+                ImGui::PushItemWidth(m_inputFieldWidth);
+                if (ImGui::SliderInt("Exposure time, ms", &exposureTime, 5,
+                                     100))
+                {
+                }
                 ImGui::PopItemWidth();
 
                 static bool showRoi = false;
-                ImGui::SameLine();
                 ImGui::Checkbox("Select ROI", &showRoi);
+                if (ImGui::IsItemHovered())
+                {
+                    ImGui::SetTooltip("Click to bring up a ROI selector window");
+                }
                 static float minX = 0.0, minY = 0.0, maxX = 1.0, maxY = 1.0;
                 if (showRoi) { ShowROISelector(minX, minY, maxX, maxY); }
 
-                auto backend =
-                        dynamic_cast<PhotometricsBackend*>(m_backend.get());
-
-                /*
-                if (!save) ImGui::BeginDisabled();
-                ImGui::SameLine();
-                ImGui::Checkbox("Subtract background",
-                                &backend->m_bSubtractBackground);
-                if (!save) ImGui::EndDisabled();
-                 */
 
                 if (dynamic_cast<PhotometricsBackend*>(m_backend.get())
                             ->m_isPvcamInitialized)
@@ -385,7 +395,12 @@ namespace prm
                                     "Undefined binning factor encountered");
                     }
                 }
+                ImGui::EndGroup();
             }
+
+            ImGui::Dummy({0.f, 10.f});
+            ImGui::Text("File saving");
+            ImGui::Separator();
 
             ImGui::Checkbox("Save to file", &save);
             ImGui::SameLine();
@@ -422,13 +437,17 @@ namespace prm
             helpString.append(m_backend->GetDirPath());
             HelpMarker(helpString.c_str());
 
-            if (ImGui::Button("Live capture"))
+            ImGui::Dummy({0.f, 10.f});
+            ImGui::Text("Capture control");
+            ImGui::Separator();
+
+            if (ImGui::Button("Live capture", {200.f, 40.f}))
             {
                 m_backend->LiveCapture(captureFormat, save);
             }
 
             static int nFrames = 50;
-            if (ImGui::Button("Sequence capture"))
+            if (ImGui::Button("Sequence capture", {200.f, 40.f}))
             {
                 m_backend->SequenceCapture(nFrames, captureFormat, save);
             }
@@ -437,7 +456,7 @@ namespace prm
             if (ImGui::SliderInt("Number of frames", &nFrames, 0, 1000)) {}
             ImGui::PopItemWidth();
 
-            if (ImGui::Button("Terminate capture"))
+            if (ImGui::Button("Terminate capture", {200.f, 40.f}))
             {
                 m_backend->TerminateCapture();
             }
@@ -691,7 +710,6 @@ namespace prm
             ImGui::Combo("Lens", &currentLens, items, IM_ARRAYSIZE(items));
             ImGui::PopItemWidth();
             ImGui::SameLine();
-            HelpMarker("Lens type");
 
             ImGui::SameLine();
             const char* itemsBinning[] = {"1x1", "2x2"};

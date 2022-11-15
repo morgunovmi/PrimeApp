@@ -26,7 +26,11 @@ int main(int argc, char** argv)
         std::vector<spdlog::sink_ptr> sinks{sink, console_sink, file_sink};
         auto MyLogger = std::make_shared<spdlog::logger>(
                 "MyLogger", sinks.begin(), sinks.end());
+#ifndef NDEBUG                
         MyLogger->set_pattern(">> [%T] {%t} (%^%l%$) %v <<");
+#else
+        MyLogger->set_pattern(">> [%T] (%^%l%$) %v <<");
+#endif
 
 #ifndef NDEBUG
         MyLogger->set_level(spdlog::level::trace);
@@ -35,11 +39,8 @@ int main(int argc, char** argv)
 #endif
         spdlog::set_default_logger(MyLogger);
 
-        spdlog::info("\n\n\n\n\n\n\n\n>>>>>>>>>>>>>>>> NEW LAUNCH "
-                     "<<<<<<<<<<<<<<<<<\n\n\n\n\n\n\n\n\n");
-
-        const auto width = 1400;
-        const auto height = 600;
+        const auto width = 1600;
+        const auto height = 800;
         const auto antialiasingLevel = 8;
 
         sf::ContextSettings settings{};
