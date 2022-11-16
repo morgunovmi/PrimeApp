@@ -525,6 +525,10 @@ namespace prm
                         "ChooseFileDlgKey", "Choose File", ".tif",
                         m_videoLoadPath.empty() ? "." : m_videoLoadPath);
             }
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip("Choose the tif stack to analyze");
+            }
 
             static bool isFileLoaded = false;
 
@@ -582,38 +586,56 @@ namespace prm
                                                 diameter);
             }
 
+            ImGui::Dummy({0.f, 10.f});
+            ImGui::Text("Feature locating");
+            ImGui::Separator();
+
+            ImGui::BeginGroup();
             static bool isUpdateNeeded = false;
             ImGui::PushItemWidth(m_inputFieldWidth);
 
             ImGui::InputInt("frame num", &frameNum, 0);
             if (ImGui::IsItemDeactivatedAfterEdit()) isUpdateNeeded = true;
-            ImGui::SameLine();
-            HelpMarker("Number of the frame to analyze");
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip("Number of the frame to analyze");
+            }
 
             ImGui::InputInt("min mass", &minMass, 0);
             if (ImGui::IsItemDeactivatedAfterEdit()) isUpdateNeeded = true;
-
-            ImGui::SameLine();
-            HelpMarker("The minimum integrated brightness.\n"
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip("The minimum integrated brightness.\n"
                        "This is a crucial parameter for eliminating spurious "
                        "features.");
+            }
 
             ImGui::InputInt("size", &size, 0);
             if (ImGui::IsItemDeactivatedAfterEdit()) isUpdateNeeded = true;
-            ImGui::SameLine();
-            HelpMarker(
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip(
                     "Max radius of gyration of blob's Gaussian-like profile");
+            }
+            ImGui::EndGroup();
+            ImGui::SameLine();
 
+            ImGui::BeginGroup();
             ImGui::InputInt("diameter", &diameter, 0);
             if (ImGui::IsItemDeactivatedAfterEdit()) isUpdateNeeded = true;
-            ImGui::SameLine();
-            HelpMarker("The feature’s extent in each dimension");
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip("The feature's extent in each dimension");
+            }
 
             ImGui::InputDouble("eccentricity", &ecc, 0.0, 0.0, "%.2f");
             if (ImGui::IsItemDeactivatedAfterEdit()) isUpdateNeeded = true;
-            ImGui::SameLine();
-            HelpMarker("Max eccentricity");
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip("Max eccentricity");
+            }
             ImGui::PopItemWidth();
+            ImGui::EndGroup();
 
             if (isUpdateNeeded)
             {
@@ -629,6 +651,10 @@ namespace prm
             ImGui::SameLine();
             HelpMarker("Use this after fine tuning all previous params");
 
+            ImGui::Dummy({0.f, 10.f});
+            ImGui::Text("Feature linking");
+            ImGui::Separator();
+
             static int searchRange = 7;
             static int memory = 10;
             static int minTrajLen = 5;
@@ -638,36 +664,51 @@ namespace prm
             static int maxDiagSize = 30;
             ImGui::PushItemWidth(m_inputFieldWidth);
 
-            ImGui::InputInt("search range", &searchRange, 0);
-            ImGui::SameLine();
-            HelpMarker("The maximum distance features can move between frames");
 
-            ImGui::SameLine();
+            ImGui::BeginGroup();
+            ImGui::InputInt("search range", &searchRange, 0);
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip("The maximum distance features can move between frames");
+            }
+
             ImGui::InputInt("memory", &memory, 0);
-            ImGui::SameLine();
-            HelpMarker("the maximum number of frames during which a feature "
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip("The maximum number of frames during which a feature "
                        "can vanish,\n"
                        "then reappear nearby, and be considered the same "
                        "particle");
+            }
 
             ImGui::InputInt("min traj. len", &minTrajLen, 0);
-            ImGui::SameLine();
-            HelpMarker("minimum number of points (video frames) to survive");
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip("Minimum number of points (video frames) to survive");
+            }
+            ImGui::EndGroup();
 
             ImGui::SameLine();
-            ImGui::InputInt("drift smooth.", &driftSmoothing, 0);
-            ImGui::SameLine();
-            HelpMarker("Smooth the drift using a forward-looking\n"
+            ImGui::BeginGroup();
+            ImGui::InputInt("drift smoothing", &driftSmoothing, 0);
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip("Smooth the drift using a forward-looking\n"
                        "rolling mean over this many frames.");
+            }
 
             ImGui::InputInt("min diag. size", &minDiagSize, 0);
-            ImGui::SameLine();
-            HelpMarker("Min particle diagonal size to survive");
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip("Min particle diagonal size to survive");
+            }
 
-            ImGui::SameLine();
             ImGui::InputInt("max diag. size", &maxDiagSize, 0);
-            ImGui::SameLine();
-            HelpMarker("Max particle diagonal size to survive");
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip("Max particle diagonal size to survive");
+            }
+            ImGui::EndGroup();
 
             ImGui::PopItemWidth();
 
@@ -684,8 +725,20 @@ namespace prm
                                                             maxDiagSize);
                 }
             }
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip("Estimates particle trajectories between frames");
+            }
             ImGui::SameLine();
             ImGui::Checkbox("Plot trajectories", &plotTrajectories);
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip("Check if you want to see the found trajectories\n(takes some time)");
+            }
+
+            ImGui::Dummy({0.f, 10.f});
+            ImGui::Text("Particle size calculation");
+            ImGui::Separator();
 
             /*
             ImGui::SameLine();
@@ -701,24 +754,32 @@ namespace prm
 
             static double scale = 330.0 / 675.0;
 
+            ImGui::BeginGroup();
             ImGui::PushItemWidth(m_inputFieldWidth);
-            ImGui::InputDouble("fps", &fps, 0.0, 0.0, "%.3f");
-            ImGui::SameLine();
-            HelpMarker("Framerate of the image sequence capture");
-
             const char* items[] = {"x10", "x20"};
             ImGui::Combo("Lens", &currentLens, items, IM_ARRAYSIZE(items));
-            ImGui::PopItemWidth();
-            ImGui::SameLine();
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip("Lens used on the camera during capture");
+            }
 
-            ImGui::SameLine();
             const char* itemsBinning[] = {"1x1", "2x2"};
-            ImGui::PushItemWidth(m_inputFieldWidth);
             ImGui::Combo("Binning factor", &currentBinning, itemsBinning,
                          IM_ARRAYSIZE(itemsBinning));
-            ImGui::PopItemWidth();
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip("Binning used during capture");
+            }
+            ImGui::EndGroup();
+
             ImGui::SameLine();
-            HelpMarker("Binning used during capture");
+
+            ImGui::InputDouble("fps", &fps, 0.0, 0.0, "%.3f");
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip("Framerate of the captured stack");
+            }
+            ImGui::PopItemWidth();
 
             switch (currentLens)
             {
@@ -736,20 +797,32 @@ namespace prm
             {
                 m_videoProcessor.PlotSizeHist(fps, scale, num_bins);
             }
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip("Plots a histogram with particle size distribution params");
+            }
             ImGui::SameLine();
             ImGui::PushItemWidth(m_inputFieldWidth);
             ImGui::SliderInt("Num bins", &num_bins, 0, 1000);
             ImGui::PopItemWidth();
-
-            static std::string pythonQuery{};
-            ImGui::PushItemWidth(m_inputFieldWidth);
-            ImGui::InputTextWithHint("Run random python string", "Python Query",
-                                     &pythonQuery);
-            ImGui::PopItemWidth();
-
-            if (ImGui::Button("Run python query"))
+            if (ImGui::IsItemHovered())
             {
-                m_videoProcessor.RunPythonQuery(pythonQuery);
+                ImGui::SetTooltip("Number of bins in the histogram");
+            }
+
+            ImGui::Dummy({0.f, 10.f});
+            if (ImGui::CollapsingHeader("Misc"))
+            {
+                static std::string pythonQuery{};
+                ImGui::PushItemWidth(m_inputFieldWidth);
+                ImGui::InputTextWithHint("Run random python string",
+                                         "Python Query", &pythonQuery);
+                ImGui::PopItemWidth();
+
+                if (ImGui::Button("Run python query"))
+                {
+                    m_videoProcessor.RunPythonQuery(pythonQuery);
+                }
             }
 
             if (isFileLoaded &&
@@ -898,6 +971,10 @@ namespace prm
                     backend->m_minDisplayValue = 0;
                     backend->m_maxDisplayValue = maxVal;
                 }
+                if (ImGui::IsItemHovered())
+                {
+                    ImGui::SetTooltip("Set brightness limits to the whole range\n of the current bit depth");
+                }
 
                 ImGui::SameLine();
                 if (ImGui::Button("Auto stretch"))
@@ -905,11 +982,15 @@ namespace prm
                     backend->m_minDisplayValue = backend->m_minCurrentValue;
                     backend->m_maxDisplayValue = backend->m_maxCurrentValue;
                 }
+                if (ImGui::IsItemHovered())
+                {
+                    ImGui::SetTooltip("Stretch the brightness limits to the values on the frame");
+                }
 
                 ImGui::Dummy({0.f, 5.f});
                 ImGui::Text("Current frame values");
                 ImGui::Separator();
-                ImGui::Text("Min: %hu Max: %hu", backend->m_minCurrentValue,
+                ImGui::TextColored({0.f, 0.7, 0.f, 1.f}, "Min: %hu Max: %hu", backend->m_minCurrentValue,
                             backend->m_maxCurrentValue);
             }
         }
