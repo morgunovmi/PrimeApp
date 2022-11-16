@@ -246,7 +246,7 @@ namespace prm
                 if (ImGui::MenuItem("Image Viewer", "F3", &m_bShowImageViewer))
                 {
                 }
-                if (ImGui::MenuItem("Serial Controller", nullptr,
+                if (ImGui::MenuItem("Laser Controller", nullptr,
                                     &m_bShowSerial))
                 {
                 }
@@ -1099,7 +1099,7 @@ namespace prm
 
     void GUI::ShowSerialPort()
     {
-        if (ImGui::Begin("Serial Controller", &m_bShowImageViewer))
+        if (ImGui::Begin("Laser Controller", &m_bShowImageViewer))
         {
             ULONG size = 10;
             std::vector<ULONG> coms(size);
@@ -1115,42 +1115,52 @@ namespace prm
                                     { return fmt::format("COM{}", comNum); }) |
                             ::ranges::to<std::vector<std::string>>();
 
-            /*
-            static SimpleSerial serial(
-                    (char*) fmt::format("\\\\.\\{}",
-                                        portStrs[portStrs.size() - 1])
-                            .c_str(),
-                    CBR_9600);
-                    */
-            static MySerial serial(
-                    fmt::format("\\\\.\\{}", portStrs[portStrs.size() - 1]),
-                    CBR_9600);
+            const int numPorts = static_cast<int>(portStrs.size());
+            static int currentPort = numPorts - 1;
 
-            static int currentPort = portStrs.size() - 1;
+            static MySerial serial{};
+
             ImGui::PushItemWidth(m_inputFieldWidth);
-            Combo("Port", &currentPort, portStrs, portStrs.size());
-
-            ImGui::SameLine();
-            if (ImGui::Button("Connect"))
+            if (numPorts > 0)
             {
-                serial.Connect(
-                        fmt::format("\\\\.\\{}", portStrs[portStrs.size() - 1]),
-                        CBR_9600);
+                Combo("Port", &currentPort, portStrs, portStrs.size());
+                if (ImGui::IsItemHovered())
+                {
+                    ImGui::SetTooltip("Choose the port the laser is connected to");
+                }
 
-                if (serial.IsConnected())
+                ImGui::SameLine();
+                if (ImGui::Button("Connect"))
                 {
-                    spdlog::info("Connected to {} successfully",
-                                 portStrs[currentPort]);
+                    serial.Connect(
+                            fmt::format("\\\\.\\{}", portStrs[currentPort]),
+                            CBR_9600);
+
+                    if (serial.IsConnected())
+                    {
+                        spdlog::info("Connected to {} successfully",
+                                    portStrs[currentPort]);
+                    }
+                    else
+                    {
+                        spdlog::error("Couldn't connect to {}",
+                                    portStrs[currentPort]);
+                    }
                 }
-                else
-                {
-                    spdlog::error("Couldn't connect to {}",
-                                  portStrs[currentPort]);
-                }
+            }
+
+            if (!serial.IsConnected())
+            {
+                ImGui::TextColored({0.7f, 0.f, 0.f, 1.f}, "Please connect the laser\n");
+                ImGui::BeginDisabled();
             }
 
             static std::string toSend{};
             ImGui::InputTextWithHint("Send to serial port", nullptr, &toSend);
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip("Send string from 0 to 255 to change laser brightness");
+            }
             if (ImGui::IsItemDeactivatedAfterEdit() && !toSend.empty())
             {
                 spdlog::info("{}", serial.IsConnected());
@@ -1164,6 +1174,11 @@ namespace prm
                 }
             }
             ImGui::PopItemWidth();
+
+            if (!serial.IsConnected())
+            {
+                ImGui::EndDisabled();
+            }
         }
         ImGui::End();
     }

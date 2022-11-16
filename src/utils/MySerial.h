@@ -9,10 +9,28 @@
 class MySerial
 {
 public:
+    MySerial() : m_connected(false), m_ioHandle(nullptr) {}
     MySerial(const std::string& com_port, DWORD COM_BAUD_RATE)
-        : m_connected(false)
+        : m_connected(false), m_ioHandle(nullptr)
     {
         Connect(com_port, COM_BAUD_RATE);
+    }
+
+    MySerial(const MySerial& other) = delete;
+    MySerial& operator=(const MySerial& other) = delete;
+    MySerial(MySerial&& other) noexcept
+        : m_ioHandle(other.m_ioHandle), m_connected(other.m_connected)
+    {
+        other.m_ioHandle = nullptr;
+        other.m_connected = false;
+    }
+    MySerial& operator=(MySerial&& other) noexcept
+    {
+        if (this == &other) return *this;
+
+        std::swap(m_ioHandle, other.m_ioHandle);
+        m_connected = other.m_connected;
+        return *this;
     }
 
     bool WriteSerialPort(const std::string& data)
@@ -20,9 +38,42 @@ public:
         DWORD bytes_sent = 0;
 
         PurgeComm(m_ioHandle, PURGE_RXCLEAR | PURGE_TXCLEAR | PURGE_RXABORT |
-                              PURGE_TXABORT);
+                                      PURGE_TXABORT);
         return WriteFile(m_ioHandle, (void*) data.c_str(), data.length(),
-                       &bytes_sent, nullptr) != 0;
+                         &bytes_sent, nullptr) != FALSE;
+    }
+
+    [[nodiscard]] std::string ReadSerialPort()
+    {
+        PurgeComm(m_ioHandle, PURGE_RXCLEAR | PURGE_TXCLEAR | PURGE_RXABORT |
+                                      PURGE_TXABORT);
+
+        std::vector<char> serialBuffer{};
+
+        if (SetCommMask(m_ioHandle, EV_RXCHAR) == FALSE)
+        {
+            PrintLastError(
+                    (LPTSTR) std::source_location::current().function_name());
+            return {};
+        }
+
+        DWORD dwEventMask = {0};
+        if (WaitCommEvent(m_ioHandle, &dwEventMask, nullptr) == FALSE)
+        {
+            PrintLastError(
+                    (LPTSTR) std::source_location::current().function_name());
+            return {};
+        }
+
+        DWORD noBytesRead = 0;
+        do {
+            char readData = 0;
+            ReadFile(m_ioHandle, &readData, sizeof(readData), &noBytesRead,
+                     nullptr);
+            serialBuffer.push_back(readData);
+        } while (noBytesRead > 0);
+
+        return {serialBuffer.begin(), serialBuffer.end()};
     }
 
     bool CloseSerialPort()
@@ -58,12 +109,13 @@ public:
 
         if (m_ioHandle == INVALID_HANDLE_VALUE)
         {
-            PrintLastError((LPTSTR) "Connect");
+            PrintLastError(
+                    (LPTSTR) std::source_location::current().function_name());
             return;
         }
         DCB dcbSerialParams = {0};
 
-        if (!GetCommState(m_ioHandle, &dcbSerialParams))
+        if (GetCommState(m_ioHandle, &dcbSerialParams) == FALSE)
         {
             PrintLastError(
                     (LPTSTR) std::source_location::current().function_name());
@@ -76,7 +128,7 @@ public:
             dcbSerialParams.Parity = NOPARITY;
             dcbSerialParams.fDtrControl = DTR_CONTROL_ENABLE;
 
-            if (!SetCommState(m_ioHandle, &dcbSerialParams))
+            if (SetCommState(m_ioHandle, &dcbSerialParams) == FALSE)
             {
                 PrintLastError((LPTSTR) std::source_location::current()
                                        .function_name());
@@ -87,11 +139,23 @@ public:
                 PurgeComm(m_ioHandle, PURGE_RXCLEAR | PURGE_TXCLEAR);
                 spdlog::info("Connected to port {}", com_port);
             }
+
+            COMMTIMEOUTS timeouts = {0};
+            timeouts.ReadIntervalTimeout = 50;
+            timeouts.ReadTotalTimeoutConstant = 50;
+            timeouts.ReadTotalTimeoutMultiplier = 10;
+            timeouts.WriteTotalTimeoutConstant = 50;
+            timeouts.WriteTotalTimeoutMultiplier = 10;
+            if (SetCommTimeouts(m_ioHandle, &timeouts) == FALSE)
+            {
+                PrintLastError((LPTSTR) std::source_location::current()
+                                       .function_name());
+            }
         }
     }
 
 private:
-    void PrintLastError(LPTSTR lpszFunction)
+    static void PrintLastError(LPTSTR lpszFunction)
     {
         LPVOID lpMsgBuf;
         LPVOID lpDisplayBuf;
@@ -100,8 +164,8 @@ private:
         FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
                               FORMAT_MESSAGE_FROM_SYSTEM |
                               FORMAT_MESSAGE_IGNORE_INSERTS,
-                      NULL, dw, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                      (LPTSTR) &lpMsgBuf, 0, NULL);
+                      nullptr, dw, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                      (LPTSTR) &lpMsgBuf, 0, nullptr);
 
         // Display the error message and exit the process
 
@@ -120,4 +184,6 @@ private:
 private:
     bool m_connected;
     HANDLE m_ioHandle;
+
+    const std::size_t MAX_BUF_LEN = 256;
 };
