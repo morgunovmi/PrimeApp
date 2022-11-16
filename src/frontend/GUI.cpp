@@ -1007,6 +1007,8 @@ namespace prm
         static int maxImages = 100;
         if (ImGui::Begin("Image Viewer", &m_bShowImageViewer, window_flags))
         {
+            ImGui::Text("File loading");
+            ImGui::Separator();
             static std::string videoPath{};
             if (ImGui::Button("Choose video file"))
             {
@@ -1038,13 +1040,22 @@ namespace prm
             ImGui::SameLine();
             ImGui::PushItemWidth(m_inputFieldWidth);
             ImGui::DragInt("Max loaded images", &maxImages, 1.0f, 1, 1000);
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip("Limit the number of frames loaded for processing");
+            }
 
-            if (ImGui::Button("Update Image")) { m_imageViewer.UpdateImage(); }
+            ImGui::Dummy({0.f, 5.f});
+            ImGui::Text("Filters");
+            ImGui::Separator();
 
             static bool processAllFrames = false;
             ImGui::Checkbox("Process all frames", &processAllFrames);
-            ImGui::SameLine();
-            HelpMarker("By default processes only frame 0");
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip("Check to apply filter to all loaded frames\n"
+                                   "By default only applies to first frame");
+            }
 
             static int topHatSize = 15;
             if (ImGui::Button("Top hat filter"))
@@ -1054,28 +1065,34 @@ namespace prm
             ImGui::SameLine();
             ImGui::DragInt("Filter size top hat", &topHatSize, 1.0f, 1, 50);
 
-            /*
-            static int medianSize = 5;
-            if (ImGui::Button("Median filter"))
-            {
-                m_imageViewer.MedianFilter(medianSize, processAllFrames);
-            }
-            ImGui::SameLine();
-            ImGui::DragInt("Filter size median", &medianSize, 2.0f, 1, 5);
-             */
-
             if (ImGui::Button("Median filter"))
             {
                 m_imageViewer.ScuffedMedianFilter(processAllFrames);
             }
 
+            ImGui::Dummy({0.f, 5.f});
+
+            if (ImGui::Button("Update Image")) { m_imageViewer.UpdateImage(); }
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip("Click to make sure the viewport shows the latest image");
+            }
+            ImGui::SameLine();
             if (ImGui::Button("Reset Image")) { m_imageViewer.ResetImage(); }
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip("Reverts all the changes made by the filters");
+            }
 
             static int frameNum = 0;
             if (m_imageViewer.m_isImageLoaded)
             {
                 ImGui::DragInt("Frane number", &frameNum, 1.0f, 0,
                                m_imageViewer.GetNumImages() - 1);
+                if (ImGui::IsItemHovered())
+                {
+                    ImGui::SetTooltip("Choose the frame shown in the viewport");
+                }
                 if (ImGui::IsItemDeactivatedAfterEdit())
                 {
                     m_imageViewer.SelectImage(frameNum);
@@ -1093,13 +1110,17 @@ namespace prm
 
                 m_imageViewer.SaveImage(savePath);
             }
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip("Save the modified stack");
+            }
         }
         ImGui::End();
     }
 
     void GUI::ShowSerialPort()
     {
-        if (ImGui::Begin("Laser Controller", &m_bShowImageViewer))
+        if (ImGui::Begin("Laser Controller", &m_bShowSerial))
         {
             ULONG size = 10;
             std::vector<ULONG> coms(size);
