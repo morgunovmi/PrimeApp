@@ -445,11 +445,19 @@ namespace prm
             {
                 m_backend->LiveCapture(captureFormat, save);
             }
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip("Use for long continuous capture,\n better FPS than sequence capture\nUse \"Terminate capture\" to stop");
+            }
 
             static int nFrames = 50;
             if (ImGui::Button("Sequence capture", {200.f, 40.f}))
             {
                 m_backend->SequenceCapture(nFrames, captureFormat, save);
+            }
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip("Use to capture a defined number of frames,\n slightly slower than live capture");
             }
             ImGui::SameLine();
             ImGui::PushItemWidth(m_inputFieldWidth);
@@ -459,6 +467,10 @@ namespace prm
             if (ImGui::Button("Terminate capture", {200.f, 40.f}))
             {
                 m_backend->TerminateCapture();
+            }
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip("Use to stop ongoing capture");
             }
         }
 
