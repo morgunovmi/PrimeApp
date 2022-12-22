@@ -26,6 +26,7 @@ namespace prm
               m_pythonWorker(1, m_messageQueue, texture, mutex)
         {
             m_pythonExePath = Exec("where python");
+            spdlog::info("\n\nPython path: {}\n\n", m_pythonExePath);
             if (m_pythonExePath.empty())
             {
                 spdlog::error("Couldn't not find python executable. Please "

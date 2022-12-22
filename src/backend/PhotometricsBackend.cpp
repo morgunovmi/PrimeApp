@@ -1229,8 +1229,6 @@ namespace prm
         with ctrl+c keyboard shortcut, the main 'while' loop is interrupted and the
         acquisition is aborted.
         */
-            spdlog::info("Waiting for EOF event to occur on camera {}\n",
-                         ctx->hcam);
             if (!WaitForEofEvent(ctx.get(), 5000, errorOccurred)) break;
 
             void* frame;
@@ -1241,9 +1239,7 @@ namespace prm
             }
 
             // Timestamp is in hundreds of microseconds
-            spdlog::info("Frame #{} acquired, timestamp = {}\n",
-                         ctx->eofFrameInfo.FrameNr,
-                         100 * ctx->eofFrameInfo.TimeStamp);
+            spdlog::info("Frame #{} acquired", ctx->eofFrameInfo.FrameNr);
 
             const auto [itMin, itMax] = std::minmax_element(
                     (uint16_t*) frame,

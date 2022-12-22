@@ -32,7 +32,7 @@ find_package(nlohmann_json REQUIRED)
 set(SFML_LIBS sfml-graphics sfml-system sfml-window)
 
 set(APP_NAME "App")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ")
 add_executable(${APP_NAME}
         vendor/ImGuiFileDialog/ImGuiFileDialog.cpp
         )
