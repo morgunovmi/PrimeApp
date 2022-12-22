@@ -926,7 +926,7 @@ namespace prm
 
         auto& ctx = m_cameraContexts[0];
 
-        std::vector<std::uint8_t> bytes;
+        std::vector<uint8_t> bytes;
 
         if (PV_OK != pl_cam_register_callback_ex3(ctx->hcam, PL_CALLBACK_EOF,
                                                   (void*) CustomEofHandler,
@@ -1015,8 +1015,7 @@ namespace prm
                 continue;
             }
 
-            spdlog::info("Frame #{} acquired, timestamp = {}\n", imageCounter,
-                         100 * ctx->eofFrameInfo.TimeStamp);
+            spdlog::info("Frame #{} acquired", imageCounter);
 
             const auto [itMin, itMax] = std::minmax_element(
                     (uint16_t*) ctx->eofFrame,
@@ -1055,10 +1054,6 @@ namespace prm
             if (PV_OK != pl_exp_finish_seq(ctx->hcam, frameInMemory, 0))
             {
                 PrintError("pl_exp_finish_seq() error");
-            }
-            else
-            {
-                spdlog::info("Acquisition finished on camera {}\n", ctx->hcam);
             }
 
             imageCounter++;

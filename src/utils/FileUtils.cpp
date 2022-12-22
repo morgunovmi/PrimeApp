@@ -39,7 +39,7 @@ namespace prm
     }
 
     bool FileUtils::WritePvcamStack(const void* data, uint16_t imageWidth,
-                                    uint16_t imageHeight, uint16_t imageSize,
+                                    uint16_t imageHeight, uint32_t imageSize,
                                     std::string_view filePath,
                                     uint16_t numImages)
     {
