@@ -354,6 +354,14 @@ namespace prm
                                      100))
                 {
                 }
+                if (m_backend->IsCapturing() && ImGui::IsItemDeactivatedAfterEdit())
+                {
+                    m_backend->TerminateCapture();
+                    std::this_thread::sleep_for(std::chrono::milliseconds{300});
+                    spdlog::info("Is camera capturing: {}", m_backend->IsCapturing());
+                    m_backend->LiveCapture(captureFormat, save);
+                }
+
                 ImGui::PopItemWidth();
 
                 static bool showRoi = false;

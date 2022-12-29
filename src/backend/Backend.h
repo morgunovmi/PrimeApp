@@ -67,6 +67,8 @@ namespace prm
         {
         }
 
+        [[nodiscard]] bool IsCapturing() const { return m_isCapturing; }
+
         [[nodiscard]] const std::string& GetDirPath() const { return m_saveDirPath; }
         void SetDirPath(std::string_view dirPath)
         {
@@ -89,6 +91,9 @@ namespace prm
 
         /// Directory in which to save the video
         std::string m_saveDirPath = ".";
+
+        /// Is camera capturing
+        bool m_isCapturing = false;
 
         /// Reference to the SFML render window
         sf::RenderWindow& m_window;

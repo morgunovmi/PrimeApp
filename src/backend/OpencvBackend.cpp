@@ -41,14 +41,14 @@ void prm::OpencvBackend::LiveCapture(SAVE_FORMAT format, bool save)
         return;
     }
 
-    if (m_context.isCapturing)
+    if (m_isCapturing)
     {
         spdlog::warn(
                 "Already capturing, please stop current acquisition first");
         return;
     }
 
-    m_context.isCapturing = true;
+    m_isCapturing = true;
     m_context.thread = std::make_unique<std::jthread>(
             &OpencvBackend::Capture_, this, std::ref(m_context), format, -1, save);
 }
@@ -61,20 +61,20 @@ void prm::OpencvBackend::SequenceCapture(uint32_t nFrames, SAVE_FORMAT format, b
         return;
     }
 
-    if (m_context.isCapturing)
+    if (m_isCapturing)
     {
         spdlog::warn(
                 "Already capturing, please stop current acquisition first");
         return;
     }
 
-    m_context.isCapturing = true;
+    m_isCapturing = true;
     m_context.thread = std::make_unique<std::jthread>(&OpencvBackend::Capture_,
                                                       this, std::ref(m_context),
                                                       format, nFrames, save);
 }
 
-void prm::OpencvBackend::TerminateCapture() { m_context.isCapturing = false; }
+void prm::OpencvBackend::TerminateCapture() { m_isCapturing = false; }
 
 void prm::OpencvBackend::Init_(prm::OpencvCameraCtx& ctx)
 {
@@ -120,12 +120,12 @@ void prm::OpencvBackend::Capture_(OpencvCameraCtx& ctx, SAVE_FORMAT format,
     std::vector<std::uint8_t> pixels;
 
     auto counter = 0;
-    while (ctx.isCapturing)
+    while (m_isCapturing)
     {
         // Condition to quit sequence capture
         if (nFrames > 0 && counter >= nFrames)
         {
-            ctx.isCapturing = false;
+            m_isCapturing = false;
             break;
         }
         ++counter;
@@ -135,7 +135,7 @@ void prm::OpencvBackend::Capture_(OpencvCameraCtx& ctx, SAVE_FORMAT format,
         if (frame.empty())
         {
             spdlog::error("Got empty frame. Stopping capture...");
-            ctx.isCapturing = false;
+            m_isCapturing = false;
             ctx.camera->release();
             ctx.isCamOpen = false;
             break;
@@ -158,7 +158,7 @@ void prm::OpencvBackend::Capture_(OpencvCameraCtx& ctx, SAVE_FORMAT format,
                 1000));
     }
     ctx.camera->release();
-    ctx.isCapturing = false;
+    m_isCapturing = false;
     ctx.isCamOpen = false;
 
     if (save)

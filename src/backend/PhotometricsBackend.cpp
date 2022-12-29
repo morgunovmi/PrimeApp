@@ -792,7 +792,7 @@ namespace prm
             return;
         }
 
-        if (ctx->isCapturing)
+        if (m_isCapturing)
         {
             spdlog::warn("Already capturing");
             return;
@@ -819,7 +819,7 @@ namespace prm
             return;
         }
 
-        if (ctx->isCapturing)
+        if (m_isCapturing)
         {
             spdlog::warn("Already capturing");
             return;
@@ -847,6 +847,7 @@ namespace prm
             }
             ctx->eofEvent.cond.notify_all();
         }
+        m_isCapturing = false;
         spdlog::info(">>>\n\n");
     }
 
@@ -979,7 +980,7 @@ namespace prm
 
         bool errorOccurred = false;
         uns32 imageCounter = 0;
-        ctx->isCapturing = true;
+        m_isCapturing = true;
 
         spdlog::info("Starting sequence capture loop on cam {}\n", ctx->hcam);
         std::vector<double> captureTimes{};
@@ -1059,7 +1060,7 @@ namespace prm
             imageCounter++;
             captureTimes.push_back(timer.stop());
         }
-        ctx->isCapturing = false;
+        m_isCapturing = false;
 
         const auto totalCaptureTime =
                 std::accumulate(captureTimes.begin(), captureTimes.end(), 0.0);
@@ -1216,7 +1217,7 @@ namespace prm
 
         uns32 imageCounter = 0;
         bool errorOccurred = false;
-        ctx->isCapturing = true;
+        m_isCapturing = true;
 
         std::vector<double> captureTimes{};
         while (true)
@@ -1269,7 +1270,7 @@ namespace prm
             imageCounter++;
             captureTimes.push_back(timer.stop());
         }
-        ctx->isCapturing = false;
+        m_isCapturing = false;
 
         const auto totalCaptureTime =
                 std::accumulate(captureTimes.begin(), captureTimes.end(), 0.0);
